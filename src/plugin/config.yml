@@ -1,0 +1,29 @@
+## Public Data Search Plugin
+---
+    package:
+        name: public-search
+        author: Erik Pearson
+        description: Search for the public
+    source:
+        styles:
+            -
+                file: styles.css
+    install:
+        widgets:
+                id: public-search_panel
+                module: panel 
+                type: es6
+        routes:
+            -
+                path: [public-search]
+                queryParams:
+                    q: {}
+                widget: public-search_panel
+                authorization: true
+        menu:
+            -
+                name: public-search
+                path: [public-search]
+                label: Public Search
+                icon: search 
+                beta: true
