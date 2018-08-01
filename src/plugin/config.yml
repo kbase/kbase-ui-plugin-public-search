@@ -10,6 +10,7 @@
                 file: styles.css
     install:
         widgets:
+            -
                 id: public-search_panel
                 module: panel 
                 type: es6
@@ -19,11 +20,11 @@
                 queryParams:
                     q: {}
                 widget: public-search_panel
-                authorization: true
+                authorization: false
         menu:
             -
                 name: public-search
                 path: [public-search]
-                label: Public Search
+                label: Search
                 icon: search 
                 beta: true
