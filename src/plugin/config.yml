@@ -6,8 +6,6 @@
         description: Search for the public
     source:
         styles:
-            -
-                file: styles.css
     install:
         widgets:
             -
