@@ -5,7 +5,8 @@ define([
     'kb_knockout/lib/viewModelBase',
     'kb_common/html',
     '../lib/model',
-    'kb_knockout/components/table'
+    'kb_knockout/components/table',
+    './inspector'
 ], function (
     ko,
     reg,
@@ -13,7 +14,8 @@ define([
     ViewModelBase,
     html,
     model,
-    TableComponent
+    TableComponent,
+    InspectorComponent
 ) {
     'use strict';
 
@@ -26,11 +28,11 @@ define([
         constructor(params) {
             super(params);
 
-            const {searchResults, searching, pageSize, searchState} = params;
+            const {searchResults, searching, pageSize, searchState, showOverlay} = params;
 
             this.searchResults = searchResults;
-
             this.searching = searching;
+            this.showOverlay = showOverlay;
 
             this.table = {
                 rows: this.searchResults,
@@ -56,15 +58,22 @@ define([
                 },
                 rowAction: (row) => {
                     // for now, just open landing page for objects, narrative for narrative.
-                    if (row.type.value === 'Narrative') {
-                        window.open('/narrative/ws.' + row.metadata.workspaceId + '.obj.' + row.metadata.objectId, '_blank');
-                    } else {
-                        window.open('#dataview/' + row.metadata.ref, '_blank');
-                    }
+                    // if (row.type.value === 'Narrative') {
+                    //     window.open('/narrative/ws.' + row.metadata.workspaceId + '.obj.' + row.metadata.objectId, '_blank');
+                    // } else {
+                    //     window.open('#dataview/' + row.metadata.ref, '_blank');
+                    // }
                     // console.log('row action?', row);
+                    this.showOverlay({
+                        name: InspectorComponent.name(),
+                        type: 'info',
+                        viewModel: {
+                            row: row
+                        }
+                    });
+
                 }
             };
-
             this.messages = {
                 none: div([
                     p('No active search.'),

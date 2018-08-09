@@ -10,7 +10,6 @@ define([
             this.runtime = runtime;
 
             this.searchAPI = this.runtime.service('rpc').makeClient({
-                runtime: runtime,
                 module: 'KBaseSearchEngine',
                 timeout: 10000,
                 authenticated: false
@@ -53,9 +52,13 @@ define([
                     include_highlight: 1,
                     add_narrative_info: 1
                 },
+                // access_filter: {
+                //     with_private: withPrivateData ? 1 : 0,
+                //     with_public: withPublicData ? 1 : 0
+                // },
                 access_filter: {
-                    with_private: withPrivateData ? 1 : 0,
-                    with_public: withPublicData ? 1 : 0
+                    with_private: 0,
+                    with_public: 1
                 },
                 sorting_rules: sortingRules
                 // sorting_rules: [{
@@ -103,7 +106,7 @@ define([
     const columns = [
         {
             name: 'type',
-            label: 'Type',
+            label: 'Data Type',
             type: 'string',
             sort: {
                 propertyKey: 'type',
@@ -143,9 +146,10 @@ define([
             // action: {
             //     name: 'doAddPi'
             // }
-        }, {
+        },
+        {
             name: 'source',
-            label: 'Source',
+            label: 'Container',
             type: 'string',
             // sort: {
             //     keyName: 'source',
@@ -158,6 +162,20 @@ define([
             // }
         },
         {
+            name: 'name',
+            label: 'Container name',
+            type: 'string',
+            // sort: {
+            //     keyName: 'source',
+            //     direction: ko.observable('ascending'),
+            //     active: ko.observable(false)
+            // },
+            width: 3,
+            // action: {
+            //     name: 'doAddPi'
+            // }
+        },
+        {
             name: 'description',
             label: 'Description',
             type: 'string',
@@ -165,7 +183,7 @@ define([
             // width is more like a weight... for all current columns the
             // widths are summed, and each column's actual width attribute
             // is set as the percent of total.
-            width: 4
+            width: 3
         },
         // {
         //     name: 'inspect',

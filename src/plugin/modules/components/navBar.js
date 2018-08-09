@@ -180,12 +180,18 @@ define([
                             }, [
                                 ' Page ',
                                 span({
+                                    style: {
+                                        fontWeight: 'bold'
+                                    },
                                     dataBind: {
                                         text: 'page'
                                     }
                                 }),
                                 ' of ',
                                 span({
+                                    style: {
+                                        fontWeight: 'bold'
+                                    },
                                     dataBind: {
                                         typedText: {
                                             value: 'totalPages',
@@ -237,7 +243,7 @@ define([
                         },
                         dataBind: {
                             typedText: {
-                                value: 'totalCount',
+                                value: 'realTotalCount',
                                 type: '"number"',
                                 format: '"0,0"'
                             }
@@ -248,11 +254,11 @@ define([
                             fontStyle: 'italic'
                         }
                     }, [
-                        ' (truncated from ',
+                        ' (truncated to ',
                         span({
                             dataBind: {
                                 typedText: {
-                                    value: 'realTotalCount',
+                                    value: 'totalCount',
                                     type: '"number"',
                                     format: '"0,0"'
                                 }

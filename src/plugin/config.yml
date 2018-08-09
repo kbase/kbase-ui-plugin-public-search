@@ -12,12 +12,20 @@
                 id: public-search_panel
                 module: panel 
                 type: es6
+            - 
+                id: public-search_test
+                module: test
+                type: es6
         routes:
             -
                 path: [public-search]
                 queryParams:
                     q: {}
                 widget: public-search_panel
+                authorization: false
+            -
+                path: [public-search, test]
+                widget: public-search_test
                 authorization: false
         menu:
             -

@@ -321,12 +321,16 @@ define([
                         if (narrative_info) {
                             const [narrativeName, /*obj id*/, /*saved time*/ , owner, ownerRealname] = narrative_info;
                             workspaces[wsid] = {
+                                // this is just a guess since the search tag is not provided in the results.
                                 type: narrativeName ? 'narrative': 'refdata',
+                                name: narrativeName,
                                 owner: owner,
                                 ownerRealname: ownerRealname
                             };
                         } else {
+                            // it is
                             workspaces[wsid] = {
+                                name: '',
                                 type: 'inaccessible',
                                 owner: null,
                                 ownerRealname: null
@@ -355,28 +359,31 @@ define([
                         // just testing...
                         const [, workspaceId, objectId, version] = object.guid.match(/^WS:(\d+)\/(\d+)\/(\d+)$/);
                         const workspace = workspaces[workspaceId];
-                        let owner, source;
+                        let owner;
+                        let name;
+                        const source = workspace.type;
                         switch (workspace.type) {
                         case 'narrative':
                             owner = workspace.owner;
-                            source = 'narrative';
+                            name = workspace.name;
+                            // name = 'narrative';
                             break;
                         case 'refdata':
                             if (object.data.source) {
                                 owner = 'kbase';
-                                source = object.data.source;
+                                name = object.data.source;
                             } else {
                                 owner = 'kbase';
-                                source = 'n/a';
+                                name = 'n/a';
                             }
                             break;
                         case 'inaccessible':
-                            owner = '** inaccessible';
-                            source = '** inaccessible';
+                            owner = 'n/a';
+                            name = 'n/a';
                             break;
                         default:
                             owner = '** err';
-                            source = '** err';
+                            name = '** err';
                         }
 
                         const row = {
@@ -392,6 +399,9 @@ define([
                             source: {
                                 value: source
                             },
+                            name: {
+                                value: name
+                            },
                             description: {
                                 value: this.grokDescription(object)
                             },
@@ -399,7 +409,8 @@ define([
                                 workspaceId: workspaceId,
                                 objectId: objectId,
                                 version: version,
-                                ref: [workspaceId, objectId, version].join('/')
+                                ref: [workspaceId, objectId, version].join('/'),
+                                workspaceType: workspace.type
                             }
                         };
                         this.searchResults.push(row);
@@ -449,7 +460,7 @@ define([
             }),
             gen.component({
                 name: ResultsAreaComponent.name(),
-                params: ['searchResults', 'searching', 'pageSize', 'searchState']
+                params: ['searchResults', 'searching', 'pageSize', 'searchState', 'showOverlay']
             }),
             gen.component({
                 name: OverlayPanelComponent.name(),

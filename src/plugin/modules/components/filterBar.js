@@ -75,24 +75,24 @@ define([
                     // justifyContent: 'flex-end'
                 }
             }, [
-                div({
-                    style: {
-                        // flex: 'auto',
-                        display: 'flex',
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'flex-end'
-                    },
-                    dataBind: {
-                        component: {
-                            name: AccessControlComponent.quotedName(),
-                            params: {
-                                withPrivateData: 'withPrivateData',
-                                withPublicData: 'withPublicData',
-                            }
-                        }
-                    }
-                }),
+                // div({
+                //     style: {
+                //         // flex: 'auto',
+                //         display: 'flex',
+                //         flexDirection: 'row',
+                //         alignItems: 'center',
+                //         justifyContent: 'flex-end'
+                //     },
+                //     dataBind: {
+                //         component: {
+                //             name: AccessControlComponent.quotedName(),
+                //             params: {
+                //                 withPrivateData: 'withPrivateData',
+                //                 withPublicData: 'withPublicData',
+                //             }
+                //         }
+                //     }
+                // }),
                 div({
                     style: {
                         // flex: 'auto',

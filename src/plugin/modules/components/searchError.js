@@ -20,6 +20,7 @@ define([
     class ViewModel {
         constructor(params, context) {
             this.error = params.error;
+            this.onClose = params.onClose;
 
             this.title = 'Search Error';
 
@@ -59,12 +60,14 @@ define([
                 }
                 return this.error().stackTrace;
             });
-            this.parent = context.$parent;
+            // console.log('context?', context);
+            // this.parent = context.$parent;
         }
 
-        onClose() {
-            this.parent.bus.send('close');
-        }
+        // onClose() {
+
+        //     // this.parent.bus.send('close');
+        // }
     }
 
     function buildErrorViewer() {
@@ -100,7 +103,7 @@ define([
             body: buildErrorViewer(),
             buttons: [
                 {
-                    label: 'close',
+                    label: 'Close',
                     onClick: 'onClose'
                 }
             ]
