@@ -16,17 +16,60 @@ define([
             });
         }
 
-        searchSummary() {
+        searchSummary({query, start, count, withUserData, withReferenceData, types}) {
+            var param = {
+                match_filter: {
+                    full_text_in_all: query,
+                    exclude_subobjects: 1
+                },
+                pagination: {
+                    start: start,
+                    count: count
+                },
+                post_processing: {
+                    ids_only: 0,
+                    skip_info: 0,
+                    skip_keys: 0,
+                    skip_data: 0,
+                    include_highlight: 1,
+                    add_narrative_info: 1
+                },
+                access_filter: {
+                    with_private: 0,
+                    with_public: 1
+                }
+            };
 
+            if (withReferenceData) {
+                if (withUserData) {
+                    // nothing to do, put no source tags restrictions at all
+                } else {
+                    // only refdata.
+                    param.match_filter.source_tags = ['refdata'];
+                    param.match_filter.source_tags_blacklist = 0;
+                }
+            } else {
+                if (withUserData) {
+                    // only narrativedata
+                    param.match_filter.source_tags = ['refdata'];
+                    param.match_filter.source_tags_blacklist = 1;
+                } else {
+                    // should never occur
+                    throw new Error('Must select one or both of "refdata" or/and "narrativedata"');
+                }
+            }
+
+            if (types) {
+                param.object_types = types;
+            }
+
+            return this.searchAPI.callFunc('search_types', [param])
+                .spread(function (result) {
+                    return result;
+                });
         }
 
-        search({query, start, count, withPrivateData, withPublicData, withUserData, withReferenceData, types, sorting}) {
-            // var query = arg.query;
-            // var start = arg.page * arg.pageSize;
-            // var count = arg.pageSize;
-            // var withPrivate = arg.withPrivateData ?  1 : 0;
-            // var withPublic = arg.withPublicData ? 1 : 0;
-
+        search({query, start, count, withUserData, withReferenceData, types, sorting}) {
             const sortingRules = sorting.map(({propertyKey, direction, isObject}) => {
                 return {
                     property: propertyKey,
@@ -52,24 +95,11 @@ define([
                     include_highlight: 1,
                     add_narrative_info: 1
                 },
-                // access_filter: {
-                //     with_private: withPrivateData ? 1 : 0,
-                //     with_public: withPublicData ? 1 : 0
-                // },
                 access_filter: {
                     with_private: 0,
                     with_public: 1
                 },
                 sorting_rules: sortingRules
-                // sorting_rules: [{
-                //     is_object_property: 0,
-                //     property: 'timestamp',
-                //     ascending: 0
-                // }, {
-                //     is_object_property: 0,
-                //     property: 'type',
-                //     ascending: 1
-                // }]
             };
 
             if (withReferenceData) {

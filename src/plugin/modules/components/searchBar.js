@@ -145,12 +145,7 @@ define([
         },
         searchArea: {
             css: {
-                flex: '2 1 0px'
-            }
-        },
-        buttonArea: {
-            css: {
-                flex: '1 1 0px',
+                flex: '1 1 0px'
             }
         },
         activeFilterInput: {
@@ -324,24 +319,13 @@ define([
         ]));
     }
 
-    function buildButtonBar() {
-        return div({
-            class: 'btn-toolbar pull-right'
-        }, [
-
-        ]);
-    }
-
     function template() {
         return div({
             class: styles.classes.component
         }, [
             div({
                 class: styles.classes.searchArea
-            }, buildSearchBar()),
-            div({
-                class: styles.classes.buttonArea
-            }, buildButtonBar())
+            }, buildSearchBar())
         ]);
     }
 

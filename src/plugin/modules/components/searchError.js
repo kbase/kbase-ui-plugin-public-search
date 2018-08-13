@@ -19,8 +19,11 @@ define([
 
     class ViewModel {
         constructor(params, context) {
-            this.error = params.error;
-            this.onClose = params.onClose;
+
+            const {error, onClose} = params;
+
+            this.error = error;
+            this.onClose = onClose;
 
             this.title = 'Search Error';
 

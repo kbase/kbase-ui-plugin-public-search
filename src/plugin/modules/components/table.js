@@ -46,9 +46,11 @@ define([
         }
 
         doSort(data) {
+
             const currentSortColumn = this.table.sort.column();
             const currentSortDirection = this.table.sort.direction();
-            console.log('sorting?', data, currentSortColumn, currentSortDirection);
+            // console.log('do sort', currentSortColumn, currentSortDirection, data.name);
+            // console.log('sorting?', data, currentSortColumn, currentSortDirection);
             if (currentSortColumn === data.name) {
                 if (currentSortDirection === 'asc') {
                     this.table.sort.direction('desc');
@@ -60,36 +62,101 @@ define([
                 this.table.sort.direction(currentSortDirection);
             }
         }
+
+        calcColumnStyle(column) {
+            const style = {
+                width: column.width + '%'
+            };
+            if (column.cellStyle) {
+                Object.assign(style, column.cellStyle);
+            } else {
+                Object.assign(style, {
+                    padding: '4px'
+                });
+            }
+            return style;
+        }
+    }
+
+    function buildRow() {
+        return div({
+            dataBind: {
+                with: 'row',
+                style: 'table.rowStyle'
+            }
+        }, gen.foreachAs('$component.table.columns', 'column',
+            // make the implicit context the row again.
+            gen.if('column.component',
+                // use the column specified for the column, using the
+                // specified params (relative to row) as input.
+                div({
+                    style: {
+                        display: 'inline-block',
+                        verticalAlign: 'top'
+                    },
+                    dataBind: {
+                        style: '$component.calcColumnStyle(column)'
+                    }
+                }, span({
+                    dataBind: {
+                        component: {
+                            name: 'column.component.name',
+                            // hopefully params are relative to the row context...
+                            params: 'eval("(" + column.component.params + ")")'
+                        }
+                    }
+                })),
+                // else use the row's column value directly
+                div({
+                    style: {
+                        display: 'inline-block',
+                        verticalAlign: 'top'
+                    },
+                    dataBind: {
+                        style: '$component.calcColumnStyle(column)'
+                    }
+                }, [
+                    gen.if('column.format',
+                        span({
+                            dataBind: {
+                                typedText: {
+                                    value: 'row[column.name]',
+                                    type: 'column.format.type',
+                                    format: 'column.format.format'
+                                }
+                            }
+                        }),
+                        span({
+                            dataBind: {
+                                text: 'row[column.name]'
+                            }
+                        }))
+                ]
+                ))));
     }
 
     function buildTable() {
         const header = div({
-            dataBind: {
-                style: {
-                    //'overflow-y': 'table.style.maxHeight ? "scroll" : null'
-
-                }
-            },
             style: {
                 '-moz-user-select': 'none',
                 '-webkit-user-select': 'none',
                 '-ms-user-select': 'none',
-                userSelect: 'none',
-                // overflowY: 'auto'
+                userSelect: 'none'
             }
         }, gen.foreach('table.columns',
             div({
                 style: {
                     display: 'inline-block',
                     fontStyle: 'italic',
-                    padding: '4px',
+                    // padding: '4px',
                     cursor: 'pointer',
                     userSelect: 'none'
                 },
                 dataBind: {
-                    style:  {
-                        width: 'width + "%"'
-                    },
+                    style: '$component.calcColumnStyle($data)',
+                    // style:  {
+                    //     width: 'width + "%"'
+                    // },
                     click: 'function (d, e) {$component.doSort.call($component,d,e);}'
                 }
             }, [
@@ -120,55 +187,7 @@ define([
         // we loop across all the columns; remember, this is invoked
         // within the row, so we need to reach back up to get the
         // row context.
-        const row = div({
-            dataBind: {
-                with: 'row'
-            },
-            style: {
-                borderBottom: '1px silver solid'
-            }
-        }, gen.foreachAs('$component.table.columns', 'column',
-            // make the implicit context the row again.
-            gen.if('column.component',
-                // use the column specified for the column, using the
-                // specified params (relative to row) as input.
-                div({
-                    style: {
-                        display: 'inline-block',
-                        padding: '4px',
-                        verticalAlign: 'top'
-                    },
-                    dataBind: {
-                        style:  {
-                            width: 'column.width + "%"'
-                        }
-                    }
-                }, span({
-                    dataBind: {
-                        component: {
-                            name: 'column.component.name',
-                            // hopefully params are relative to the row context...
-                            params: 'eval("(" + column.component.params + ")")'
-                        }
-                    }
-                })),
-                // else use the row's column value directly
-                div({
-                    style: {
-                        display: 'inline-block',
-                        padding: '4px',
-                        verticalAlign: 'top'
-                    },
-                    dataBind: {
-                        style:  {
-                            width: 'column.width + "%"'
-                        }
-                    }
-                }, span({
-                    dataBind: {
-                        text: 'row[column.name]'
-                    }
-                })))));
+        const row = buildRow();
 
         return div({
             dataBind: {
@@ -184,17 +203,14 @@ define([
         }, [
             header,
             div({
-                dataBind: {
-                    style: {
-                        // maxHeight: 'table.style.maxHeight || null',
-                        // overflowY: 'table.style.maxHeight ? "scroll" : null'
-                    }
-                },
                 style: {
                     flex: '1 1 0px',
                     overflowY: 'auto'
                 }
-            }, gen.foreachAs('rows.sort((a,b) => {return $component.sortTable.call($component,a,b)})', 'row', row))
+            }, gen.foreachAs(
+                'rows.sorted((a,b) => {return $component.sortTable.call($component,a,b)})',
+                'row',
+                row))
         ]);
     }
 

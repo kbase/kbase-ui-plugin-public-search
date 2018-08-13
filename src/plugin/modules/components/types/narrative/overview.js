@@ -60,7 +60,7 @@ define([
                 ]
             }]])
                 .spread(([objectData]) => {
-                    console.log('taxon object data...', objectData);
+                    // console.log('taxon object data...', objectData);
                     this.scientificName(objectData.data.scientific_name);
                     this.rank(objectData.data.rank);
                     this.domain(objectData.data.domain);

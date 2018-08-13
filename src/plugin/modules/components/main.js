@@ -1,4 +1,5 @@
 define([
+    'bluebird',
     'knockout',
     'kb_knockout/registry',
     'kb_knockout/lib/generators',
@@ -10,8 +11,10 @@ define([
     './resultsArea',
     './navBar',
     './searchError',
+    './summary',
     'kb_knockout/components/overlayPanel'
 ], function (
+    Promise,
     ko,
     reg,
     gen,
@@ -23,6 +26,7 @@ define([
     ResultsAreaComponent,
     NavBarComponent,
     SearchErrorComponent,
+    SummaryComponent,
     OverlayPanelComponent
 ) {
     'use strict';
@@ -76,6 +80,7 @@ define([
             this.resultCount = ko.pureComputed(() => {
                 return this.searchResults().length;
             });
+            this.searchSummary = ko.observableArray();
 
             // TODO: not implemented yet
             this.summaryCount = null;
@@ -253,6 +258,7 @@ define([
             if (!query.input.searchInput || query.input.searchInput.trim().length === 0) {
                 this.searchState('none');
                 this.searchResults.removeAll();
+                this.searchSummary.removeAll();
                 this.totalCount(0);
                 this.realTotalCount(0);
                 // this.totalPages(0);
@@ -293,19 +299,21 @@ define([
                 types: dataTypes,
                 start: start,
                 count: count,
-                withPrivateData: query.input.withPrivateData,
-                withPublicData: query.input.withPublicData,
                 withUserData: query.input.withUserData,
                 withReferenceData: query.input.withReferenceData,
                 sorting: query.sorting.sortSpec
             };
             this.searching(true);
             this.searchState('searching');
-            this.model.search(param)
-                .then((result) => {
-                    // console.log('result!', result);
+            Promise.all([
+                this.model.search(param),
+                this.model.searchSummary(param)
+            ])
+                .spread((result, summaryResult) => {
+                    // console.log('result!', summaryResult);
                     // The results
                     this.searchResults.removeAll();
+                    this.searchSummary.removeAll();
                     const len = result.objects.length;
                     if (len === 0) {
                         this.searchState('notfound');
@@ -315,6 +323,25 @@ define([
                         this.page(null);
                         return;
                     }
+
+                    // The search types summary
+                    this.searchSummary(Object.entries(summaryResult.type_to_count)
+                        .map(([type, count]) => {
+                            return {
+                                type: type,
+                                count: count
+                            };
+                        })
+                        .sort((a, b) => {
+                            if (a.count < b.count) {
+                                return 1;
+                            } else if (a.count > b.count) {
+                                return -1;
+                            } else {
+                                return 0;
+                            }
+                        }));
+
                     // The workspace summary
                     const workspaces = Object.keys(result.access_group_narrative_info).reduce((workspaces, wsid) => {
                         const narrative_info = result.access_group_narrative_info[wsid];
@@ -418,7 +445,11 @@ define([
                     this.searchState('success');
                 })
                 .catch((error) => {
-                    // console.error('boo', error);
+                    this.searchResults.removeAll();
+                    this.searchSummary.removeAll();
+                    this.totalCount(0);
+                    this.realTotalCount(0);
+                    this.page(null);
                     this.searchState('error');
                     this.showError(error);
                 })
@@ -431,12 +462,35 @@ define([
     const styles = html.makeStyles({
         component: {
             css: {
-                // border: '1px red solid',
                 margin: '10px',
                 padding: '10px',
                 flex: '1 1 0px',
                 display: 'flex',
                 flexDirection: 'column'
+            }
+        },
+        header: {
+            css: {
+                // flex: '1 1 0px',
+                display: 'flex',
+                flexDirection: 'row'
+            }
+        },
+        headerCol1: {
+            css: {
+                flex: '2 1 0px',
+                display: 'flex',
+                flexDirection: 'column'
+            }
+        },
+        headerCol2: {
+            css: {
+                flex: '1 1 0px',
+                display: 'flex',
+                flexDirection: 'column',
+                border: '1px solid rgba(200, 200, 200, 1)',
+                margin: '0 0 4px 4px',
+                padding: '4px'
             }
         }
     });
@@ -445,19 +499,33 @@ define([
         return div({
             class: styles.classes.component
         }, [
-            gen.component({
-                name: SearchBarComponent.name(),
-                params: ['searchInput', 'forceSearch', 'searching']
-            }),
-            gen.component({
-                name: FilterBarComponent.name(),
-                params: ['withPrivateData', 'withPublicData', 'dataTypes', 'withUserData', 'withReferenceData']
-            }),
-            gen.component({
-                name: NavBarComponent.name(),
-                params: ['page', 'totalPages', 'summaryCount', 'resultCount',
-                    'totalCount', 'realTotalCount', 'searching', 'searchState']
-            }),
+            div({
+                class: styles.classes.header
+            }, [
+                div({
+                    class: styles.classes.headerCol1
+                }, [
+                    gen.component({
+                        name: SearchBarComponent.name(),
+                        params: ['searchInput', 'forceSearch', 'searching']
+                    }),
+                    gen.component({
+                        name: FilterBarComponent.name(),
+                        params: ['withPrivateData', 'withPublicData', 'dataTypes', 'withUserData', 'withReferenceData']
+                    }),
+                    gen.component({
+                        name: NavBarComponent.name(),
+                        params: ['page', 'totalPages', 'summaryCount', 'resultCount',
+                            'totalCount', 'realTotalCount', 'searching', 'searchState']
+                    })
+                ]),
+                div({
+                    class: styles.classes.headerCol2
+                }, gen.component({
+                    name: SummaryComponent.name(),
+                    params: ['searchSummary']
+                }))
+            ]),
             gen.component({
                 name: ResultsAreaComponent.name(),
                 params: ['searchResults', 'searching', 'pageSize', 'searchState', 'showOverlay']

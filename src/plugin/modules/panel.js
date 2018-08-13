@@ -54,7 +54,7 @@ define([
         }
 
         start() {
-            this.runtime.send('ui', 'setTitle', 'Public Search');
+            this.runtime.send('ui', 'setTitle', 'Search KBase Public Data');
             ko.applyBindings(this.vm, this.container);
         }
 

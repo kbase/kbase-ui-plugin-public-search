@@ -85,9 +85,14 @@ define([
                     p('Sorry, nothing was found with this search.'),
                     hr({style: {width: '50%'}}),
                     p('Try reducing the number of search terms and/or filters.'),
+                ]),
+                loading: div([
+                    html.loading('Running your search...')
+                ]),
+                error: div([
+                    'Error running your search!'
                 ])
             };
-
         }
     }
 

@@ -13,7 +13,6 @@ define([
 
     const t = html.tag,
         div = t('div'),
-        a = t('a'),
         span = t('span'),
         table = t('table'),
         tbody = t('tbody'),

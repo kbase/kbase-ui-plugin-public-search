@@ -83,41 +83,16 @@ define([
 
             this.table = {
                 style: {
-                    // maxHeight: '20em',
                     backgroundColor: '#FFF'
+                },
+                rowStyle: {
+                    borderBottom: '1px silver solid'
                 },
                 sort: {
                     column: ko.observable('year'),
                     direction: ko.observable('desc')
                 },
                 columns: [
-                    // {
-                    //     name: 'realname',
-                    //     label: 'Real name',
-                    //     width: 45,
-                    //     component: {
-                    //         name: UserLinkComponent.name(),
-                    //         // note params interpreted in the context
-                    //         // of the row. So, username, realname are properties on the
-                    //         // row, but true is the true value.
-                    //         // params: {
-                    //         //     username: 'username',
-                    //         //     realname: 'realname',
-                    //         //     newWindow: 'true'
-                    //         // }
-                    //         params: '{username: username, realname: realname, newWindow: true}'
-                    //     },
-                    //     sort: {
-                    //         comparator: (a, b) => {
-                    //             if (a < b) {
-                    //                 return -1;
-                    //             } else if (a > b) {
-                    //                 return 1;
-                    //             }
-                    //             return 0;
-                    //         }
-                    //     }
-                    // },
                     {
                         name: 'title',
                         label: 'Title',
