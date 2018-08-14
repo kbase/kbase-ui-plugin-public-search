@@ -16,23 +16,11 @@ define([
             });
         }
 
-        searchSummary({query, start, count, withUserData, withReferenceData, types}) {
+        searchSummary({query, withUserData, withReferenceData}) {
             var param = {
                 match_filter: {
                     full_text_in_all: query,
                     exclude_subobjects: 1
-                },
-                pagination: {
-                    start: start,
-                    count: count
-                },
-                post_processing: {
-                    ids_only: 0,
-                    skip_info: 0,
-                    skip_keys: 0,
-                    skip_data: 0,
-                    include_highlight: 1,
-                    add_narrative_info: 1
                 },
                 access_filter: {
                     with_private: 0,
@@ -57,10 +45,6 @@ define([
                     // should never occur
                     throw new Error('Must select one or both of "refdata" or/and "narrativedata"');
                 }
-            }
-
-            if (types) {
-                param.object_types = types;
             }
 
             return this.searchAPI.callFunc('search_types', [param])

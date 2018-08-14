@@ -287,6 +287,7 @@ define([
                 style: {
                     fontSize: '100%',
                 },
+                title: 'Click me to start a search for KBase Data',
                 dataBind: {
                     css: {
                         'fa-search': '!$component.searching()',
@@ -297,6 +298,7 @@ define([
             div({
                 class: 'input-group-addon ' + styles.classes.addonButton,
                 dataType: 'history-toggle-button',
+                title: 'Click me to see a list of up to 10 of your most recently used searches',
                 dataBind: {
                     click: 'doToggleHistory',
                     style: {
@@ -309,6 +311,7 @@ define([
             })),
             div({
                 class: 'input-group-addon ' + styles.classes.addonButton,
+                title: 'Click me to clear the search box with one easy action',
                 dataBind: {
                     click: 'searchControlValue() ? doClearInput : null',
                     css: 'searchControlValue() ? "' + styles.classes.addonButton + '" : "' + styles.classes.addonButtonDisabled + '"'

@@ -6,7 +6,7 @@ define([
     'kb_common/html',
     './accessControl',
     './dataSource',
-    './dataTypesControl'
+    './controls/dataTypesControl'
 ], function (
     ko,
     reg,

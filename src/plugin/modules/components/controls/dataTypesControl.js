@@ -21,12 +21,13 @@ define([
         button = t('button');
 
     class ViewModel extends ViewModelBase {
-        constructor(params) {
+        constructor(params, context) {
             super(params);
 
             const {dataTypes} = params;
-
             this.dataTypes = dataTypes;
+
+            this.supportedDataTypes = context.$root.supportedDataTypes;
 
             this.selectedDataTypes = ko.observableArray();
             this.selectedDataType = ko.observable();
@@ -44,23 +45,14 @@ define([
                     value: '_select_',
                     label: this.selectionLabel,
                     enabled: ko.observable(true)
-                },
-                {
-                    value: 'genome',
-                    label: 'Genome',
-                    enabled: ko.observable(true)
-                },
-                {
-                    value: 'taxon',
-                    label: 'Taxon',
-                    enabled: ko.observable(true)
-                },
-                {
-                    value: 'narrative',
-                    label: 'Narrative',
-                    enabled: ko.observable(true)
                 }
-            ];
+            ].concat(this.supportedDataTypes.map((type) => {
+                return {
+                    value: type.value,
+                    label: type.label,
+                    enabled: ko.observable(true)
+                };
+            }));
 
             this.subscribe(this.selectedDataTypes, (newValue) => {
                 if (newValue.length === 0) {
@@ -281,7 +273,7 @@ define([
 
     function component() {
         return {
-            viewModel: ViewModel,
+            viewModelWithContext: ViewModel,
             template: template(),
             stylesheet: styles.sheet
         };

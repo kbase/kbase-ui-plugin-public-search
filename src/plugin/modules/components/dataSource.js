@@ -78,7 +78,7 @@ define([
         }, [
             span({
                 class: styles.classes.fieldGroupLabel
-            }, 'Data source:'),
+            }, 'Search In:'),
             span({
                 class: ['form-control', styles.classes.checkboxControl],
                 title: 'Search over data created by users in Narratives',
@@ -95,7 +95,7 @@ define([
                         enable: 'withReferenceData'
                     }
                 }),
-                ' User'
+                ' Narratives'
             ])),
             span({
                 class: ['form-control', styles.classes.checkboxControl],
@@ -113,7 +113,7 @@ define([
                         enable: 'withUserData'
                     }
                 }),
-                ' Reference'
+                ' Reference Data'
             ]))
         ]);
     }

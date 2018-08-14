@@ -16,6 +16,16 @@ define([
     class ViewModel {
         constructor({runtime}) {
             this.runtime = runtime;
+            this.supportedDataTypes = [
+                {
+                    value: 'genome',
+                    label: 'Genome',
+                },
+                {
+                    value: 'taxon',
+                    label: 'Taxon',
+                }
+            ];
             // Primary search inputs
             // this.searchInput = ko.observable();
             //     this.forceSearch = ko.observable();

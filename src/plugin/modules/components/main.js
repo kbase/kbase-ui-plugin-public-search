@@ -48,7 +48,8 @@ define([
         constructor(params, context) {
             super(params);
 
-            this.runtime = context['$root'].runtime;
+            this.runtime = context.$root.runtime;
+            this.supportedDataTypes = context.$root.supportedDataTypes;
 
             // Primary search inputs
             this.searchInput = ko.observable();
@@ -93,10 +94,16 @@ define([
 
             this.searchQueryInput = ko.pureComputed(() => {
                 this.page(null);
+                let dataTypes = this.dataTypes();
+                if (!dataTypes || dataTypes.length === 0) {
+                    dataTypes = this.supportedDataTypes.map((type) => {
+                        return type.value;
+                    });
+                }
                 return {
                     searchInput: this.searchInput(),
                     forceSearch: this.forceSearch(),
-                    dataTypes: this.dataTypes(),
+                    dataTypes: dataTypes,
                     dataSources: this.dataSources(),
                     withPrivateData: this.withPrivateData(),
                     withPublicData: this.withPublicData(),
@@ -294,20 +301,23 @@ define([
                 dataTypes = query.input.dataTypes;
             }
 
-            const param = {
-                query: query.input.searchInput,
-                types: dataTypes,
-                start: start,
-                count: count,
-                withUserData: query.input.withUserData,
-                withReferenceData: query.input.withReferenceData,
-                sorting: query.sorting.sortSpec
-            };
             this.searching(true);
             this.searchState('searching');
             Promise.all([
-                this.model.search(param),
-                this.model.searchSummary(param)
+                this.model.search({
+                    query: query.input.searchInput,
+                    types: dataTypes,
+                    start: start,
+                    count: count,
+                    withUserData: query.input.withUserData,
+                    withReferenceData: query.input.withReferenceData,
+                    sorting: query.sorting.sortSpec
+                }),
+                this.model.searchSummary({
+                    query: query.input.searchInput,
+                    withUserData: query.input.withUserData,
+                    withReferenceData: query.input.withReferenceData
+                })
             ])
                 .spread((result, summaryResult) => {
                     // console.log('result!', summaryResult);
@@ -324,8 +334,25 @@ define([
                         return;
                     }
 
+                    if (result.total > this.maxResultCount) {
+                        this.totalCount(this.maxResultCount);
+                        this.realTotalCount(result.total);
+                    } else {
+                        this.totalCount(result.total);
+                        this.realTotalCount(result.total);
+                    }
+
                     // The search types summary
                     this.searchSummary(Object.entries(summaryResult.type_to_count)
+                        .filter(([type,]) => {
+                            if (!dataTypes) {
+                                return true;
+                            }
+                            if (dataTypes.length === 0) {
+                                return true;
+                            }
+                            return (dataTypes.includes(type.toLowerCase()));
+                        })
                         .map(([type, count]) => {
                             return {
                                 type: type,
@@ -365,14 +392,6 @@ define([
                         }
                         return workspaces;
                     }, {});
-
-                    if (result.total > this.maxResultCount) {
-                        this.totalCount(this.maxResultCount);
-                        this.realTotalCount(result.total);
-                    } else {
-                        this.totalCount(result.total);
-                        this.realTotalCount(result.total);
-                    }
 
                     // Calculate page stats
                     // const totalPages = Math.ceil(this.totalCount()/query.paging.pageSize);
@@ -488,7 +507,7 @@ define([
                 flex: '1 1 0px',
                 display: 'flex',
                 flexDirection: 'column',
-                border: '1px solid rgba(200, 200, 200, 1)',
+                // border: '1px solid rgba(200, 200, 200, 1)',
                 margin: '0 0 4px 4px',
                 padding: '4px'
             }
@@ -523,7 +542,7 @@ define([
                     class: styles.classes.headerCol2
                 }, gen.component({
                     name: SummaryComponent.name(),
-                    params: ['searchSummary']
+                    params: ['searchSummary', 'searchState', 'totalCount', 'realTotalCount']
                 }))
             ]),
             gen.component({
