@@ -18,12 +18,24 @@ define([
             this.runtime = runtime;
             this.supportedDataTypes = [
                 {
+                    value: 'fbamodel',
+                    label: 'FBA Model',
+                },
+                {
                     value: 'genome',
                     label: 'Genome',
                 },
                 {
+                    value: 'pangenome',
+                    label: 'Pangenome',
+                },
+                {
                     value: 'taxon',
                     label: 'Taxon',
+                },
+                {
+                    value: 'tree',
+                    label: 'Species Tree',
                 }
             ];
             // Primary search inputs
