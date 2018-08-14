@@ -180,7 +180,7 @@ define([
                 right: '0',
                 bottom: '0',
                 left: '0',
-                zIndex: '1000',
+                zIndex: '1',
                 display: 'flex',
                 flexDirection: 'column'
             },
@@ -202,7 +202,7 @@ define([
                     right: '0',
                     bottom: '0',
                     left: '0',
-                    zIndex: '1001',
+                    zIndex: '2',
                     // background: 'linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,1))'
                 },
                 // dataBind: {
