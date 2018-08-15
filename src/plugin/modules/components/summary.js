@@ -43,7 +43,7 @@ define([
                 padding: '4px 20px',
                 // overflow: 'hidden',
                 // display: 'relative',
-                margin: 'auto',
+                margin: '0 auto',
                 width: '15em',
                 zIndex: '1000',
                 backgroundColor: '#FFF',

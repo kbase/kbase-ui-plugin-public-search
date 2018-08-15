@@ -163,7 +163,7 @@ define([
         },
         {
             name: 'source',
-            label: 'Container',
+            label: 'Data Source',
             type: 'string',
             // sort: {
             //     keyName: 'source',
@@ -177,7 +177,7 @@ define([
         },
         {
             name: 'name',
-            label: 'Container name',
+            label: 'Source Title',
             type: 'string',
             // sort: {
             //     keyName: 'source',

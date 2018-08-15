@@ -12,6 +12,7 @@ define([
     './navBar',
     './searchError',
     './summary',
+    './help',
     'kb_knockout/components/overlayPanel'
 ], function (
     Promise,
@@ -27,6 +28,7 @@ define([
     NavBarComponent,
     SearchErrorComponent,
     SummaryComponent,
+    HelpComponent,
     OverlayPanelComponent
 ) {
     'use strict';
@@ -180,6 +182,17 @@ define([
             });
 
 
+            // Help.
+            this.parentBus.on('help', () => {
+                this.showOverlay({
+                    name: HelpComponent.name(),
+                    viewModel: {}
+                });
+            });
+
+            this.bus.on('showError', () => {
+                this.showError();
+            });
 
             // this.sortSpec = ko.observableArray();
             // this.model.columns.forEach((column) => {
@@ -196,8 +209,10 @@ define([
             // ]);
         }
 
-        showError(err) {
-            var stackTrace = [];
+        showError() {
+            const err = this.error();
+            let stackTrace = [];
+
             if (err.stack) {
                 stackTrace = err.stack.split('\n');
             }
@@ -225,10 +240,6 @@ define([
             this.showOverlay({
                 name: SearchErrorComponent.name(),
                 type: 'error',
-                params: {
-                    type: '"error"',
-                    hostVm: 'search'
-                },
                 viewModel: {
                     error: this.error
                 }
@@ -470,7 +481,8 @@ define([
                     this.realTotalCount(0);
                     this.page(null);
                     this.searchState('error');
-                    this.showError(error);
+                    this.error(error);
+                    // this.showError();
                 })
                 .finally(() => {
                     this.searching(false);
@@ -481,8 +493,7 @@ define([
     const styles = html.makeStyles({
         component: {
             css: {
-                margin: '10px',
-                padding: '10px',
+                margin: '0 10px',
                 flex: '1 1 0px',
                 display: 'flex',
                 flexDirection: 'column'
@@ -547,7 +558,7 @@ define([
             ]),
             gen.component({
                 name: ResultsAreaComponent.name(),
-                params: ['searchResults', 'searching', 'pageSize', 'searchState', 'showOverlay']
+                params: ['bus', 'searchResults', 'searching', 'pageSize', 'searchState', 'showOverlay']
             }),
             gen.component({
                 name: OverlayPanelComponent.name(),

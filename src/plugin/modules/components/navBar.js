@@ -263,6 +263,17 @@ define([
                                     format: '"0,0"'
                                 }
                             }
+                        }), ' ',
+                        span({
+                            class: 'fa fa-question-circle',
+                            style: {
+                                color: 'gray'
+                            },
+                            title: [
+                                'The search service is limited to finding at most 10,000 items. ',
+                                'Any results for the current sort order beyond 10,000 items will be omitted. ',
+                                'If this is a problem, you should restrict your search further.'
+                            ].join('\n')
                         }),
                         ')'
                     ]))

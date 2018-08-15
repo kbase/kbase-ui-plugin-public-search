@@ -1,5 +1,9 @@
 define([
+    'knockout',
+    'kb_knockout/lib/viewModelBase'
 ], function (
+    ko,
+    ViewModelBase
 ) {
     'use strict';
 
@@ -13,8 +17,10 @@ define([
     //     }
     // }
 
-    class ViewModel {
-        constructor({runtime}) {
+    class ViewModel extends ViewModelBase {
+        constructor(params) {
+            super(params);
+            const {runtime} = params;
             this.runtime = runtime;
             this.supportedDataTypes = [
                 {
@@ -38,17 +44,6 @@ define([
                     label: 'Species Tree',
                 }
             ];
-            // Primary search inputs
-            // this.searchInput = ko.observable();
-            //     this.forceSearch = ko.observable();
-            //     this.types = ko.observableArray();
-            //     this.dataSources = ko.observableArray();
-            //     this.firstItem = ko.observable();
-            //     this.pageSize = ko.observable();
-
-            //     // Search state
-            //     this.searching = ko.observable();
-            //     this.error = ko.observable();
         }
     }
 

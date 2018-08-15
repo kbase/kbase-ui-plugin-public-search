@@ -230,7 +230,7 @@ define([
         }, [
             label({
                 class: styles.classes.fieldGroupLabel
-            }, 'Data Type:'),
+            }, 'Include Data Types:'),
             select({
                 dataBind: {
                     value: 'dataTypeInput',

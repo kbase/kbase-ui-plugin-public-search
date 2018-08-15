@@ -1,12 +1,14 @@
 define([
     'knockout',
     'kb_knockout/registry',
+    'kb_knockout/lib/viewModelBase',
     'kb_common/html',
     '../lib/ui',
     'kb_knockout/components/error'
 ], function (
     ko,
     reg,
+    ViewModelBase,
     html,
     ui,
     ErrorComponent
@@ -17,13 +19,15 @@ define([
         div = t('div'),
         span = t('span');
 
-    class ViewModel {
+    class ViewModel extends ViewModelBase {
         constructor(params, context) {
-
-            const {error, onClose} = params;
+            super(params);
+            const {error} = params;
 
             this.error = error;
-            this.onClose = onClose;
+
+            // The parent will always be the overlay.
+            this.parent = context.$parent;
 
             this.title = 'Search Error';
 
@@ -63,14 +67,11 @@ define([
                 }
                 return this.error().stackTrace;
             });
-            // console.log('context?', context);
-            // this.parent = context.$parent;
         }
 
-        // onClose() {
-
-        //     // this.parent.bus.send('close');
-        // }
+        onClose() {
+            this.parent.bus.send('close');
+        }
     }
 
     function buildErrorViewer() {
@@ -107,7 +108,8 @@ define([
             buttons: [
                 {
                     label: 'Close',
-                    onClick: 'onClose'
+                    // nb: established by the overlayPanel
+                    onClick: 'function(){bus.send("close")}'
                 }
             ]
         });

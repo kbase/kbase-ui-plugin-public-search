@@ -6,7 +6,8 @@ define([
     'kb_common/html',
     '../lib/model',
     'kb_knockout/components/table',
-    './inspector'
+    './inspector',
+    './resultsError'
 ], function (
     ko,
     reg,
@@ -15,7 +16,8 @@ define([
     html,
     model,
     TableComponent,
-    InspectorComponent
+    InspectorComponent,
+    ResultsErrorComponent
 ) {
     'use strict';
 
@@ -27,7 +29,6 @@ define([
     class ViewModel extends ViewModelBase {
         constructor(params) {
             super(params);
-
             const {searchResults, searching, pageSize, searchState, showOverlay} = params;
 
             this.searchResults = searchResults;
@@ -89,9 +90,12 @@ define([
                 loading: div([
                     html.loading('Running your search...')
                 ]),
-                error: div([
-                    'Error running your search!'
-                ])
+                error: {
+                    component: {
+                        name: ResultsErrorComponent.name(),
+                        params: {}
+                    }
+                }
             };
         }
     }
@@ -119,6 +123,7 @@ define([
                 component: {
                     name: TableComponent.quotedName(),
                     params: {
+                        link: 'bus',
                         table: 'table',
                         messages: 'messages'
                     }
