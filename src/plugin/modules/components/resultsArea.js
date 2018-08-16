@@ -93,7 +93,9 @@ define([
                 error: {
                     component: {
                         name: ResultsErrorComponent.name(),
-                        params: {}
+                        params: {
+                            link: 'bus'
+                        }
                     }
                 }
             };

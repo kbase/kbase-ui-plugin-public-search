@@ -45,7 +45,7 @@ define([
                     // this should propagate up, if all of the
                     // ancestor components are based on ViewModelBase
                     dataBind: {
-                        click: 'function() {bus.send("showError")}'
+                        click: 'function(){bus.send("showError")}'
                     }
                 }, 'Show Error')
             ])

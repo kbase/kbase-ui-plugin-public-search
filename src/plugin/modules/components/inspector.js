@@ -147,8 +147,9 @@ define([
                 component: {
                     name: SearchErrorComponent.quotedName(),
                     params: {
+                        link: 'bus',
                         error: 'error',
-                        onClose: 'function(){$component.onClose.call($component)}'
+                        onClose: 'function(){$component.bus.send("close")}'
                     }
                 }
             }
