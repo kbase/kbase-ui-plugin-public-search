@@ -53,6 +53,19 @@ define([
         doLastPage() {
             this.page(this.totalPages());
         }
+
+        showTruncatedResultsTooltip(data, ev) {
+            const tooltip = {
+                title: 'Truncated Results',
+                content: [
+                    'The search service is limited to accessing at most 10,000 items for a given query. ',
+                    'Any results beyond the 10,000th item, within the current query and sort order, will be omitted. ',
+                ],
+                left: ev.clientX,
+                top: ev.clientY
+            };
+            this.bus.send('show-tooltip', tooltip);
+        }
     }
 
     var styles = html.makeStyles({
@@ -266,14 +279,13 @@ define([
                         }), ' ',
                         span({
                             class: 'fa fa-question-circle',
+                            dataTooltipHook: 'truncatedText',
                             style: {
                                 color: 'gray'
                             },
-                            title: [
-                                'The search service is limited to finding at most 10,000 items. ',
-                                'Any results for the current sort order beyond 10,000 items will be omitted. ',
-                                'If this is a problem, you should restrict your search further.'
-                            ].join('\n')
+                            dataBind: {
+                                click: 'function(d,e){$component.showTruncatedResultsTooltip(d,e)}'
+                            }
                         }),
                         ')'
                     ]))

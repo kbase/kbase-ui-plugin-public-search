@@ -13,7 +13,9 @@ define([
     './searchError',
     './summary',
     './help',
-    'kb_knockout/components/overlayPanel'
+    './tooltipManager',
+    'kb_knockout/components/overlayPanel',
+    'kb_knockout/lib/nanoBus'
 ], function (
     Promise,
     ko,
@@ -29,7 +31,9 @@ define([
     SearchErrorComponent,
     SummaryComponent,
     HelpComponent,
-    OverlayPanelComponent
+    TooltipComponent,
+    OverlayPanelComponent,
+    NanoBus
 ) {
     'use strict';
 
@@ -194,19 +198,10 @@ define([
                 this.showError();
             });
 
-            // this.sortSpec = ko.observableArray();
-            // this.model.columns.forEach((column) => {
-            //     if (column.sort.active()) {
-
-            //     }
-            // });
-
-            // [
-            //     {
-            //         name: 'date',
-            //         ascending: false
-            //     }
-            // ]);
+            this.tooltipChannel = new NanoBus();
+            this.bus.on('show-tooltip', (tooltip) => {
+                this.tooltipChannel.send('add-tooltip', tooltip);
+            });
         }
 
         showError() {
@@ -545,7 +540,7 @@ define([
                     }),
                     gen.component({
                         name: NavBarComponent.name(),
-                        params: ['page', 'totalPages', 'summaryCount', 'resultCount',
+                        params: ['bus', 'page', 'totalPages', 'summaryCount', 'resultCount',
                             'totalCount', 'realTotalCount', 'searching', 'searchState']
                     })
                 ]),
@@ -565,6 +560,12 @@ define([
                 params: {
                     component: 'overlayComponent',
                     hostVm: '$data'
+                }
+            }),
+            gen.component({
+                name: TooltipComponent.name(),
+                params: {
+                    channel: 'tooltipChannel'
                 }
             })
         ]);
