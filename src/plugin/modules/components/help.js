@@ -6,7 +6,7 @@ define([
     'kb_knockout/components/help',
     'kb_knockout/lib/viewModelBase',
     '../lib/ui',
-    'yaml!./searchHelp.yml'
+    'yaml!./help.yml'
 ], function (
     ko,
     reg,
