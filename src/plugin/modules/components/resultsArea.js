@@ -29,7 +29,7 @@ define([
     class ViewModel extends ViewModelBase {
         constructor(params) {
             super(params);
-            const {searchResults, searching, pageSize, searchState, showOverlay} = params;
+            const {searchResults, searching, pageSize, searchState, showOverlay, errorMessage} = params;
 
             this.searchResults = searchResults;
             this.searching = searching;
@@ -41,6 +41,7 @@ define([
                 isLoading: searching,
                 pageSize: pageSize,
                 state: searchState,
+                errorMessage: errorMessage,
                 env: {
                     search: this.search
                 },
@@ -94,7 +95,8 @@ define([
                     component: {
                         name: ResultsErrorComponent.name(),
                         params: {
-                            link: 'bus'
+                            link: 'bus',
+                            message: 'errorMessage'
                         }
                     }
                 }

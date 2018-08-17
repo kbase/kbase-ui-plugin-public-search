@@ -81,6 +81,12 @@ define([
             this.searching = ko.observable();
             this.error = ko.observable();
             this.searchState = ko.observable('none');
+            this.errorMessage = ko.pureComputed(() => {
+                const error = this.error();
+                if (error) {
+                    return error.message;
+                }
+            });
 
             // And... search results.
             this.searchResults= ko.observableArray();
@@ -553,7 +559,7 @@ define([
             ]),
             gen.component({
                 name: ResultsAreaComponent.name(),
-                params: ['bus', 'searchResults', 'searching', 'pageSize', 'searchState', 'showOverlay']
+                params: ['bus', 'searchResults', 'searching', 'pageSize', 'searchState', 'showOverlay', 'errorMessage']
             }),
             gen.component({
                 name: OverlayPanelComponent.name(),

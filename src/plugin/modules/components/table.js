@@ -126,11 +126,17 @@ define([
                                 }
                             }
                         }),
-                        span({
-                            dataBind: {
-                                text: 'row[column.name]'
-                            }
-                        }))
+                        gen.if('column.html',
+                            span({
+                                dataBind: {
+                                    html: 'row[column.name]'
+                                }
+                            }),
+                            span({
+                                dataBind: {
+                                    text: 'row[column.name]'
+                                }
+                            })))
                 ]
                 ))));
     }

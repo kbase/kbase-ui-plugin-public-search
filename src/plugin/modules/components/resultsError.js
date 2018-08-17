@@ -16,14 +16,18 @@ define([
     const t = html.tag,
         div = t('div'),
         p = t('p'),
+        hr = t('hr'),
         button = t('button');
 
     class ViewModel extends ViewModelBase {
         constructor(params) {
             super(params);
+
+            const {table} = params;
+
+            this.errorMessage = table.errorMessage();
         }
     }
-
     function template() {
         return div({
             class: 'alert alert-danger',
@@ -33,7 +37,13 @@ define([
                 padding: '20px'
             }
         }, [
-            'Error running your search!',
+            p('Error running your search!'),
+            hr({style: {width: '50%'}}),
+            p({
+                dataBind: {
+                    text: 'errorMessage'
+                }
+            }),
             p({
                 style: {
                     marginTop: '10px',
