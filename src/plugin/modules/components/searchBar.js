@@ -275,7 +275,7 @@ define([
                                 padding: '8px',
                                 margin: '0px'
                             }
-                        }, 'no items in history yet - Search!')))),
+                        }, 'no items in history yet - it will be populated as you conduct searches!')))),
             ]),
             div({
                 class: 'input-group-addon ' + styles.classes.addonButton,
@@ -287,7 +287,7 @@ define([
                 style: {
                     fontSize: '100%',
                 },
-                title: 'Click me to start a search for KBase Data',
+                title: 'Click me to start or refresh a search for public data',
                 dataBind: {
                     css: {
                         'fa-search': '!$component.searching()',

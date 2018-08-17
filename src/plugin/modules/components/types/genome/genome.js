@@ -4,34 +4,26 @@ define([
     'kb_knockout/lib/generators',
     'kb_knockout/lib/viewModelBase',
     'kb_knockout/components/tabset',
-    'kb_knockout/lib/nanoBus',
     'kb_common/html',
-    '../../containerTypes/narrative',
-    '../../containerTypes/refdata',
-    '../../containerTypes/unknown',
-    '../dataType',
     '../wikipediaImage',
-    '../objectStats',
     './overview',
     './taxonomy',
-    './publications'
+    './publications',
+    '../container',
+    '../containerTab'
 ], function (
     ko,
     reg,
     gen,
     ViewModelBase,
     TabsetComponent,
-    NanoBus,
     html,
-    NarrativeComponent,
-    RefdataComponent,
-    UnknownComponent,
-    DataTypeComponent,
     WikipediaImageComponent,
-    ObjectStats,
     TabOverviewComponent,
     TaxonomyComponent,
-    PublicationsComponent
+    PublicationsComponent,
+    ContainerComponent,
+    ContainerTabComponent
 ) {
     'use strict';
 
@@ -75,16 +67,24 @@ define([
                         }
                     }
                 },
-                // {
-                //     tab: {
-                //         label: 'Provenance',
-                //         component: null
-                //     },
-                //     panel: {
-                //         component: null,
-                //         content: div('hi!')
-                //     }
-                // },
+                {
+                    tab: {
+                        component: {
+                            name: ContainerTabComponent.name(),
+                            params: {
+                                object: object
+                            }
+                        }
+                    },
+                    panel: {
+                        component: {
+                            name: ContainerComponent.name(),
+                            params: {
+                                object: object
+                            }
+                        }
+                    }
+                },
                 {
                     tab: {
                         label: 'Taxonomy',
@@ -124,28 +124,7 @@ define([
                     }
                 }
             ];
-
-            // this.tabsetBus.on('ready', )
         }
-
-        // getSummaryInfox() {
-        //     const api = this.runtime.service('rpc').makeClient({
-        //         module: 'GenomeAnnotationAPI',
-        //         timeout: 10000,
-        //         authorization: false
-        //     });
-        //     api.callFunc('get_genome_v1', [{
-        //         genomes: [{
-        //             ref: this.object().objectInfo.ref
-        //         }]
-        //     }])
-        //         .spread(({genomes}) => {
-        //             console.log('result', genomes);
-        //             const [genomeData] = genomes;
-        //             // see: https://github.com/kbase/genome_annotation_api/blob/e609b0c45c7d9462e3a33c7e5a7982fc4e0d5f46/KBaseGenomes.spec#L389
-        //             this.scientificName(genomeData.data.scientific_name);
-        //         });
-        // }
 
         getSummaryInfo() {
             const workspace = this.runtime.service('rpc').makeClient({
@@ -191,10 +170,8 @@ define([
                     classes: 'fa-question',
                     color: 'gray'
                 });
-
             }
         }
-
     }
 
     const styles = html.makeStyles({
@@ -221,23 +198,6 @@ define([
                 marginTop: '8px'
             }
         }
-        // tableRow: {
-        //     css: {
-
-        //     }
-        // },
-        // tableHeaderCell: {
-        //     css: {
-        //         fontWeight: 'bold',
-        //         textAlign: 'left',
-        //         padding: '4px'
-        //     }
-        // },
-        // tableDataCell: {
-        //     css: {
-        //         padding: '4px'
-        //     }
-        // }
     });
 
     function buildOverview() {
@@ -326,67 +286,11 @@ define([
                             }
                         })
                     ])
-                ]),
-                div([
-                    // gen.component({
-                    //     name: DataTypeComponent.name(),
-                    //     params: {
-                    //         typeID: 'object().objectInfo.type',
-                    //         name: 'object().objectInfo.typeName',
-                    //         module: 'object().objectInfo.typeModule',
-                    //         version: 'object().objectInfo.typeMajorVersion + "." + object().objectInfo.typeMajorVersion'
-                    //     }
-                    // }),
-                    // gen.component({
-                    //     name: ObjectStats.name(),
-                    //     params: {
-                    //         createdAt: 'object().firstObjectInfo.saveDate',
-                    //         modifiedAt: 'object().objectInfo.saveDate'
-                    //     }
-                    // }),
-                    gen.switch('object().workspaceType', [
-                        ['"narrative"',
-                            gen.component({
-                                name: NarrativeComponent.name(),
-                                params: {
-                                    name: 'object().workspaceInfo.metadata.narrative_nice_name',
-                                    owner: 'object().workspaceInfo.owner',
-                                    lastModifiedAt: 'object().workspaceInfo.modDate',
-                                    workspaceId: 'object().workspaceInfo.id',
-                                    objectId: 'object().objectInfo.id'
-                                }
-                            })],
-                        ['"refdata"',
-                            gen.component({
-                                name: RefdataComponent.name(),
-                                params: {
-                                    source: 'object().objectInfo.metadata.Source',
-                                    sourceID: 'object().objectInfo.metadata["Source ID"]',
-                                    owner: 'object().workspaceInfo.owner',
-                                    lastModifiedAt: 'object().workspaceInfo.modDate',
-                                    workspaceId: 'object().workspaceInfo.id',
-                                    objectId: 'object().objectInfo.id'
-                                }
-                            })],
-                        ['"unknown"',
-                            gen.component({
-                                name: UnknownComponent.name(),
-                                params: {
-                                    name: 'object().workspaceInfo.name',
-                                    owner: 'object().workspaceInfo.owner',
-                                    lastModifiedAt: 'object().workspaceInfo.modDate',
-                                    workspaceId: 'object().workspaceInfo.id',
-                                    objectId: 'object().objectInfo.id'
-                                }
-                            })]
-                    ])
                 ])
             ]),
             div({
                 style: {
-                    flex: '1 1 0px',
-                    // border: '1px silver solid'
-                    // textAlign: 'right'
+                    flex: '1 1 0px'
                 }
             }, [
                 div({
@@ -402,16 +306,7 @@ define([
                         scientificName: 'scientificName',
                         height: '"150px"'
                     }
-                })
-
-                // img({
-                //     src: 'https://upload.wikimedia.org/wikipedia/commons/a/ab/House_mouse.jpg',
-                //     style: {
-                //         width: '100%'
-                //     }
-                // })
-
-                )
+                }))
             ])
         ]);
     }

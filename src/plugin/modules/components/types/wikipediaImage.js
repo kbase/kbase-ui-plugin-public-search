@@ -54,6 +54,11 @@ define([
             css: {
                 // width: '100%'
             }
+        },
+        imageCaption: {
+            css: {
+                height: '1em'
+            }
         }
     });
 
@@ -279,7 +284,9 @@ define([
                         }
                     }
                 }, 'Image not found')),
-            div(a({
+            div({
+                class: styles.classes.imageCaption
+            }, a({
                 dataBind: {
                     attr: {
                         href: 'pageUrl'
@@ -303,25 +310,36 @@ define([
     }
 
     function buildError() {
-        return div({
-            dataBind: {
-                attr: {
-                    width: 'size',
-                    height: 'size',
-                },
-                text: 'error().message'
-            }
-        });
+        return div([
+            div({
+                dataBind: {
+                    style: {
+                        width: 'height',
+                        height: 'height',
+                    },
+                    text: 'error().message'
+                }
+            }),
+            div({
+                class: styles.classes.imageCaption
+            })
+        ]);
     }
 
     function buildLoading() {
-        return div({
-            dataBind: {
-                attr: {
-                    width: 'size'
+        return div([
+            div({
+                dataBind: {
+                    style: {
+                        width: 'height',
+                        height: 'height'
+                    }
                 }
-            }
-        }, html.loading('Locating image at Wikipedia'));
+            }, html.loading('Locating image at Wikipedia')),
+            div({
+                class: styles.classes.imageCaption
+            })
+        ]);
     }
 
     function template() {

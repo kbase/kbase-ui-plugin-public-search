@@ -14,6 +14,8 @@ define([
     const t = html.tag,
         div = t('div'),
         a = t('a'),
+        p = t('p'),
+        hr = t('hr'),
         span = t('span'),
         table = t('table'),
         tbody = t('tbody'),
@@ -60,29 +62,19 @@ define([
 
     function buildNarrativeInfo() {
         return div([
-            div([
-                span({
-                    class: styles.classes.sectionHeader
-                }, 'Narrative'),
-                a({
-                    class: 'btn btn-link',
-                    target: '_blank',
-                    dataBind: {
-                        attr: {
-                            href: '"/narrative/ws." + workspaceId + ".obj." + objectId'
-                        }
-                    }
-                }, 'open')
-            ]),
             table({
                 class: styles.classes.table
             }, [
                 tbody([
                     tr([
                         th('Title'),
-                        td(span({
+                        td(a({
+                            target: '_blank',
                             dataBind: {
-                                text: 'name'
+                                text: 'name',
+                                attr: {
+                                    href: '"/narrative/ws." + workspaceId + ".obj." + objectId'
+                                }
                             }
                         }))
                     ]),
@@ -119,8 +111,35 @@ define([
         ]);
     }
 
+    function buildExplanation() {
+        return div([
+            p([
+                'This object is contained in a Narrative. You may ',
+                a({
+                    target: '_blank',
+                    dataBind: {
+                        attr: {
+                            href: '"/narrative/ws." + workspaceId + ".obj." + objectId'
+                        }
+                    }
+                }, 'open'),
+                ' the narrative to view the context in which the object is used and other associated ',
+                ' objects and apps.'
+            ]),
+            p(['Note that Narrative access requires login.'])
+        ]);
+    }
+
     function template() {
-        return buildNarrativeInfo();
+        return div([
+            buildNarrativeInfo(),
+            hr({
+                style: {
+                    width: '80%'
+                }
+            }),
+            buildExplanation()
+        ]);
     }
 
     function component() {

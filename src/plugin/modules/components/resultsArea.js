@@ -24,6 +24,7 @@ define([
     const t = html.tag,
         div = t('div'),
         p = t('p'),
+        span = t('span'),
         hr = t('hr');
 
     class ViewModel extends ViewModelBase {
@@ -80,13 +81,22 @@ define([
                 none: div([
                     p('No active search.'),
                     hr({style: {width: '50%'}}),
-                    p('Enter one or more terms above to search for public data and narratives.'),
-                    p('Multiple search terms are treated as “AND”  statements. The search will find objects or text that include all of the terms you submit. Terms are matched against whole words; no partial matches will be listed.')
+                    p('Enter one or more terms above to search for public data.'),
+                    p('The search will find objects that include <b>all of the search words</b>, or terms, you submit. In tech-speak, this means that the terms are implicitly combined by a logical "AND".'),
+                    p([
+                        'Terms are matched against <b>whole words</b>; a search term will which is part of a word found in an object will not result in a match.'
+                    ])
                 ]),
                 notfound: div([
                     p('Sorry, nothing was found with this search.'),
                     hr({style: {width: '50%'}}),
-                    p('Try reducing the number of search terms and/or filters.'),
+                    p([
+                        'Try broadening your search or use the ',
+                        span({
+                            class: 'fa fa-bullhorn'
+                        }),
+                        ' Feedback button above to let us know how we can improve search.'
+                    ]),
                 ]),
                 loading: div([
                     html.loading('Running your search...')

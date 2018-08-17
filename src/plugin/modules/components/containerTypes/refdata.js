@@ -14,6 +14,8 @@ define([
     const t = html.tag,
         div = t('div'),
         a = t('a'),
+        p = t('p'),
+        hr = t('hr'),
         span = t('span'),
         table = t('table'),
         tbody = t('tbody'),
@@ -61,11 +63,6 @@ define([
 
     function buildNarrativeInfo() {
         return div([
-            div([
-                span({
-                    class: styles.classes.sectionHeader
-                }, 'Reference Data')
-            ]),
             table({
                 class: styles.classes.table
             }, [
@@ -87,11 +84,15 @@ define([
                         }))
                     ]),
                     tr([
-                        th('Data import by'),
-                        td(span({
+                        th('Data imported by'),
+                        td(a({
                             dataBind: {
-                                text: 'owner'
-                            }
+                                text: 'owner',
+                                attr: {
+                                    href: '"/#people/" + owner'
+                                }
+                            },
+                            target: '_blank'
                         }))
                     ]),
                     // tr([
@@ -102,25 +103,51 @@ define([
                     //         // }
                     //     }, 'tbd'))
                     // ]),
-                    // tr([
-                    //     th('Last modified'),
-                    //     td(span({
-                    //         dataBind: {
-                    //             typedText: {
-                    //                 value: 'lastModifiedAt',
-                    //                 type: '"date"',
-                    //                 format: '"YYYY-MM-DD @ hh:mm a"'
-                    //             }
-                    //         }
-                    //     }))
-                    // ])
+                    tr([
+                        th('Data imported'),
+                        td(span({
+                            dataBind: {
+                                typedText: {
+                                    value: 'lastModifiedAt',
+                                    type: '"date"',
+                                    format: '"YYYY-MM-DD"'
+                                }
+                            }
+                        }))
+                    ])
                 ])
             ])
         ]);
     }
 
+    function buildExplanation() {
+        return div([
+            p('This data object is contained within a Reference Data Workspace.'),
+            p([
+                'KBase provides several sets of public reference datasets which you may use ',
+                'within Narratives for analysis.'
+            ]),
+            p([
+                'Please see our ',
+                a({
+                    href: 'http://kbase.us/data-policy-and-sources',
+                    target: '_blank'
+                }, 'Data Policy & Sources'),
+                ' page for a full list of data sources and our data policy.'
+            ])
+        ]);
+    }
+
     function template() {
-        return buildNarrativeInfo();
+        return div([
+            buildNarrativeInfo(),
+            hr({
+                style: {
+                    width: '50%'
+                }
+            }),
+            buildExplanation()
+        ]);
     }
 
     function component() {
