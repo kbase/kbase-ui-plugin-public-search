@@ -207,7 +207,7 @@ define([
                     'add_narrative_info': 1
                 },
                 'access_filter': {
-                    'with_private': 1,
+                    'with_private': 0,
                     'with_public': 1
                 },
                 'sorting_rules': [{
@@ -230,6 +230,9 @@ define([
                             let size;
                             if (result) {
                                 size = JSON.stringify(result).length;
+                            } else {
+                                console.log('Error', error);
+                                throw new Error('Error!');
                             }
                             this.samples.push({
                                 iteration: iteration,
