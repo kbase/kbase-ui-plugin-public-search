@@ -3,21 +3,25 @@ define([
     'knockout',
     'kb_knockout/registry',
     'kb_knockout/lib/generators',
+    'kb_knockout/lib/viewModelBase',
     'kb_common/html',
     'kb_common_ts/HttpClient',
     '../../table',
     '../../controls/scrollingText',
-    '../../../lib/docUtils'
+    '../../../lib/docUtils',
+    './authors'
 ], function (
     bluebird,
     ko,
     reg,
     gen,
+    ViewModelBase,
     html,
     HttpClient,
     TableComponent,
     ScrollingTextComponent,
-    docUtils
+    docUtils,
+    AuthorsComponent
 ) {
     'use strict';
 
@@ -27,8 +31,12 @@ define([
         input = t('input'),
         label = t('label');
 
-    class ViewModel {
-        constructor({query}, context) {
+    class ViewModel extends ViewModelBase {
+        constructor(params, context) {
+            super(params);
+
+            const {query} = params;
+
             this.runtime = context.$root.runtime;
 
             this.queryInput = ko.observable().syncFrom(query);
@@ -38,30 +46,31 @@ define([
                 return terms.join('+');
             });
 
-            this.searchInput = ko.observable().extend({
-                rateLimit: {
-                    timeout: 300,
-                    method: 'notifyWhenChangesStop'
-                }
-            });
+            // this.searchInput = ko.observable(query);
+            // .extend({
+            //     rateLimit: {
+            //         timeout: 300,
+            //         method: 'notifyWhenChangesStop'
+            //     }
+            // });
 
-            this.searchTerms = ko.pureComputed(() => {
-                if (!this.searchInput()) {
-                    return [];
-                }
-                return this.searchInput().split(/\s+/);
-            });
+            // this.searchTerms = ko.pureComputed(() => {
+            //     if (!this.searchInput()) {
+            //         return [];
+            //     }
+            //     return this.searchInput().split(/\s+/);
+            // });
 
             this.publications = ko.observableArray();
-            this.filteredPublications = this.publications.filter((publication) => {
-                if (!this.searchInput()) {
-                    return true;
-                }
-                if (publication.title.indexof(this.searchTerms[0]) != -1) {
-                    return true;
-                }
-                return false;
-            });
+            // this.filteredPublications = this.publications.filter((publication) => {
+            //     if (!this.searchInput()) {
+            //         return true;
+            //     }
+            //     if (publication.title.indexof(this.searchTerms[0]) != -1) {
+            //         return true;
+            //     }
+            //     return false;
+            // });
             // this.filteredPublications = ko.pureComputed(() => {
             //     if (!this.searchInput()) {
             //         return this.publications;
@@ -97,6 +106,7 @@ define([
                         name: 'title',
                         label: 'Title',
                         width: 40,
+                        html: true,
                         sort: {
                             comparator: (a, b) => {
                                 if (a < b) {
@@ -111,7 +121,7 @@ define([
                     {
                         name: 'source',
                         label: 'Source',
-                        width: 10,
+                        width: 15,
                         sort: {
                             comparator: (a, b) => {
                                 if (a < b) {
@@ -139,24 +149,34 @@ define([
                         }
                     },
                     {
-                        name: 'abstract',
-                        label: 'Abstract',
-                        width: 40,
-                        sort: {
-                            comparator: (a, b) => {
-                                if (a < b) {
-                                    return -1;
-                                } else if (a > b) {
-                                    return 1;
-                                }
-                                return 0;
-                            }
-                        },
+                        name: 'authors',
+                        label: 'Authors',
+                        width: 35,
                         component: {
-                            name: ScrollingTextComponent.name(),
-                            params: '{text: abstract, maxHeight: "10em"}'
-                        }
+                            name: AuthorsComponent.name(),
+                            params: '{authors: authors}'
+                        },
+                        sort: null
                     }
+                    // {
+                    //     name: 'abstract',
+                    //     label: 'Abstract',
+                    //     width: 40,
+                    //     sort: {
+                    //         comparator: (a, b) => {
+                    //             if (a < b) {
+                    //                 return -1;
+                    //             } else if (a > b) {
+                    //                 return 1;
+                    //             }
+                    //             return 0;
+                    //         }
+                    //     },
+                    //     component: {
+                    //         name: ScrollingTextComponent.name(),
+                    //         params: '{text: abstract, maxHeight: "10em"}'
+                    //     }
+                    // }
                 ]
             };
             this.table.columnMap = this.table.columns.reduce((map, column) => {
@@ -164,10 +184,24 @@ define([
                 return map;
             }, {});
 
+            this.subscribe(this.queryTerms, () => {
+                this.fetchPublications();
+            });
+            this.status = ko.observable('searching');
+            this.fetchPublications();
+        }
+
+        fetchPublications() {
+            this.status('searching');
             this.getPublications()
                 .then((publications) => {
                     this.publications(publications);
                     this.loading(false);
+                    this.status('success');
+                })
+                .catch((err) => {
+                    console.error('ERROR fetching publications', err);
+                    this.status('error');
                 });
         }
 
@@ -369,15 +403,43 @@ define([
                 class: 'form-group'
             }, [
                 label({
-                    class: 'control-label'
-                }, 'Filter '),
-                input({
-                    class: 'form-control',
-                    dataBind: {
-                        textInput: 'searchInput'
+                    class: 'control-label',
+                    style: {
+                        marginRight: '4px'
                     }
-                })
+                }, 'Search'),
+                div({
+                    class: 'input-group'
+                }, [
+                    input({
+                        class: 'form-control',
+                        dataBind: {
+                            value: 'queryInput'
+                        },
+                        style: {
+                            width: '20em'
+                        }
+                    }),
+                    div({
+                        class: 'input-group-addon'
+                    }, gen.switch('status', [
+                        [
+                            '"searching"', html.loading()
+                        ],
+                        [
+                            '"error"', span({
+                                class: 'fa fa-frown-o'
+                            })
+                        ],
+                        [
+                            '"success"', span({
+                                class: 'fa fa-search'
+                            })
+                        ]
+                    ]))
+                ])
             ]),
+
             div({
                 style: {
                     display: 'inline-block',

@@ -52,7 +52,7 @@ define([
         },
         wikipediaImage: {
             css: {
-                width: '100%'
+                // width: '100%'
             }
         }
     });
@@ -60,8 +60,9 @@ define([
     class ViewModel extends ViewModelBase {
         constructor(params) {
             super(params);
-            const {scientificName} = params;
+            const {scientificName, height} = params;
 
+            this.height = height;
             this.size = ko.observable(500);
             this.imageUrl = ko.observable();
             this.imageCaption = ko.observable();
@@ -262,9 +263,9 @@ define([
                         attr: {
                             src: 'imageUrl'
                         },
-                        // style: {
-                        //     width: 'size'
-                        // }
+                        style: {
+                            height: 'height'
+                        }
                     }
                 }),
                 div({
@@ -273,12 +274,12 @@ define([
                     },
                     dataBind: {
                         style: {
-                            width: 'size',
-                            height: 'size() / 2'
+                            width: 'height',
+                            height: 'height'
                         }
                     }
                 }, 'Image not found')),
-            a({
+            div(a({
                 dataBind: {
                     attr: {
                         href: 'pageUrl'
@@ -297,7 +298,7 @@ define([
                 span({
                     class: 'fa fa-wikipedia-w'
                 })
-            ])
+            ]))
         ]);
     }
 

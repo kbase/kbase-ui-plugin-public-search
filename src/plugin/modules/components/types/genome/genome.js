@@ -292,15 +292,19 @@ define([
                         }
                     }, [
                         gen.if('scientificName',
-                            div({
+                            a({
                                 style: {
                                     fontSize: '120%',
                                     fontWeight: 'bold',
                                     fontStyle: 'italic'
                                 },
                                 dataBind: {
-                                    text: 'scientificName'
-                                }
+                                    text: 'scientificName',
+                                    attr: {
+                                        href: '"#dataview/" + object().objectInfo.ref'
+                                    }
+                                },
+                                target: '_blank'
                             }),
                             div(html.loading())),
                         div(a({
@@ -311,7 +315,16 @@ define([
                                 }
                             },
                             target: '_blank'
-                        }))
+                        })),
+                        div({
+                            dataBind: {
+                                typedText: {
+                                    value: 'object().objectInfo.saveDate',
+                                    type: '"date"',
+                                    format: '"YYYY-MM-DD"'
+                                }
+                            }
+                        })
                     ])
                 ]),
                 div([
@@ -324,13 +337,13 @@ define([
                     //         version: 'object().objectInfo.typeMajorVersion + "." + object().objectInfo.typeMajorVersion'
                     //     }
                     // }),
-                    gen.component({
-                        name: ObjectStats.name(),
-                        params: {
-                            createdAt: 'object().firstObjectInfo.saveDate',
-                            modifiedAt: 'object().objectInfo.saveDate'
-                        }
-                    }),
+                    // gen.component({
+                    //     name: ObjectStats.name(),
+                    //     params: {
+                    //         createdAt: 'object().firstObjectInfo.saveDate',
+                    //         modifiedAt: 'object().objectInfo.saveDate'
+                    //     }
+                    // }),
                     gen.switch('object().workspaceType', [
                         ['"narrative"',
                             gen.component({
@@ -373,18 +386,21 @@ define([
                 style: {
                     flex: '1 1 0px',
                     // border: '1px silver solid'
+                    // textAlign: 'right'
                 }
             }, [
                 div({
                     style: {
-                        // border: '1px silver solid',
+                        border: '1px silver solid',
                         padding: '4px',
-                        margin: '4px'
+                        margin: '4px',
+                        float: 'right'
                     }
                 }, gen.component({
                     name: WikipediaImageComponent.name(),
                     params: {
-                        scientificName: 'scientificName'
+                        scientificName: 'scientificName',
+                        height: '"150px"'
                     }
                 })
 
