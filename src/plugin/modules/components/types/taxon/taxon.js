@@ -4,32 +4,24 @@ define([
     'kb_knockout/lib/generators',
     'kb_knockout/lib/viewModelBase',
     'kb_knockout/components/tabset',
-    'kb_knockout/lib/nanoBus',
     'kb_common/html',
-    '../../containerTypes/narrative',
-    '../../containerTypes/refdata',
-    '../../containerTypes/unknown',
-    '../dataType',
     '../wikipediaImage',
-    '../objectStats',
     './overview',
-    '../genome/publications'
+    '../genome/publications',
+    '../container',
+    '../containerTab'
 ], function (
     ko,
     reg,
     gen,
     ViewModelBase,
     TabsetComponent,
-    NanoBus,
     html,
-    NarrativeComponent,
-    RefdataComponent,
-    UnknownComponent,
-    DataTypeComponent,
     WikipediaImageComponent,
-    ObjectStats,
     OverviewComponent,
-    PublicationsComponent
+    PublicationsComponent,
+    ContainerComponent,
+    ContainerTabComponent
 ) {
     'use strict';
 
@@ -65,7 +57,25 @@ define([
                         component: {
                             name: OverviewComponent.name(),
                             params: {
-                                ref: this.object().objectInfo.ref
+                                ref: 'object().objectInfo.ref'
+                            }
+                        }
+                    }
+                },
+                {
+                    tab: {
+                        component: {
+                            name: ContainerTabComponent.name(),
+                            params: {
+                                object: 'object'
+                            }
+                        }
+                    },
+                    panel: {
+                        component: {
+                            name: ContainerComponent.name(),
+                            params: {
+                                object: 'object'
                             }
                         }
                     }
@@ -98,28 +108,7 @@ define([
 
             this.getSummaryInfo();
             this.getDataIcon();
-
-            // this.tabsetBus.on('ready', )
         }
-
-        // getSummaryInfox() {
-        //     const api = this.runtime.service('rpc').makeClient({
-        //         module: 'GenomeAnnotationAPI',
-        //         timeout: 10000,
-        //         authorization: false
-        //     });
-        //     api.callFunc('get_genome_v1', [{
-        //         genomes: [{
-        //             ref: this.object().objectInfo.ref
-        //         }]
-        //     }])
-        //         .spread(({genomes}) => {
-        //             console.log('result', genomes);
-        //             const [genomeData] = genomes;
-        //             // see: https://github.com/kbase/genome_annotation_api/blob/e609b0c45c7d9462e3a33c7e5a7982fc4e0d5f46/KBaseGenomes.spec#L389
-        //             this.scientificName(genomeData.data.scientific_name);
-        //         });
-        // }
 
         getSummaryInfo() {
             const workspace = this.runtime.service('rpc').makeClient({
@@ -166,10 +155,8 @@ define([
                     classes: 'fa-question',
                     color: 'gray'
                 });
-
             }
         }
-
     }
 
     const styles = html.makeStyles({
@@ -196,23 +183,6 @@ define([
                 marginTop: '8px'
             }
         }
-        // tableRow: {
-        //     css: {
-
-        //     }
-        // },
-        // tableHeaderCell: {
-        //     css: {
-        //         fontWeight: 'bold',
-        //         textAlign: 'left',
-        //         padding: '4px'
-        //     }
-        // },
-        // tableDataCell: {
-        //     css: {
-        //         padding: '4px'
-        //     }
-        // }
     });
 
     function buildOverview() {
@@ -225,7 +195,6 @@ define([
             div({
                 style: {
                     flex: '3 1 0px',
-                    // border: '1px silver solid',
                     display: 'flex',
                     flexDirection: 'column'
                 }
@@ -236,12 +205,7 @@ define([
                         flexDirection: 'row'
                     }
                 }, [
-                    div({
-                        style: {
-                            // width: '32px',
-                            // height: '32px'
-                        }
-                    }, div([
+                    div(div([
                         span({ class: 'fa-stack fa-2x' }, [
                             span({
                                 class: 'fa fa-circle fa-stack-2x',
@@ -267,15 +231,19 @@ define([
                         }
                     }, [
                         gen.if('scientificName',
-                            div({
+                            a({
                                 style: {
                                     fontSize: '120%',
                                     fontWeight: 'bold',
                                     fontStyle: 'italic'
                                 },
                                 dataBind: {
-                                    text: 'scientificName'
-                                }
+                                    text: 'scientificName',
+                                    attr: {
+                                        href: '"#dataview/" + object().objectInfo.ref'
+                                    }
+                                },
+                                target: '_blank'
                             }),
                             div(html.loading())),
                         div(a({
@@ -286,91 +254,36 @@ define([
                                 }
                             },
                             target: '_blank'
-                        }))
-                    ])
-                ]),
-                div([
-                    // gen.component({
-                    //     name: DataTypeComponent.name(),
-                    //     params: {
-                    //         typeID: 'object().objectInfo.type',
-                    //         name: 'object().objectInfo.typeName',
-                    //         module: 'object().objectInfo.typeModule',
-                    //         version: 'object().objectInfo.typeMajorVersion + "." + object().objectInfo.typeMajorVersion'
-                    //     }
-                    // }),
-                    gen.component({
-                        name: ObjectStats.name(),
-                        params: {
-                            createdAt: 'object().firstObjectInfo.saveDate',
-                            modifiedAt: 'object().objectInfo.saveDate'
-                        }
-                    }),
-                    gen.switch('object().workspaceType', [
-                        ['"narrative"',
-                            gen.component({
-                                name: NarrativeComponent.name(),
-                                params: {
-                                    name: 'object().workspaceInfo.metadata.narrative_nice_name',
-                                    owner: 'object().workspaceInfo.owner',
-                                    lastModifiedAt: 'object().workspaceInfo.modDate',
-                                    workspaceId: 'object().workspaceInfo.id',
-                                    objectId: 'object().objectInfo.id'
+                        })),
+                        div({
+                            dataBind: {
+                                typedText: {
+                                    value: 'object().objectInfo.saveDate',
+                                    type: '"date"',
+                                    format: '"YYYY-MM-DD"'
                                 }
-                            })],
-                        ['"refdata"',
-                            gen.component({
-                                name: RefdataComponent.name(),
-                                params: {
-                                    source: 'object().objectInfo.metadata.Source',
-                                    sourceID: 'object().objectInfo.metadata["Source ID"]',
-                                    owner: 'object().workspaceInfo.owner',
-                                    lastModifiedAt: 'object().workspaceInfo.modDate',
-                                    workspaceId: 'object().workspaceInfo.id',
-                                    objectId: 'object().objectInfo.id'
-                                }
-                            })],
-                        ['"unknown"',
-                            gen.component({
-                                name: UnknownComponent.name(),
-                                params: {
-                                    name: 'object().workspaceInfo.name',
-                                    owner: 'object().workspaceInfo.owner',
-                                    lastModifiedAt: 'object().workspaceInfo.modDate',
-                                    workspaceId: 'object().workspaceInfo.id',
-                                    objectId: 'object().objectInfo.id'
-                                }
-                            })]
+                            }
+                        })
                     ])
                 ])
             ]),
             div({
                 style: {
                     flex: '1 1 0px',
-                    // border: '1px silver solid'
                 }
             }, [
                 div({
                     style: {
-                        // border: '1px silver solid',
                         padding: '4px',
                         margin: '4px'
                     }
                 }, gen.component({
                     name: WikipediaImageComponent.name(),
                     params: {
-                        scientificName: 'scientificName'
+                        scientificName: 'scientificName',
+                        height: '"150px"'
                     }
-                })
-
-                // img({
-                //     src: 'https://upload.wikimedia.org/wikipedia/commons/a/ab/House_mouse.jpg',
-                //     style: {
-                //         width: '100%'
-                //     }
-                // })
-
-                )
+                }))
             ])
         ]);
     }
@@ -386,6 +299,7 @@ define([
             gen.component({
                 name: TabsetComponent.name(),
                 params: {
+                    tabContext: '$component',
                     tabs: 'tabs',
                     bus: 'bus'
                 }

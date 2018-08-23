@@ -20,10 +20,20 @@ define([
     'use strict';
 
     const t = html.tag,
+        a = t('a'),
+        span = t('span'),
         div = t('div'),
         img = t('img');
 
-    const styles = html.makeStyles({
+    const style = html.makeStyles({
+        component: {
+            css: {
+                flex: '1 1 0px',
+                display: 'flex',
+                flexDirection: 'column',
+                margin: '10px'
+            }
+        },
         table: {
             css: {
 
@@ -50,12 +60,41 @@ define([
         },
         wikipediaImage: {
             css: {
-                // width: '100%'
+                width: '100%'
             }
         },
         imageCaption: {
             css: {
-                height: '1em'
+                height: '1em',
+                marginTop: '4px'
+            }
+        },
+        square: {
+            css: {
+                width: '100%',
+                height: 'auto',
+                position: 'relative'
+            },
+            pseudo: {
+                before: {
+                    content: '""',
+                    display: 'block',
+                    paddingTop: '100%'
+                }
+            },
+            inner: {
+                '> .-content': {
+                    position: 'absolute',
+                    top: '0',
+                    right: '0',
+                    bottom: '0',
+                    left: '0',
+                    border: '1px silver dashed',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                },
+
             }
         }
     });
@@ -63,10 +102,11 @@ define([
     class ViewModel extends ViewModelBase {
         constructor(params) {
             super(params);
-            const {scientificName, height} = params;
+            const {scientificName} = params;
 
-            this.height = height;
-            this.size = ko.observable(500);
+            this.imageWidth = '150px';
+            this.defaultImageWidth = '150px';
+            this.imageSize = ko.observable(500);
             this.imageUrl = ko.observable();
             this.imageCaption = ko.observable();
             this.pageUrl = ko.observable();
@@ -94,9 +134,10 @@ define([
                 return;
             }
             this.getOrganismInfo(scientificName)
-                .then(({imageUrl, url}) => {
+                .then(({imageUrl, url, introText}) => {
                     this.imageUrl(imageUrl);
                     this.pageUrl(url);
+                    this.introText = introText.replace(/==/g, '##').replace(/\n/g, '  \n');
                     this.loaded(true);
                     this.state('loaded');
                 })
@@ -112,14 +153,15 @@ define([
                     this.imageCaption(wikiResponse.parse.title);
                     return Promise.all(
                         [
-                            this.getImage({size: this.size(), pageId: wikiResponse.parse.pageid}),
-                            this.getPageUrl({pageId: wikiResponse.parse.pageid})
+                            this.getImage({size: this.imageSize(), pageId: wikiResponse.parse.pageid}),
+                            this.getPageInfo({pageId: wikiResponse.parse.pageid})
                         ]);
                 })
-                .spread((imageUrl, url) => {
+                .spread((imageUrl, pageInfo) => {
                     return {
                         imageUrl: imageUrl,
-                        url: url
+                        url: pageInfo.url,
+                        introText: pageInfo.introText
                     };
                 });
         }
@@ -132,7 +174,6 @@ define([
                 const fetchPage = (terms) => {
                     if (terms.length === 0) {
                         reject(new Error('No Wikipedia page found'));
-                        return;
                     }
                     const http = new HttpClient.HttpClient();
                     const header = new HttpClient.HttpHeader({
@@ -142,7 +183,7 @@ define([
                     const query = pageUrl.searchParams;
                     query.set('action', 'parse');
                     query.set('format', 'json');
-                    query.set('prop', 'text');
+                    query.set('prop', 'text|headhtml');
                     query.set('section', '0');
                     query.set('redirects', '');
                     query.set('page', terms.join(' '));
@@ -178,6 +219,7 @@ define([
                                 console.error(message, result);
                                 reject(new Error(message));
                             }
+
                         })
                         .catch((err) => {
                             reject(err);
@@ -187,12 +229,13 @@ define([
             });
         }
 
-        getPageUrl({pageId}) {
+        getPageInfo({pageId}) {
             const apiURL = new URL('https://en.wikipedia.org/w/api.php');
             const query = apiURL.searchParams;
             query.set('action', 'query');
             query.set('pageids', pageId);
-            query.set('prop', 'info');
+            query.set('prop', 'info|extracts');
+            query.set('explaintext', 'true');
             query.set('inprop', 'url');
             query.set('origin', '*');
             query.set('format', 'json');
@@ -208,7 +251,10 @@ define([
                     case 200:
                         try {
                             var wikiResponse = JSON.parse(result.response);
-                            return props.getProp(wikiResponse, ['query', 'pages', String(pageId), 'fullurl']);
+                            return {
+                                url: props.getProp(wikiResponse, ['query', 'pages', String(pageId), 'fullurl']),
+                                introText: props.getProp(wikiResponse, ['query', 'pages', String(pageId), 'extract'])
+                            };
                         } catch (ex) {
                             console.error('error getting page info', ex.message);
                             this.error(ex);
@@ -264,73 +310,113 @@ define([
         }
     }
 
+    function buildSquareWrapper(content) {
+        return div({
+            class: style.classes.square
+        }, div({
+            class: '-content'
+        }, content));
+    }
+
     function buildImage() {
         return div([
             gen.if('imageUrl',
                 img({
-                    class: styles.classes.wikipediaImage,
+                    class: style.classes.wikipediaImage,
                     dataBind: {
                         attr: {
                             src: 'imageUrl'
                         },
-                        style: {
-                            height: 'height'
-                        }
+                        // style: {
+                        //     height: 'height'
+                        // }
                     }
                 }),
-                div({
-                    style: {
-                    },
-                    dataBind: {
-                        style: {
-                            width: 'height',
-                            height: 'height'
-                        }
+                buildSquareWrapper('Image not found')
+            ),
+            div({
+                class: style.classes.imageCaption
+            }, a({
+                dataBind: {
+                    attr: {
+                        href: 'pageUrl'
                     }
-                }, 'Image not found')),
+                },
+                target: '_blank'
+            }, [
+                span({
+                    dataBind: {
+                        text: 'imageCaption'
+                    },
+                    style: {
+                        marginRight: '6px'
+                    }
+                }),
+                span({
+                    class: 'fa fa-wikipedia-w'
+                })
+            ]))
+        ]);
+    }
+
+    function buildArticle() {
+        return div({
+            dataBind: {
+                htmlMarkdown: 'introText'
+            }
+        });
+    }
+
+    function buildDisplay() {
+        return div({
+            style: {
+                display: 'flex',
+                flexDirection: 'row',
+                flex: '1 1 0px'
+            }
+        }, [
+            div({
+                style: {
+                    flex: '2 1 0px',
+                    paddingRight: '4px',
+                    marginRight: '4px',
+                    overflowY: 'auto'
+                }
+            }, buildArticle()),
+            div({
+                style: {
+                    flex: '1 1 0px'
+                },
+                dataBind: {
+                    attr: {
+                        width: 'imageWidth'
+                    }
+                }
+            }, buildImage())
         ]);
     }
 
     function buildError() {
-        return div([
-            div({
-                dataBind: {
-                    style: {
-                        width: 'height',
-                        height: 'height',
-                    },
-                    text: 'error().message'
-                }
-            }),
-            div({
-                class: styles.classes.imageCaption
-            })
-        ]);
+        return div({
+            dataBind: {
+                text: 'error().message'
+            }
+        });
     }
 
     function buildLoading() {
-        return div([
-            div({
-                dataBind: {
-                    style: {
-                        width: 'height',
-                        height: 'height'
-                    }
-                }
-            }, html.loading('Locating image at Wikipedia')),
-            div({
-                class: styles.classes.imageCaption
-            })
-        ]);
+        return div(html.loading('Locating image at Wikipedia'));
     }
 
     function template() {
-        return div(gen.switch('state', [
+        return div({
+            class: style.classes.component
+        }, gen.switch('state', [
             [
                 '"loading"', buildLoading()
             ],
             [
-                '"loaded"', buildImage()
+                '"loaded"', buildDisplay()
             ],
             [
                 '"error"', buildError()
@@ -342,7 +428,7 @@ define([
         return {
             viewModel: ViewModel,
             template: template(),
-            stylesheet: styles.sheet
+            stylesheet: style.sheet
         };
     }
 

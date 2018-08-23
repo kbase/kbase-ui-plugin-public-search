@@ -35,10 +35,10 @@ define([
                     value: 'pangenome',
                     label: 'Pangenome',
                 },
-                {
-                    value: 'taxon',
-                    label: 'Taxon',
-                },
+                // {
+                //     value: 'taxon',
+                //     label: 'Taxon',
+                // },
                 {
                     value: 'tree',
                     label: 'Species Tree',

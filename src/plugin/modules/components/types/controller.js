@@ -2,12 +2,16 @@ define([
     './genome/genome',
     './taxon/taxon',
     './narrative/narrative',
-    './default/default'
+    './default/default',
+    './pangenome/pangenome',
+    './tree/tree'
 ], function (
     GenomeComponent,
     TaxonComponent,
     NarrativeComponent,
-    DefaultComponent
+    DefaultComponent,
+    PangenomeComponent,
+    TreeComponent
 ) {
     'use strict';
 
@@ -15,10 +19,14 @@ define([
         switch (type.toLowerCase()) {
         case 'genome':
             return GenomeComponent;
-        case 'taxon':
-            return TaxonComponent;
+        // case 'taxon':
+        //     return TaxonComponent;
         case 'narrative':
             return NarrativeComponent;
+        // case 'pangenome':
+        //     return PangenomeComponent;
+        case 'tree':
+            return TreeComponent;
         default:
             return DefaultComponent;
         }

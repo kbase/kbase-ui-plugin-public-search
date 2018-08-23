@@ -20,6 +20,8 @@ define([
     'use strict';
 
     const t = html.tag,
+        a = t('a'),
+        span = t('span'),
         div = t('div'),
         img = t('img');
 
@@ -131,8 +133,8 @@ define([
             return new Promise((resolve, reject) => {
                 const fetchPage = (terms) => {
                     if (terms.length === 0) {
-                        reject(new Error('No Wikipedia page found'));
-                        return;
+                        throw new Error('No Wikipedia page found');
+                        // resolve(null);
                     }
                     const http = new HttpClient.HttpClient();
                     const header = new HttpClient.HttpHeader({
@@ -148,6 +150,7 @@ define([
                     query.set('page', terms.join(' '));
                     // must set this to enable cors
                     query.set('origin', '*');
+                    // console.log('wikipedia url', pageUrl.toString());
                     http.request({
                         method: 'GET',
                         header: header,
@@ -163,7 +166,6 @@ define([
                                         if (wikiResponse.error.code === 'missingtitle') {
                                             terms.pop();
                                             fetchPage(terms);
-                                            return null;
                                         }
                                     } else {
                                         resolve(wikiResponse);
@@ -178,6 +180,7 @@ define([
                                 console.error(message, result);
                                 reject(new Error(message));
                             }
+
                         })
                         .catch((err) => {
                             reject(err);
@@ -280,6 +283,7 @@ define([
                 }),
                 div({
                     style: {
+                        border: '1px silver dashed'
                     },
                     dataBind: {
                         style: {
@@ -288,6 +292,28 @@ define([
                         }
                     }
                 }, 'Image not found')),
+            div({
+                class: styles.classes.imageCaption
+            }, a({
+                dataBind: {
+                    attr: {
+                        href: 'pageUrl'
+                    }
+                },
+                target: '_blank'
+            }, [
+                span({
+                    dataBind: {
+                        text: 'imageCaption'
+                    },
+                    style: {
+                        marginRight: '6px'
+                    }
+                }),
+                span({
+                    class: 'fa fa-wikipedia-w'
+                })
+            ]))
         ]);
     }
 

@@ -8,7 +8,8 @@ define([
     '../wikipediaImage',
     './overview',
     '../container',
-    '../containerTab'
+    '../containerTab',
+    './metadata'
 ], function (
     ko,
     reg,
@@ -19,7 +20,8 @@ define([
     WikipediaImageComponent,
     OverviewComponent,
     ContainerComponent,
-    ContainerTabComponent
+    ContainerTabComponent,
+    MetadataComponent
 ) {
     'use strict';
 
@@ -36,13 +38,16 @@ define([
 
             this.object = object;
 
+            console.log('default viewer', object());
+
             this.runtime = context.$root.runtime;
 
             this.summaryInfo = ko.observable();
+
             this.objectName = object().objectInfo.name;
             this.taxonomy = ko.observableArray();
+
             this.dataIcon = ko.observable();
-            this.ready = ko.observable(false);
 
             this.tabs = [
                 {
@@ -54,7 +59,7 @@ define([
                         component: {
                             name: OverviewComponent.name(),
                             params: {
-                                object: 'object'
+                                ref: this.object().objectInfo.ref
                             }
                         }
                     }
@@ -64,7 +69,7 @@ define([
                         component: {
                             name: ContainerTabComponent.name(),
                             params: {
-                                object: 'object'
+                                object: object
                             }
                         }
                     },
@@ -72,30 +77,29 @@ define([
                         component: {
                             name: ContainerComponent.name(),
                             params: {
-                                object: 'object'
+                                object: object
                             }
                         }
                     }
                 },
-                // {
-                //     tab: {
-                //         label: 'Metadata',
-                //         component: null
-                //     },
-                //     panel: {
-                //         component: {
-                //             name: MetadataComponent.name(),
-                //             params: {
-                //                 metadata: 'object().objectInfo.metadata'
-                //             }
-                //         }
-                //     }
-                // }
+                {
+                    tab: {
+                        label: 'Metadata',
+                        component: null
+                    },
+                    panel: {
+                        component: {
+                            name: MetadataComponent.name(),
+                            params: {
+                                object: object
+                            }
+                        }
+                    }
+                }
             ];
 
             // this.getSummaryInfo();
             this.getDataIcon();
-            this.ready(true);
         }
 
         // getSummaryInfo() {
@@ -287,7 +291,6 @@ define([
             gen.component({
                 name: TabsetComponent.name(),
                 params: {
-                    tabContext: '$component',
                     tabs: 'tabs',
                     bus: 'bus'
                 }
@@ -303,13 +306,12 @@ define([
                 flexDirection: 'column'
             }
         },
-        gen.if('ready()',
-            gen.if('object()',
-                [
-                    buildOverview(),
-                    buildTabs()
-                ],
-                html.loading())));
+        gen.if('object()',
+            [
+                buildOverview(),
+                buildTabs()
+            ],
+            html.loading()));
     }
 
     function component() {

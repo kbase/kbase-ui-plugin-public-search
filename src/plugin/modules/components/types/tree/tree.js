@@ -8,7 +8,8 @@ define([
     '../wikipediaImage',
     './overview',
     '../container',
-    '../containerTab'
+    '../containerTab',
+    './metadata'
 ], function (
     ko,
     reg,
@@ -19,7 +20,8 @@ define([
     WikipediaImageComponent,
     OverviewComponent,
     ContainerComponent,
-    ContainerTabComponent
+    ContainerTabComponent,
+    MetadataComponent
 ) {
     'use strict';
 
@@ -28,21 +30,37 @@ define([
         span = t('span'),
         a = t('a');
 
+    class Tree {
+        constructor(nodes, label, length) {
+            this.nodes = nodes;
+            this.label = label;
+            this.length = length;
+        }
+    }
+
+    class Leaf {
+        constructor(label, length) {
+            this.label = label;
+            this.length = length;
+        }
+    }
+
     class ViewModel extends ViewModelBase {
         constructor(params, context) {
             super(params);
 
             const {object} = params;
 
-            this.object = object;
+            this.object = ko.utils.unwrapObservable(object);
 
             this.runtime = context.$root.runtime;
 
             this.summaryInfo = ko.observable();
-            this.objectName = object().objectInfo.name;
+
+            this.objectName = this.object.objectInfo.name;
             this.taxonomy = ko.observableArray();
+
             this.dataIcon = ko.observable();
-            this.ready = ko.observable(false);
 
             this.tabs = [
                 {
@@ -54,7 +72,7 @@ define([
                         component: {
                             name: OverviewComponent.name(),
                             params: {
-                                object: 'object'
+                                ref: 'object.objectInfo.ref'
                             }
                         }
                     }
@@ -77,60 +95,120 @@ define([
                         }
                     }
                 },
-                // {
-                //     tab: {
-                //         label: 'Metadata',
-                //         component: null
-                //     },
-                //     panel: {
-                //         component: {
-                //             name: MetadataComponent.name(),
-                //             params: {
-                //                 metadata: 'object().objectInfo.metadata'
-                //             }
-                //         }
-                //     }
-                // }
+                {
+                    tab: {
+                        label: 'Metadata',
+                        component: null
+                    },
+                    panel: {
+                        component: {
+                            name: MetadataComponent.name(),
+                            params: {
+                                metadata: 'object.objectInfo.metadata'
+                            }
+                        }
+                    }
+                }
             ];
 
-            // this.getSummaryInfo();
+            this.getSummaryInfo();
             this.getDataIcon();
-            this.ready(true);
         }
 
-        // getSummaryInfo() {
-        //     const workspace = this.runtime.service('rpc').makeClient({
-        //         module: 'Workspace',
-        //         timeout: 10000,
-        //         authorization: false
-        //     });
-        //     // https://github.com/kbase/workspace_deluxe/blob/8a52097748ef31b94cdf1105766e2c35108f4c41/workspace.spec#L1111
-        //     // https://github.com/kbase/workspace_deluxe/blob/8a52097748ef31b94cdf1105766e2c35108f4c41/workspace.spec#L265
-        //     workspace.callFunc('get_object_subset', [[{
-        //         ref: this.object().objectInfo.ref,
-        //         included: [
-        //             'scientific_name'
-        //         ]
-        //     }]])
-        //         .spread(([objectData]) => {
-        //             // console.log('taxon object data');
-        //             this.scientificName(objectData.data.scientific_name);
-        //             const tax = objectData.data.taxonomy;
-        //             if (tax) {
-        //                 let taxList;
-        //                 if (tax.indexOf(';') !== -1) {
-        //                     taxList = tax.split(';');
-        //                 } else {
-        //                     taxList = tax.split(',');
-        //                 }
-        //                 this.taxonomy(taxList);
-        //             }
-        //         });
-        // }
+        parseTree(treeData) {
+            const data = treeData;
+            let pos = 0;
+            // const depth = 0;
+
+            // collect characters into a string until a char in the string
+            // stoppers is encountered.
+            function getUntil(stoppers) {
+                const chars = [];
+                while (stoppers.indexOf(data[pos]) === -1) {
+                    chars.push(data[pos]);
+                    pos += 1;
+                }
+                return chars.join('');
+            }
+
+            // a length always starts with ":" and is a float,
+            function maybeGetLength() {
+                if (data[pos] !== ':') {
+                    return null;
+                }
+                pos += 1;
+                return parseFloat(getUntil(',)'));
+            }
+
+            // a leaf consists of a label and optional length.
+            // <label>[:<length>]
+            function maybeGetLeaf() {
+                const label = getUntil(':,)');
+                const length = maybeGetLength();
+                return new Leaf(label, length);
+            }
+
+            // descendants is a list of either leaves or other
+            // sets of descendants.
+            // Or, one may think of each descendant as a "subtree",
+            // which may take the form of a single leaf node
+            // or a collection of other subtree collections.
+            function maybeGetTree() {
+                // ditch if not really a descendant list
+                if (data[pos] !== '(') {
+                    return null;
+                }
+                pos += 1;
+                const nodes = [];
+                let node;
+                for (;;) {
+                    // now repeatedly get either a leaf or a descendant list
+                    node = maybeGetTree();
+                    if (node === null) {
+                        node = maybeGetLeaf();
+                    }
+                    nodes.push(node);
+                    // end of list is signalled by ")", next element by ","
+                    // anything else should be an error
+                    // TODO: whitespace
+                    if (data[pos] === ')') {
+                        pos += 1;
+                        break;
+                    }
+                    if (data[pos] !== ',') {
+                        throw new Error('Unexpected character in descendants list: "' + data[pos] + '" at pos "' + pos + '"');
+                    }
+                    pos += 1;
+                }
+                const label = getUntil(':,);');
+                const length = maybeGetLength();
+                return new Tree(nodes, label, length);
+            }
+            return maybeGetTree();
+        }
+
+        getSummaryInfo() {
+            const workspace = this.runtime.service('rpc').makeClient({
+                module: 'Workspace',
+                timeout: 10000,
+                authorization: false
+            });
+            // https://github.com/kbase/workspace_deluxe/blob/8a52097748ef31b94cdf1105766e2c35108f4c41/workspace.spec#L1111
+            // https://github.com/kbase/workspace_deluxe/blob/8a52097748ef31b94cdf1105766e2c35108f4c41/workspace.spec#L265
+            workspace.callFunc('get_objects', [[{
+                ref: this.object.objectInfo.ref
+            }]])
+                .spread(([objectData]) => {
+                    // console.log('object data???', objectData);
+                    const treeData = objectData.data.tree;
+                    const tree = this.parseTree(treeData);
+                    // do something with the tree...
+                });
+        }
 
         getDataIcon() {
             try {
-                const typeId = this.object().objectInfo.type,
+                const typeId = this.object.objectInfo.type,
                     type = this.runtime.service('type').parseTypeId(typeId),
                     icon = this.runtime.service('type').getIcon({ type: type });
                 this.dataIcon({
@@ -228,7 +306,7 @@ define([
                                 dataBind: {
                                     text: 'objectName',
                                     attr: {
-                                        href: '"#dataview/" + object().objectInfo.ref'
+                                        href: '"#dataview/" + object.objectInfo.ref'
                                     }
                                 },
                                 target: '_blank'
@@ -236,9 +314,9 @@ define([
                             div(html.loading())),
                         div(a({
                             dataBind: {
-                                text: 'object().objectInfo.typeName + " " + object().objectInfo.typeMajorVersion + "." + object().objectInfo.typeMinorVersion',
+                                text: 'object.objectInfo.typeName + " " + object.objectInfo.typeMajorVersion + "." + object.objectInfo.typeMinorVersion',
                                 attr: {
-                                    href: '"#spec/type/" + object().objectInfo.type'
+                                    href: '"#spec/type/" + object.objectInfo.type'
                                 }
                             },
                             target: '_blank'
@@ -246,7 +324,7 @@ define([
                         div({
                             dataBind: {
                                 typedText: {
-                                    value: 'object().objectInfo.saveDate',
+                                    value: 'object.objectInfo.saveDate',
                                     type: '"date"',
                                     format: '"YYYY-MM-DD"'
                                 }
@@ -260,18 +338,6 @@ define([
                     flex: '1 1 0px',
                 }
             }, [
-                // div({
-                //     style: {
-                //         padding: '4px',
-                //         margin: '4px'
-                //     }
-                // }, gen.component({
-                //     name: WikipediaImageComponent.name(),
-                //     params: {
-                //         scientificName: 'scientificName',
-                //         height: '"150px"'
-                //     }
-                // }))
             ])
         ]);
     }
@@ -303,13 +369,12 @@ define([
                 flexDirection: 'column'
             }
         },
-        gen.if('ready()',
-            gen.if('object()',
-                [
-                    buildOverview(),
-                    buildTabs()
-                ],
-                html.loading())));
+        gen.if('object',
+            [
+                buildOverview(),
+                buildTabs()
+            ],
+            html.loading()));
     }
 
     function component() {

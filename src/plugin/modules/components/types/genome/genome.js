@@ -1,4 +1,5 @@
 define([
+    'bluebird',
     'knockout',
     'kb_knockout/registry',
     'kb_knockout/lib/generators',
@@ -10,8 +11,11 @@ define([
     './taxonomy',
     './publications',
     '../container',
-    '../containerTab'
+    '../containerTab',
+    '../provenance',
+    '../wikipedia'
 ], function (
+    Promise,
     ko,
     reg,
     gen,
@@ -23,7 +27,9 @@ define([
     TaxonomyComponent,
     PublicationsComponent,
     ContainerComponent,
-    ContainerTabComponent
+    ContainerTabComponent,
+    ProvenanceComponent,
+    WikipediaComponent
 ) {
     'use strict';
 
@@ -36,9 +42,18 @@ define([
         constructor(params, context) {
             super(params);
 
+            // console.log('genome params', params.object());
+
             const {object} = params;
 
             this.object = object;
+
+            this.ref = ko.pureComputed(() => {
+                if (object() && object().objectInfo) {
+                    return object().objectInfo.ref;
+                }
+                return null;
+            });
 
             this.runtime = context.$root.runtime;
 
@@ -48,9 +63,6 @@ define([
             this.taxonomy = ko.observableArray();
 
             this.dataIcon = ko.observable();
-
-            this.getSummaryInfo();
-            this.getDataIcon();
 
             this.tabs = [
                 {
@@ -62,17 +74,18 @@ define([
                         component: {
                             name: TabOverviewComponent.name(),
                             params: {
-                                ref: this.object().objectInfo.ref
+                                ref: 'object().objectInfo.ref'
                             }
                         }
                     }
                 },
                 {
                     tab: {
-                        component: {
+                        label: 'Container',
+                        xcomponent: {
                             name: ContainerTabComponent.name(),
                             params: {
-                                object: object
+                                object: 'object'
                             }
                         }
                     },
@@ -80,7 +93,34 @@ define([
                         component: {
                             name: ContainerComponent.name(),
                             params: {
-                                object: object
+                                object: 'object'
+                            }
+                        }
+                    }
+                },
+                {
+                    tab: {
+                        label: 'Wikipedia'
+                    },
+                    panel: {
+                        component: {
+                            name: WikipediaComponent.name(),
+                            params: {
+                                scientificName: 'scientificName'
+                            }
+                        }
+                    }
+                },
+                {
+                    tab: {
+                        label: 'Provenance'
+                    },
+                    panel: {
+                        component: {
+                            name: ProvenanceComponent.name(),
+                            params: {
+                                ref: 'ref',
+                                methodMap: 'methodMap'
                             }
                         }
                     }
@@ -94,7 +134,7 @@ define([
                         component: {
                             name: TaxonomyComponent.name(),
                             params: {
-                                ref: this.object().objectInfo.ref
+                                ref: 'object().objectInfo.ref'
                             }
                         }
                     }
@@ -108,7 +148,7 @@ define([
                         component: {
                             name: PublicationsComponent.name(),
                             params: {
-                                query: this.scientificName
+                                query: 'scientificName'
                             }
                         }
                     }
@@ -124,6 +164,69 @@ define([
                     }
                 }
             ];
+
+            this.getDataIcon();
+
+            this.methodMap = null;
+            this.ready = ko.observable(false);
+
+            Promise.all([
+                this.getSummaryInfo(),
+                this.getMethodMap()
+            ])
+                .then(() => {
+                    // console.log('method map?', this.methodMap());
+                    this.ready(true);
+                });
+        }
+
+        getMethodMap() {
+            const nms = this.runtime.service('rpc').makeClient({
+                module: 'NarrativeMethodStore',
+                timeout: 10000,
+                authorization: false
+            });
+            return Promise.all([
+                nms.callFunc('list_methods_spec', [{tag: 'dev'}]),
+                nms.callFunc('list_methods_spec', [{tag: 'beta'}]),
+                nms.callFunc('list_methods_spec', [{tag: 'release'}])
+            ])
+                .spread(([dev], [beta], [release]) => {
+                    // console.log('hey, got method specs info...', result);
+                    const methodMap = {};
+
+                    const devMap = dev.reduce((methodMap, spec) => {
+                        const id = spec.behavior.kb_service_name + '/' +
+                                   spec.behavior.kb_service_method;
+                        methodMap[id] = spec;
+                        return methodMap;
+                    }, {});
+
+                    const betaMap = beta.reduce((methodMap, spec) => {
+                        const id = spec.behavior.kb_service_name + '/' +
+                                   spec.behavior.kb_service_method;
+                        methodMap[id] = spec;
+                        return methodMap;
+                    }, {});
+
+                    const releaseMap = release.reduce((methodMap, spec) => {
+                        const id = spec.behavior.kb_service_name + '/' +
+                                   spec.behavior.kb_service_method;
+                        methodMap[id] = spec;
+                        return methodMap;
+                    }, {});
+
+                    this.methodMap = {
+                        dev: devMap,
+                        beta: betaMap,
+                        release: releaseMap
+                    };
+                    // console.log('hey, got method map!!', this.methodMap);
+                })
+                .catch((err) => {
+                    console.error('ERROR', err.message);
+                    return null;
+                });
         }
 
         getSummaryInfo() {
@@ -134,7 +237,7 @@ define([
             });
             // https://github.com/kbase/workspace_deluxe/blob/8a52097748ef31b94cdf1105766e2c35108f4c41/workspace.spec#L1111
             // https://github.com/kbase/workspace_deluxe/blob/8a52097748ef31b94cdf1105766e2c35108f4c41/workspace.spec#L265
-            workspace.callFunc('get_object_subset', [[{
+            return workspace.callFunc('get_object_subset', [[{
                 ref: this.object().objectInfo.ref,
                 included: [
                     'scientific_name'
@@ -204,13 +307,13 @@ define([
         return div({
             style: {
                 display : 'flex',
-                flexDirection: 'row'
+                flexDirection: 'row',
+                height: '100px'
             }
         }, [
             div({
                 style: {
                     flex: '2 1 0px',
-                    // border: '1px silver solid',
                     display: 'flex',
                     flexDirection: 'column'
                 }
@@ -221,12 +324,7 @@ define([
                         flexDirection: 'row'
                     }
                 }, [
-                    div({
-                        style: {
-                            // width: '32px',
-                            // height: '32px'
-                        }
-                    }, div([
+                    div([
                         span({ class: 'fa-stack fa-2x' }, [
                             span({
                                 class: 'fa fa-circle fa-stack-2x',
@@ -243,7 +341,7 @@ define([
                                 }
                             })
                         ])
-                    ])),
+                    ]),
                     div({
                         style: {
                             display: 'flex',
@@ -295,16 +393,16 @@ define([
             }, [
                 div({
                     style: {
-                        border: '1px silver solid',
-                        padding: '4px',
-                        margin: '4px',
+                        // border: '1px silver solid',
+                        // padding: '4px',
+                        // margin: '4px',
                         float: 'right'
                     }
                 }, gen.component({
                     name: WikipediaImageComponent.name(),
                     params: {
                         scientificName: 'scientificName',
-                        height: '"150px"'
+                        height: '"100px"'
                     }
                 }))
             ])
@@ -324,6 +422,7 @@ define([
                 name: TabsetComponent.name(),
                 params: {
                     tabs: 'tabs',
+                    tabContext: '$component',
                     bus: 'bus'
                 }
             })
@@ -338,12 +437,13 @@ define([
                 flexDirection: 'column'
             }
         },
-        gen.if('object()',
-            [
-                buildOverview(),
-                buildTabs()
-            ],
-            html.loading()));
+        gen.if('ready()',
+            gen.if('object()',
+                [
+                    buildOverview(),
+                    buildTabs()
+                ],
+                html.loading())));
     }
 
     function component() {

@@ -3,13 +3,11 @@ define([
     'kb_knockout/registry',
     'kb_knockout/lib/generators',
     'kb_common/html',
-    '../../lineage'
 ], function (
     ko,
     reg,
     gen,
-    html,
-    LineageComponent
+    html
 ) {
     'use strict';
 
@@ -28,15 +26,18 @@ define([
 
             this.loading = ko.observable(true);
 
-            this.scientificName = ko.observable();
-            this.rank = ko.observable();
-            this.domain = ko.observable();
-            this.kingdom = ko.observable();
-            this.geneticCode = ko.observable();
-            this.aliases = ko.observableArray();
-            this.lineage = ko.observableArray();
+            this.type = ko.observable();
+            // this.referenceTypes = ko.observable();
+            // this.kbaseID = ko.observable();
+            // this.description = ko.observable();
 
-            this.getOverviewInfo();
+            this.getOverviewInfo()
+                .then(() => {
+                    this.loading(false);
+                })
+                .catch((err) => {
+                    console.error('ERROR', err);
+                });
         }
 
         getOverviewInfo() {
@@ -47,38 +48,18 @@ define([
             });
             // https://github.com/kbase/workspace_deluxe/blob/8a52097748ef31b94cdf1105766e2c35108f4c41/workspace.spec#L1111
             // https://github.com/kbase/workspace_deluxe/blob/8a52097748ef31b94cdf1105766e2c35108f4c41/workspace.spec#L265
-            workspace.callFunc('get_object_subset', [[{
+            return workspace.callFunc('get_object_subset', [[{
                 ref: this.ref,
                 included: [
-                    'scientific_name',
-                    'scientific_lineage',
-                    'rank',
-                    'domain',
-                    'kingdom',
-                    'aliases',
-                    'genetic_code'
+                    'type'
                 ]
             }]])
                 .spread(([objectData]) => {
-                    // console.log('taxon object data...', objectData);
-                    this.scientificName(objectData.data.scientific_name);
-                    this.rank(objectData.data.rank);
-                    this.domain(objectData.data.domain);
-                    this.kingdom(objectData.data.kingdom);
-                    this.geneticCode(objectData.data.genetic_code);
-                    this.aliases(objectData.data.aliases);
+                    this.type(objectData.data.type);
+                    // this.referenceTypes(objectData.data.ref_type);
+                    // this.kbaseID(objectData.data.kbase_id);
+                    // this.description(objectData.data.tree.description);
                     this.loading(false);
-                    // this.scientificName(objectData.data.scientific_name);
-                    const lineage = objectData.data.scientific_lineage;
-                    if (lineage) {
-                        let lineageList;
-                        if (lineage.indexOf(';') !== -1) {
-                            lineageList = lineage.split(';');
-                        } else {
-                            lineageList = lineage.split(',');
-                        }
-                        this.lineage(lineageList);
-                    }
                 })
                 .catch((err) => {
                     console.error('ERROR', err);
@@ -135,70 +116,58 @@ define([
             class: styles.classes.table
         }, [
             tr([
-                th('Scientific name'),
+                th('Type'),
                 td({
                     dataBind: {
-                        text: 'scientificName'
+                        text: 'type'
                     }
                 })
             ]),
             tr([
-                th('Rank'),
+                th('Count'),
                 td({
                     dataBind: {
-                        text: 'rank'
+                        text: 'type'
                     }
                 })
             ]),
-            tr([
-                th('Kingdom'),
-                td({
-                    dataBind: {
-                        text: 'kingdom'
-                    }
-                })
-            ]),
-            tr([
-                th('Domain'),
-                td({
-                    dataBind: {
-                        text: 'domain'
-                    }
-                })
-            ]),
-            tr([
-                th('Genetic Code'),
-                td({
-                    dataBind: {
-                        text: 'geneticCode'
-                    }
-                })
-            ]),
-            tr([
-                th('Aliases'),
-                td({
-                    dataBind: {
-                        foreach: 'aliases'
-                    }
-                }, div({
-                    dataBind: {
-                        text: '$data'
-                    }
-                }))
-            ]),
-            tr([
-                th('Lineage'),
-                td({
-                    dataBind: {
-                        component: {
-                            name: LineageComponent.quotedName(),
-                            params: {
-                                lineage: 'lineage'
-                            }
-                        }
-                    }
-                })
-            ]),
+            // tr([
+            //     th('Description'),
+            //     td({
+            //         dataBind: {
+            //             text: 'description'
+            //         }
+            //     })
+            // ]),
+            // tr([
+            //     th('KBase ID'),
+            //     td({
+            //         dataBind: {
+            //             text: 'kbaseID'
+            //         }
+            //     })
+            // ]),
+            // tr([
+            //     th('Reference Types'),
+            //     td({
+            //         dataBind: {
+            //             text: 'referenceTypes'
+            //         }
+            //     })
+            // ])
+            // tr([
+            //     th('Lineage'),
+            //     td({
+            //         dataBind: {
+            //             component: {
+            //                 name: LineageComponent.quotedName(),
+            //                 params: {
+            //                     lineage: 'lineage'
+            //                 }
+            //             }
+            //         }
+            //     })
+            // ]),
         ]);
     }
 

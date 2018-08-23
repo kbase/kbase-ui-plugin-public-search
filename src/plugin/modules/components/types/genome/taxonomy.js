@@ -25,7 +25,6 @@ define([
 
             this.runtime = context.$root.runtime;
 
-
             this.scientificName = ko.observable();
             this.taxonomy = ko.observableArray();
 
@@ -143,7 +142,7 @@ define([
             class: styles.classes.component
         },
         gen.if('loading',
-            html.loading('Loading overview data'),
+            html.loading('Loading taxonomy data'),
             buildLineage()));
     }
 

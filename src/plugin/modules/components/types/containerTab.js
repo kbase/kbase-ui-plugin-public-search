@@ -15,13 +15,14 @@ define([
         div = t('div');
 
     class ViewModel {
-        constructor({object}) {
-            this.object = object;
+        constructor(params) {
+            const {object} = params;
+            this.object = ko.utils.unwrapObservable(object);
         }
     }
 
     function template() {
-        return div(gen.switch('object().workspaceType', [
+        return div(gen.switch('object.workspaceType', [
             ['"narrative"',
                 'Narrative'],
             ['"refdata"',

@@ -29,7 +29,8 @@ define([
 
         //     this.runtime = context.$root.runtime;
         // }
-        constructor({ref}, context) {
+        constructor(params, context) {
+            const {ref} = params;
             this.ref = ref;
 
             this.runtime = context.$root.runtime;

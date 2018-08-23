@@ -281,7 +281,8 @@ define([
                             class: 'fa fa-question-circle',
                             dataTooltipHook: 'truncatedText',
                             style: {
-                                color: 'gray'
+                                color: 'gray',
+                                cursor: 'pointer'
                             },
                             dataBind: {
                                 click: 'function(d,e){$component.showTruncatedResultsTooltip(d,e)}'

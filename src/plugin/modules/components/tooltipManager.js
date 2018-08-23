@@ -46,17 +46,25 @@ define([
             this.right = ko.observable();
             this.bottom = ko.observable();
 
+            this.escapeHandler = (ev) => {
+                if (ev.key === 'Escape') {
+                    this.closeAllTooltips();
+                }
+            };
+
             this.subscribe(this.tooltips, (newValue) => {
                 if (newValue.length > 0) {
                     this.width(null);
                     this.height(null);
                     this.right(0);
                     this.bottom(0);
+                    document.body.addEventListener('keyup', this.escapeHandler);
                 } else {
                     this.width('0px');
                     this.height('0px');
                     this.right(null);
                     this.bottom(null);
+                    document.body.removeEventListener('keyup', this.escapeHandler);
                 }
             });
 
