@@ -24,15 +24,15 @@ define([
             this.runtime = runtime;
             this.supportedDataTypes = [
                 {
-                    value: 'fbamodel',
+                    value: 'FBAModel',
                     label: 'FBA Model',
                 },
                 {
-                    value: 'genome',
+                    value: 'Genome',
                     label: 'Genome',
                 },
                 {
-                    value: 'pangenome',
+                    value: 'Pangenome',
                     label: 'Pangenome',
                 },
                 // {
@@ -40,8 +40,16 @@ define([
                 //     label: 'Taxon',
                 // },
                 {
-                    value: 'tree',
+                    value: 'Tree',
                     label: 'Species Tree',
+                },
+                {
+                    value: 'Media',
+                    label: 'Media'
+                },
+                {
+                    value: 'MediaCompound',
+                    label: 'Media Compound'
                 }
             ];
         }

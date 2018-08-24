@@ -16,7 +16,12 @@ define([
             });
         }
 
-        searchSummary({query, withUserData, withReferenceData}) {
+        searchSummary({query, withUserData, withReferenceData, types}) {
+
+            if (query === '*') {
+                query = null;
+            }
+
             var param = {
                 match_filter: {
                     full_text_in_all: query,
@@ -27,6 +32,10 @@ define([
                     with_public: 1
                 }
             };
+
+            if (types) {
+                param.object_types = types;
+            }
 
             if (withReferenceData) {
                 if (withUserData) {
@@ -62,6 +71,10 @@ define([
                 };
             });
 
+            if (query === '*') {
+                query = null;
+            }
+
             var param = {
                 match_filter: {
                     full_text_in_all: query,
@@ -77,7 +90,8 @@ define([
                     skip_keys: 0,
                     skip_data: 0,
                     include_highlight: 1,
-                    add_narrative_info: 1
+                    add_narrative_info: 1,
+                    add_access_group_info: 1
                 },
                 access_filter: {
                     with_private: 0,

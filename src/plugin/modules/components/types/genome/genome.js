@@ -81,8 +81,7 @@ define([
                 },
                 {
                     tab: {
-                        label: 'Container',
-                        xcomponent: {
+                        component: {
                             name: ContainerTabComponent.name(),
                             params: {
                                 object: 'object'

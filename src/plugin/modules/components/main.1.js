@@ -15,7 +15,6 @@ define([
     './summary',
     './help',
     './tooltipManager',
-    './dataSource',
     'kb_knockout/components/overlayPanel',
     'kb_knockout/lib/nanoBus'
 ], function (
@@ -35,7 +34,6 @@ define([
     SummaryComponent,
     HelpComponent,
     TooltipComponent,
-    DataSourceComponent,
     OverlayPanelComponent,
     NanoBus
 ) {
@@ -43,6 +41,16 @@ define([
 
     const t = html.tag,
         div = t('div');
+
+    // class SearchError {
+    //     constructor({name, message, code, detail, info}) {
+    //         this.name = name;
+    //         this.message = message;
+    //         this.code = code;
+    //         this.detail = detail;
+    //         this.info = info;
+    //     }
+    // }
 
     class ViewModel extends ViewModelBase {
         constructor(params, context) {
@@ -88,26 +96,11 @@ define([
             this.resultCount = ko.pureComputed(() => {
                 return this.searchResults().length;
             });
-            this.searchSummary = ko.observableArray(
-                this.supportedDataTypes.map((type) => {
-                    return {
-                        selected: ko.pureComputed(() => {return !this.omittedDataTypes().includes(type.value);}),
-                        type: type.value,
-                        count: ko.observable(null)
-                    };
-                })
-                    .sort((a, b) => {
-                        if (a.type < b.type) {
-                            return -1;
-                        }
-                        if (a.type > b.type) {
-                            return 1;
-                        }
-                        return 0;
-                    }));
+            this.searchSummary = ko.observableArray();
 
             // TODO: not implemented yet
             this.summaryCount = null;
+
 
             // TODO: configurable?
             this.maxResultCount = 10000;
@@ -115,6 +108,13 @@ define([
             this.realTotalCount = ko.observable();
 
             this.searchQueryInput = ko.pureComputed(() => {
+                // this.page(null);
+                // let dataTypes = this.dataTypes();
+                // if (!dataTypes || dataTypes.length === 0) {
+                //     dataTypes = this.supportedDataTypes.map((type) => {
+                //         return type.value;
+                //     });
+                // }
                 const omitted = this.omittedDataTypes();
                 const dataTypes = [];
                 for (const type of this.supportedDataTypes) {
@@ -123,15 +123,12 @@ define([
                     }
                 }
 
-                const supportedDataTypes = this.supportedDataTypes.map((type) => {
-                    return type.value;
-                });
+                console.log('types??', dataTypes, omitted);
 
                 return {
                     searchInput: this.searchInput(),
                     forceSearch: this.forceSearch(),
                     dataTypes: dataTypes,
-                    supportedDataTypes: supportedDataTypes,
                     dataSources: this.dataSources(),
                     withPrivateData: this.withPrivateData(),
                     withPublicData: this.withPublicData(),
@@ -282,6 +279,14 @@ define([
                     }
                 }
                 return object.object_name;
+                    // } else {
+                    //     console.warn('cannot determine description for', object);
+                    //     return 'n/a';
+                    // }
+                // } else {
+                //     console.warn('cannot determine description for', object);
+                //     return 'n/a';
+                // }
             }
         }
 
@@ -290,8 +295,10 @@ define([
             if (!query.input.searchInput || query.input.searchInput.trim().length === 0) {
                 this.searchState('none');
                 this.searchResults.removeAll();
+                this.searchSummary.removeAll();
                 this.totalCount(0);
                 this.realTotalCount(0);
+                // this.totalPages(0);
                 this.page(null);
                 return;
             }
@@ -308,6 +315,7 @@ define([
             if (query.paging.page > 1) {
                 const last = query.paging.page * query.paging.pageSize;
                 if (last >= this.maxResultCount) {
+                    // count = this.maxResultCount - (query.paging.page - 1) * query.paging.pageSize;
                     count = this.maxResultCount - last + query.paging.pageSize;
                 } else {
                     count = query.paging.pageSize;
@@ -336,29 +344,22 @@ define([
                     sorting: query.sorting.sortSpec
                 }),
                 this.model.searchSummary({
-                    types: query.input.supportedDataTypes,
                     query: query.input.searchInput,
                     withUserData: query.input.withUserData,
                     withReferenceData: query.input.withReferenceData
                 })
             ])
                 .spread((result, summaryResult) => {
+                    // console.log('result!', summaryResult);
+                    // The results
                     this.searchResults.removeAll();
-
-                    this.searchSummary().forEach((summary) => {
-                        if (this.omittedDataTypes().includes(summary.type)) {
-                            summary.count(null);
-                        } else {
-                            summary.count(summaryResult.type_to_count[summary.type] || 0);
-                        }
-                    });
-
-
+                    this.searchSummary.removeAll();
                     const len = result.objects.length;
                     if (len === 0) {
                         this.searchState('notfound');
                         this.totalCount(0);
                         this.realTotalCount(0);
+                        // this.totalPages(0);
                         this.page(null);
                         return;
                     }
@@ -371,8 +372,36 @@ define([
                         this.realTotalCount(result.total);
                     }
 
+                    // The search types summary
+                    this.searchSummary(Object.entries(summaryResult.type_to_count)
+                        // .filter(([type,]) => {
+                        //     if (!dataTypes) {
+                        //         return true;
+                        //     }
+                        //     if (dataTypes.length === 0) {
+                        //         return true;
+                        //     }
+                        //     return (dataTypes.includes(type));
+                        // })
+                        .map(([type, count]) => {
+                            return {
+                                type: type,
+                                count: count
+                            };
+                        })
+                        .sort((a, b) => {
+                            if (a.count < b.count) {
+                                return 1;
+                            } else if (a.count > b.count) {
+                                return -1;
+                            } else {
+                                return 0;
+                            }
+                        }));
+
                     // we receive the workspace and object info for each search result.
                     // Here we transform them into more usable forms.
+                    // console.log('result?', result);
                     const workspacesMap = {};
                     for (const [id, info] of Object.entries(result.access_groups_info)) {
                         workspacesMap[id] = serviceUtils.workspaceInfoToObject(info);
@@ -385,6 +414,18 @@ define([
                     }
                     this.objectsMap = objectsMap;
 
+                    // result.workspacesMap = Object.keys(result.access_groups_info).reduce((workspacesMap, key) => {
+                    //     workspacesMap[key] = serviceUtils.workspaceInfoToObject(result.access_groups_info[key]);
+                    //     info. serviceUtils.workspaceInfoToObject(info);
+                    // });
+
+                    // result.objectsInfo = result.objects_info.map((info) => {
+                    //     return serviceUtils.objectInfoToObject(info);
+                    // });
+
+                    // The workspace summary
+                    // console.log('access gropu info', workspacesMap, objectsMap);
+
                     const workspaces = {};
                     for (const [id, info] of Object.entries((workspacesMap))) {
                         // grok the workspace type
@@ -395,8 +436,6 @@ define([
                             ownerRealName: null
                         };
                         if (info == null) {
-                            workspace.type = 'inaccessible';
-                        } else if (info.globalread === 'n' && info.user_permission === 'n') {
                             workspace.type = 'inaccessible';
                         } else {
                             workspace.owner = info.owner;
@@ -426,8 +465,11 @@ define([
                         }
                         workspaces[id] = workspace;
                     }
+                    // console.log('workspaces', workspaces);
 
                     // Calculate page stats
+                    // const totalPages = Math.ceil(this.totalCount()/query.paging.pageSize);
+                    // this.totalPages(totalPages);
                     if (!this.page()) {
                         this.page(1);
                     }
@@ -439,7 +481,6 @@ define([
                         const workspace = workspaces[workspaceId];
                         let owner;
                         let name;
-                        let mode = 'normal';
                         const source = workspace.type;
                         switch (workspace.type) {
                         case 'narrative':
@@ -469,7 +510,6 @@ define([
                         case 'inaccessible':
                             owner = 'n/a';
                             name = 'n/a';
-                            mode = 'inaccessible';
                             break;
                         default:
                             owner = '** err';
@@ -477,33 +517,30 @@ define([
                         }
 
                         const row = {
-                            mode: mode,
-                            data: {
-                                type: {
-                                    value: object.type
-                                },
-                                date: {
-                                    value: new Date(object.timestamp)
-                                },
-                                owner: {
-                                    value: owner
-                                },
-                                source: {
-                                    value: source
-                                },
-                                name: {
-                                    value: name
-                                },
-                                description: {
-                                    value: this.grokDescription(object)
-                                },
-                                metadata: {
-                                    workspaceId: workspaceId,
-                                    objectId: objectId,
-                                    version: version,
-                                    ref: [workspaceId, objectId, version].join('/'),
-                                    workspaceType: workspace.type
-                                }
+                            type: {
+                                value: object.type
+                            },
+                            date: {
+                                value: new Date(object.timestamp)
+                            },
+                            owner: {
+                                value: owner
+                            },
+                            source: {
+                                value: source
+                            },
+                            name: {
+                                value: name
+                            },
+                            description: {
+                                value: this.grokDescription(object)
+                            },
+                            metadata: {
+                                workspaceId: workspaceId,
+                                objectId: objectId,
+                                version: version,
+                                ref: [workspaceId, objectId, version].join('/'),
+                                workspaceType: workspace.type
                             }
                         };
                         this.searchResults.push(row);
@@ -512,8 +549,7 @@ define([
                 })
                 .catch((error) => {
                     this.searchResults.removeAll();
-                    // this.searchSummary.removeAll();
-                    this.resetSearchSummary();
+                    this.searchSummary.removeAll();
                     this.totalCount(0);
                     this.realTotalCount(0);
                     this.page(null);
@@ -525,15 +561,9 @@ define([
                     this.searching(false);
                 });
         }
-
-        resetSearchSummary() {
-            this.searchSummary().forEach((summary) => {
-                summary.count(null);
-            });
-        }
     }
 
-    const style = html.makeStyles({
+    const styles = html.makeStyles({
         component: {
             css: {
                 margin: '0 10px',
@@ -565,125 +595,44 @@ define([
                 margin: '0 0 4px 4px',
                 padding: '4px'
             }
-        },
-        mainRow: {
-            css: {
-                flex: '1 1 0px',
-                display: 'flex',
-                flexDirection: 'row'
-            }
-        },
-        filterColumn: {
-            css: {
-                width: '15em',
-                display: 'flex',
-                flexDirection: 'column',
-                paddingRight: '10px'
-            }
-        },
-        resultsColumn: {
-            css: {
-                flex: '1 1 0px',
-                display: 'flex',
-                flexDirection: 'column'
-            }
-        },
-        fieldGroupLabel: {
-            fontWeight: 'bold',
-            color: 'gray',
-            // marginTop: '8px',
-            // marginRight: '4px'
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: '1.5em',
-            marginBottom: '8px'
-        },
-        columnHeader: {
-            fontWeight: 'bold',
-            color: 'gray',
-            textAlign: 'center',
-            margin: '10px 0 4px 0',
-            textTransform: 'uppercase',
-            borderBottom: '1px silver solid'
-        },
-        columnGroup: {
-            css: {
-                border: '1px silver solid',
-                padding: '4px',
-                marginBottom: '10px'
-            }
         }
     });
 
     function template() {
         return div({
-            class: style.classes.component
+            class: styles.classes.component
         }, [
             div({
-                class: style.classes.header
+                class: styles.classes.header
             }, [
                 div({
-                    class: style.classes.headerCol1
+                    class: styles.classes.headerCol1
                 }, [
                     gen.component({
                         name: SearchBarComponent.name(),
                         params: ['searchInput', 'forceSearch', 'searching']
                     }),
-                ]),
-            ]),
-            div({
-                class: style.classes.mainRow
-            }, [
-                div({
-                    class: style.classes.filterColumn
-                }, [
-                    div({
-                        class: style.classes.columnHeader
-                    }, 'Filters'),
-                    div({
-                        class: style.classes.columnGroup
-                    }, [
-                        div({
-                            class: style.classes.fieldGroupLabel
-                        }, 'Search In:'),
-                        gen.component({
-                            name: DataSourceComponent.name(),
-                            params: {
-                                withUserData: 'withUserData',
-                                withReferenceData: 'withReferenceData'
-                            }
-                        })
-                    ]),
-                    div({
-                        class: style.classes.columnGroup
-                    }, [
-                        div({
-                            class: style.classes.fieldGroupLabel
-                        }, 'Search Summary:'),
-                        gen.component({
-                            name: SummaryComponent.name(),
-                            params: ['searchSummary', 'searchState', 'totalCount', 'realTotalCount', 'omittedDataTypes']
-                        })
-                    ])
-                ]),
-                div({
-                    class: style.classes.resultsColumn
-                }, [
-                    div({
-                        class: style.classes.columnHeader
-                    }, 'Results'),
+                    gen.component({
+                        name: FilterBarComponent.name(),
+                        params: ['withPrivateData', 'withPublicData', 'dataTypes', 'withUserData', 'withReferenceData']
+                    }),
                     gen.component({
                         name: NavBarComponent.name(),
                         params: ['bus', 'page', 'totalPages', 'summaryCount', 'resultCount',
                             'totalCount', 'realTotalCount', 'searching', 'searchState']
-                    }),
-                    gen.component({
-                        name: ResultsAreaComponent.name(),
-                        params: ['bus', 'searchResults', 'searching', 'pageSize', 'searchState', 'showOverlay', 'errorMessage']
                     })
-                ])
+                ]),
+                div({
+                    class: styles.classes.headerCol2
+                }, gen.component({
+                    name: SummaryComponent.name(),
+                    params: ['searchSummary', 'searchState', 'totalCount', 'realTotalCount', 'omittedDataTypes']
+                }))
             ]),
+            gen.component({
+                name: ResultsAreaComponent.name(),
+                params: ['bus', 'searchResults', 'searching', 'pageSize', 'searchState', 'showOverlay', 'errorMessage']
+            }),
             gen.component({
                 name: OverlayPanelComponent.name(),
                 params: {
@@ -704,7 +653,7 @@ define([
         return {
             viewModelWithContext: ViewModel,
             template: template(),
-            stylesheet: style.sheet
+            stylesheet: styles.sheet
         };
     }
 

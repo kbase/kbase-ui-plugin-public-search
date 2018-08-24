@@ -226,12 +226,12 @@ define([
             ['"notfound"', ''],
             ['"error"', ''],
             [
-                '"searching"',
-                span({
-                    style: {
-                        fontSize: '80%'
-                    }
-                },  html.loading())
+                '"searching"', ''
+                // span({
+                //     style: {
+                //         fontSize: '80%'
+                //     }
+                // },  html.loading())
             ],
             [
                 '"success"',

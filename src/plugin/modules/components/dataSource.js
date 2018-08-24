@@ -18,38 +18,32 @@ define([
     const styles = html.makeStyles({
         component: {
             flex: '1 1 0px',
-            display: 'flex',
-            flexDirection: 'column'
         },
         searchArea: {
-            flex: '0 0 50px',
-            // border: '1px red solid'
+            flex: '0 0 50px'
         },
         filterArea: {
             flex: '0 0 50px',
             textAlign: 'left'
-            // border: '1px blue dashed'
         },
         resultArea: {
             flex: '1 1 0px',
-            // border: '1px green dotted',
             display: 'flex',
             flexDirection: 'column'
         },
         activeFilterInput: {
-            // fontFamily: 'monospace',
             backgroundColor: 'rgba(209, 226, 255, 1)',
             color: '#000'
         },
         modifiedFilterInput: {
-            // fontFamily: 'monospace',
             backgroundColor: 'rgba(255, 245, 158, 1)',
             color: '#000'
         },
         checkboxControl: {
             borderColor: 'transparent',
             boxShadow: 'none',
-            margin: '0 2px'
+            margin: '0 2px',
+            borderRadius: 'unset'
         },
         checkboxLabel: {
             fontWeight: 'normal',
@@ -59,9 +53,16 @@ define([
         fieldGroupLabel: {
             fontWeight: 'bold',
             color: 'gray',
-            marginTop: '8px',
-            marginRight: '4px'
-            // fontSize: '80%'
+            // marginTop: '8px',
+            // marginRight: '4px'
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '1.5em',
+            marginBottom: '8px'
+        },
+        fieldGroup: {
+            marginBottom: '8px'
         }
     });
 
@@ -73,68 +74,58 @@ define([
     }
 
     function buildControl() {
-        return div({
-            class: 'form-inline',
-        }, [
-            span({
-                class: styles.classes.fieldGroupLabel
-            }, 'Search In:'),
-            span({
-                class: ['form-control', styles.classes.checkboxControl],
-                title: 'Search over data created by users in Narratives',
-                dataBind: {
-                    css: 'withUserData() ? "' + styles.classes.activeFilterInput + '" : null'
-                }
-            }, label({
-                class: styles.classes.checkboxLabel
+        return div([
+            div({
+                class: styles.classes.fieldGroup
             }, [
-                input({
-                    type: 'checkbox',
+                span({
+                    class: ['form-control', styles.classes.checkboxControl],
+                    title: 'Search over data created by users in Narratives',
                     dataBind: {
-                        checked: 'withUserData',
-                        enable: 'withReferenceData'
+                        css: 'withUserData() ? "' + styles.classes.activeFilterInput + '" : null'
                     }
-                }),
-                ' Narratives'
-            ])),
-            span({
-                class: ['form-control', styles.classes.checkboxControl],
-                title: 'Search over reference data',
-                dataBind: {
-                    css: 'withReferenceData() ? "' + styles.classes.activeFilterInput + '" : null'
-                }
-            }, label({
-                class: styles.classes.checkboxLabel
+                }, label({
+                    class: styles.classes.checkboxLabel
+                }, [
+                    input({
+                        type: 'checkbox',
+                        dataBind: {
+                            checked: 'withUserData',
+                            enable: 'withReferenceData'
+                        }
+                    }),
+                    ' Narratives'
+                ]))
+            ]),
+            div({
+                class: styles.classes.fieldGroup
             }, [
-                input({
-                    type: 'checkbox',
+                span({
+                    class: ['form-control', styles.classes.checkboxControl],
+                    title: 'Search over reference data',
                     dataBind: {
-                        checked: 'withReferenceData',
-                        enable: 'withUserData'
+                        css: 'withReferenceData() ? "' + styles.classes.activeFilterInput + '" : null'
                     }
-                }),
-                ' Reference Data'
-            ]))
+                }, label({
+                    class: styles.classes.checkboxLabel
+                }, [
+                    input({
+                        type: 'checkbox',
+                        dataBind: {
+                            checked: 'withReferenceData',
+                            enable: 'withUserData'
+                        }
+                    }),
+                    ' Reference Data'
+                ]))
+            ])
         ]);
     }
 
     function template() {
         return div({
-            style: {
-                // flex: '1 1 0px',
-                display: 'flex',
-                flexDirection: 'row'
-            }
-        }, [
-            div({
-                style: {
-                    flex: '1',
-                    display: 'flex',
-                    justifyContent: 'flex-end',
-                    alignItems: 'center'
-                }
-            }, buildControl())
-        ]);
+            class: 'component'
+        }, buildControl());
     }
 
     function component() {
