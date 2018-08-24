@@ -26,10 +26,12 @@ define([
 
             this.loading = ko.observable(true);
 
-            this.type = ko.observable();
+            this.type = null;
+            this.count = null;
             // this.referenceTypes = ko.observable();
             // this.kbaseID = ko.observable();
-            // this.description = ko.observable();
+            // this.name = null;
+            // this.description = null;
 
             this.getOverviewInfo()
                 .then(() => {
@@ -48,14 +50,31 @@ define([
             });
             // https://github.com/kbase/workspace_deluxe/blob/8a52097748ef31b94cdf1105766e2c35108f4c41/workspace.spec#L1111
             // https://github.com/kbase/workspace_deluxe/blob/8a52097748ef31b94cdf1105766e2c35108f4c41/workspace.spec#L265
-            return workspace.callFunc('get_object_subset', [[{
-                ref: this.ref,
-                included: [
-                    'type'
-                ]
-            }]])
-                .spread(([objectData]) => {
-                    this.type(objectData.data.type);
+            // TODO: report bug for tree type -- weird, the returned structure does NOT look like the
+            // type spec https://ci.kbase.us/#spec/type/KBaseTrees.Tree-1.0
+            // const fields = [
+            //     '/type',
+            //     '/newick_tree/name',
+            //     '/newick_tree/description',
+            //     '/newick_tree/leaf_list'
+            // ];
+            const fields = [
+                '/type',
+                '/kb_refs'
+            ];
+            return workspace.callFunc('get_objects2', [{
+                objects: [{
+                    ref: this.ref,
+                    included: fields
+                }]
+            }])
+                .spread(({data}) => {
+                    const [objectData] = data;
+                    console.log('object data...', objectData);
+                    this.type = objectData.data.type;
+                    this.count = Object.keys(objectData.data.kb_refs).length;
+                    // this.name = objectData.data.newick_tree.name;
+                    // this.description = objectData.data.newick_tree.description;
                     // this.referenceTypes(objectData.data.ref_type);
                     // this.kbaseID(objectData.data.kbase_id);
                     // this.description(objectData.data.tree.description);
@@ -127,10 +146,18 @@ define([
                 th('Count'),
                 td({
                     dataBind: {
-                        text: 'type'
+                        text: 'count'
                     }
                 })
             ]),
+            // tr([
+            //     th('Description'),
+            //     td({
+            //         dataBind: {
+            //             text: 'description'
+            //         }
+            //     })
+            // ]),
             // tr([
             //     th('Description'),
             //     td({

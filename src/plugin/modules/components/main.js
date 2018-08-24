@@ -290,6 +290,7 @@ define([
             if (!query.input.searchInput || query.input.searchInput.trim().length === 0) {
                 this.searchState('none');
                 this.searchResults.removeAll();
+                this.resetSearchSummary();
                 this.totalCount(0);
                 this.realTotalCount(0);
                 this.page(null);
@@ -346,11 +347,12 @@ define([
                     this.searchResults.removeAll();
 
                     this.searchSummary().forEach((summary) => {
-                        if (this.omittedDataTypes().includes(summary.type)) {
-                            summary.count(null);
-                        } else {
-                            summary.count(summaryResult.type_to_count[summary.type] || 0);
-                        }
+                        summary.count(summaryResult.type_to_count[summary.type] || 0);
+                        // if (this.omittedDataTypes().includes(summary.type)) {
+                        //     summary.count(null);
+                        // } else {
+                        //     summary.count(summaryResult.type_to_count[summary.type] || 0);
+                        // }
                     });
 
 
@@ -600,17 +602,22 @@ define([
             marginBottom: '8px'
         },
         columnHeader: {
-            fontWeight: 'bold',
-            color: 'gray',
-            textAlign: 'center',
-            margin: '10px 0 4px 0',
-            textTransform: 'uppercase',
-            borderBottom: '1px silver solid'
+            // fontWeight: 'bold',
+            color: 'white',
+            backgroundColor: 'gray',
+            // textAlign: 'center',
+            margin: '10px 0 10px 0',
+            textTransform: 'lowercase',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '2em'
+            // borderBottom: '1px silver solid'
         },
         columnGroup: {
             css: {
                 border: '1px silver solid',
-                padding: '4px',
+                // padding: '4px',
                 marginBottom: '10px'
             }
         }
@@ -646,7 +653,7 @@ define([
                     }, [
                         div({
                             class: style.classes.fieldGroupLabel
-                        }, 'Search In:'),
+                        }, 'Data Sources'),
                         gen.component({
                             name: DataSourceComponent.name(),
                             params: {
@@ -660,7 +667,7 @@ define([
                     }, [
                         div({
                             class: style.classes.fieldGroupLabel
-                        }, 'Search Summary:'),
+                        }, 'Data Types'),
                         gen.component({
                             name: SummaryComponent.name(),
                             params: ['searchSummary', 'searchState', 'totalCount', 'realTotalCount', 'omittedDataTypes']

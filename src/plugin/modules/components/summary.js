@@ -11,9 +11,11 @@ define([
 ) {
     'use strict';
 
-    const t = html.tag,
-        span = t('span'),
-        div = t('div');
+    // const t = html.tag,
+    //     span = t('span'),
+    //     div = t('div'),
+    //     table = t('table'),
+    const [span, div, table, tbody, tr, th, td] = html.tags(['span', 'div', 'table', 'tbody', 'tr', 'th', 'td']);
 
     const style = html.makeStyles({
         component: {
@@ -38,8 +40,8 @@ define([
         },
         summaryTable: {
             css: {
-                borderTop: '1px silver solid',
-                borderBottom: '1px silver solid',
+                // borderTop: '1px silver solid',
+                // borderBottom: '1px silver solid',
                 width: '100%',
                 backgroundColor: '#FFF',
             },
@@ -68,7 +70,8 @@ define([
                     backgroundColor: 'rgba(255,255,255,1)',
                 },
                 '.-body > .-row': {
-                    padding: '4px'
+                    padding: '4px',
+                    height: '2em'
                 },
                 '.-body > .-row > .-cell': {
                     display: 'inline-block'
@@ -86,12 +89,19 @@ define([
             }
         },
         activeFilterInput: {
-            backgroundColor: 'rgba(209, 226, 255, 1)',
-            color: '#000'
+            css: {
+                backgroundColor: 'rgba(209, 226, 255, 1)',
+                color: '#000'
+            },
+            pseudo: {
+                hover: {
+                    backgroundColor: 'rgba(209, 226, 255, 0.5)',
+                }
+            }
         },
         statusRow: {
             css: {
-                height: '2em'
+                // height: '3em'
             }
         }
     });
@@ -103,6 +113,30 @@ define([
             this.totalCount = totalCount;
             this.realTotalCount = realTotalCount;
             this.omittedDataTypes = omittedDataTypes;
+
+            this.includedTotal = ko.pureComputed(() => {
+                if (['none', 'error', 'searching'].includes(this.searchState())) {
+                    return null;
+                }
+                return this.searchSummary().reduce((total, typeSummary) => {
+                    if (typeSummary.selected()) {
+                        return total + typeSummary.count();
+                    }
+                    return total;
+                }, 0);
+            });
+
+            this.excludedTotal = ko.pureComputed(() => {
+                if (['none', 'error', 'searching'].includes(this.searchState())) {
+                    return null;
+                }
+                return this.searchSummary().reduce((total, typeSummary) => {
+                    if (!typeSummary.selected()) {
+                        return total + typeSummary.count();
+                    }
+                    return total;
+                }, 0);
+            });
         }
 
         doSelectDataType(data) {
@@ -144,24 +178,32 @@ define([
                     dataBind: {
                         css: {
                             [style.classes.activeFilterInput]: 'selected()'
-                        }
+                        },
+                        click: 'function(d,e){$component.doSelectDataType.call($component,d,e);}'
+                    },
+                    style: {
+                        cursor: 'pointer'
                     }
                 }, [
                     div({
-                        class: '-cell',
-                    }, span({
+                        class: '-cell'
+                    },
+                    // input({
+                    //     type: 'checkbox',
+                    //     dataBind: {
+                    //         checked: 'selected'
+                    //     }
+                    // })),
+                    span({
                         class: 'fa',
-                        style: {
-                            cursor: 'pointer'
-                        },
                         dataBind: {
                             css: {
                                 'fa-check-square-o': 'selected()',
                                 'fa-square-o': '!selected()'
-                            },
-                            click: 'function(d,e){$component.doSelectDataType.call($component,d,e);}'
+                            }
                         }
                     })),
+
                     div({
                         class: '-cell',
                         dataBind: {
@@ -194,6 +236,44 @@ define([
         ]);
     }
 
+    function buildTotals() {
+        return table({
+            style: {
+                borderSpacing: '4px',
+                borderCollapse: 'separate'
+            }
+        },
+        tbody([
+            tr([
+                td('Included'),
+                td(span({
+                    dataBind: {
+                        typedText: {
+                            value: 'includedTotal',
+                            type: '"number"',
+                            format: '"0,0"',
+                            missing: '"-"'
+                        }
+                    }
+                }))
+            ]),
+            tr([
+                td('Excluded'),
+                td(span({
+                    dataBind: {
+                        typedText: {
+                            value: 'excludedTotal',
+                            type: '"number"',
+                            format: '"0,0"',
+                            missing: '"-"'
+                        }
+                    }
+                }))
+            ])
+        ])
+        );
+    }
+
     function buildMessage(message) {
         return div({
             style: {
@@ -206,49 +286,55 @@ define([
     function buildTotal() {
         return div({
             class: style.classes.statusRow
-        }, gen.switch('searchState', [
-            [
-                '"none"', buildMessage('No active search')
-            ],
-            [
-                '"searching"', buildMessage(html.loading('Searching', 'normal'))
-            ],
-            [
-                '"error"', buildMessage('Error!')
-            ],
-            [
-                '["success", "notfound"]',
-                buildMessage(div([
-                    'Found ',
-                    span({
-                        style: {
-                            fontWeight: 'bold'
-                        },
-                        dataBind: {
-                            typedText: {
-                                value: 'realTotalCount',
-                                type: '"number"',
-                                format: '"0,0"'
-                            }
-                        }
-                    }),
-                    gen.plural('realTotalCount', ' data object', ' data objects')
-                ]))
-            ],
-            [
-                '$default',
-                buildMessage(div([
-                    'Unknown search state "',
-                    span({
-                        dataBind: {
-                            text: 'searchState'
-                        }
-                    }),
-                    '"'
-                ]))
-            ]
-        ]));
+        }, buildTotals());
     }
+
+    // function buildTotal() {
+    //     return div({
+    //         class: style.classes.statusRow
+    //     }, gen.switch('searchState', [
+    //         [
+    //             '"none"', buildMessage('No active search')
+    //         ],
+    //         [
+    //             '"searching"', buildMessage(html.loading('Searching', 'normal'))
+    //         ],
+    //         [
+    //             '"error"', buildMessage('Error!')
+    //         ],
+    //         [
+    //             '["success", "notfound"]', buildTotals()
+    //             // buildMessage(div([
+    //             //     'Found ',
+    //             //     span({
+    //             //         style: {
+    //             //             fontWeight: 'bold'
+    //             //         },
+    //             //         dataBind: {
+    //             //             typedText: {
+    //             //                 value: 'includedTotal',
+    //             //                 type: '"number"',
+    //             //                 format: '"0,0"'
+    //             //             }
+    //             //         }
+    //             //     }),
+    //             //     gen.plural('realTotalCount', ' data object', ' data objects')
+    //             // ]))
+    //         ],
+    //         [
+    //             '$default',
+    //             buildMessage(div([
+    //                 'Unknown search state "',
+    //                 span({
+    //                     dataBind: {
+    //                         text: 'searchState'
+    //                     }
+    //                 }),
+    //                 '"'
+    //             ]))
+    //         ]
+    //     ]));
+    // }
 
     function template() {
         return div({

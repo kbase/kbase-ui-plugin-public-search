@@ -13,7 +13,11 @@ define([
         div = t('div'),
         span = t('span'),
         input = t('input'),
-        label = t('label');
+        label = t('label'),
+        table = t('table'),
+        tbody = t('tbody'),
+        tr = t('tr'),
+        td = t('td');
 
     const styles = html.makeStyles({
         component: {
@@ -32,8 +36,15 @@ define([
             flexDirection: 'column'
         },
         activeFilterInput: {
-            backgroundColor: 'rgba(209, 226, 255, 1)',
-            color: '#000'
+            css: {
+                backgroundColor: 'rgba(209, 226, 255, 1)',
+                color: '#000'
+            },
+            pseudo: {
+                hover: {
+                    backgroundColor: 'rgba(209, 226, 255, 0.5)',
+                }
+            }
         },
         modifiedFilterInput: {
             backgroundColor: 'rgba(255, 245, 158, 1)',
@@ -62,8 +73,69 @@ define([
             marginBottom: '8px'
         },
         fieldGroup: {
-            marginBottom: '8px'
-        }
+            // marginBottom: '8px'
+        },
+        xtable: {
+            css: {
+                width: '100%',
+                'border-spacing': '4px',
+                'border-collapse': 'separate'
+            },
+            inner: {
+                'tr': {
+                    cursor: 'pointer'
+                },
+                'td:nth-child(1)': {
+                    textAlign: 'center',
+                    width: '1em'
+                },
+                'td:nth-child(2)': {
+                    // width: '90%'
+                }
+            }
+        },
+        table: {
+            css: {
+                // borderTop: '1px silver solid',
+                // borderBottom: '1px silver solid',
+                width: '100%',
+                backgroundColor: '#FFF',
+            },
+            inner: {
+                '.-header': {
+                    fontStyle: 'italic',
+                    color: 'rgba(0, 0, 0, 0.7)',
+                    padding: '4px',
+                    borderBottom: '1px silver solid',
+                },
+                '.-header > .-cell': {
+                    display: 'inline-block'
+                },
+                '.-header > .-cell:nth-child(1)': {
+                    width: '10%'
+                },
+                '.-header > .-cell:nth-child(2)': {
+                    width: '90%'
+                },
+                '.-body-container': {
+                    backgroundColor: 'rgba(255,255,255,1)',
+                },
+                '.-body > .-row': {
+                    padding: '4px',
+                    cursor: 'pointer',
+                    height: '2em'
+                },
+                '.-body > .-row > .-cell': {
+                    display: 'inline-block'
+                },
+                '.-body > .-row > .-cell:nth-child(1)': {
+                    width: '10%'
+                },
+                '.-body > .-row > .-cell:nth-child(2)': {
+                    width: '90%'
+                }
+            }
+        },
     });
 
     class ViewModel {
@@ -71,6 +143,131 @@ define([
             this.withUserData = withUserData;
             this.withReferenceData = withReferenceData;
         }
+        toggleUserData() {
+            if (this.withReferenceData()) {
+                this.withUserData(!this.withUserData());
+            }
+        }
+        toggleReferenceData() {
+            if (this.withUserData()) {
+                this.withReferenceData(!this.withReferenceData());
+            }
+        }
+    }
+
+    function buildDataSourceTable() {
+        return div({
+            class: styles.classes.table
+        }, [
+            // div({
+            //     class: '-header'
+            // }, 'Data Sources'),
+            div({
+                class: '-body-container'
+            }, div({
+                class: '-body'
+            }, [
+                div({
+                    class: '-row',
+                    dataBind: {
+                        css: {
+                            [styles.classes.activeFilterInput]: 'withUserData()'
+                        },
+                        click: 'function(d,e){$component.toggleUserData.call($component,d,e);}'
+                    }
+                }, [
+                    div({
+                        class: '-cell'
+                    },
+                    // input({
+                    //     type: 'checkbox',
+                    //     dataBind: {
+                    //         // checked: 'withUserData',
+                    //         enable: 'withReferenceData'
+                    //     }
+                    // })
+                    span({
+                        class: 'fa',
+                        dataBind: {
+                            style: {
+                                color: 'withReferenceData() ? "#000" : "#AAA"'
+                            },
+                            css: {
+                                'fa-check-square-o': 'withUserData()',
+                                'fa-square-o': '!withUserData()'
+                            }
+                        }
+                    })
+                    ),
+                    div({
+                        class: '-cell'
+                    }, 'Narratives')
+                ]),
+                div({
+                    class: '-row',
+                    dataBind: {
+                        css: {
+                            [styles.classes.activeFilterInput]: 'withReferenceData()'
+                        },
+                        click: 'function(d,e){$component.toggleReferenceData($component,d,e);}'
+                    }
+                }, [
+                    div({
+                        class: '-cell'
+                    },
+                    // input({
+                    //     type: 'checkbox',
+                    //     dataBind: {
+                    //         // checked: 'withReferenceData',
+                    //         enable: 'withUserData'
+                    //     }
+                    // })
+                    span({
+                        class: 'fa',
+                        dataBind: {
+                            style: {
+                                color: 'withUserData() ? "#000" : "#AAA"'
+                            },
+                            css: {
+                                'fa-check-square-o': 'withReferenceData()',
+                                'fa-square-o': '!withReferenceData()'
+                            }
+                        }
+                    })
+                    ),
+                    div({
+                        class: '-cell'
+                    }, 'Reference Data')
+                ])
+            ]))
+        ]);
+        //     div([
+        //         tr({
+        //             class: styles.classes.activeFilterInput
+        //         }, [
+        //             td(input({
+        //                 type: 'checkbox',
+        //                 dataBind: {
+        //                     checked: 'withUserData',
+        //                     enable: 'withReferenceData'
+        //                 }
+        //             })),
+        //             td('Narratives')
+        //         ]),
+        //         tr({
+        //             class: styles.classes.activeFilterInput
+        //         }, [
+        //             td(input({
+        //                 type: 'checkbox',
+        //                 dataBind: {
+        //                     checked: 'withReferenceData',
+        //                     enable: 'withUserData'
+        //                 }
+        //             })),
+        //             td('Reference Data')
+        //         ])
+        //     ])
+        // ]);
     }
 
     function buildControl() {
@@ -125,7 +322,7 @@ define([
     function template() {
         return div({
             class: 'component'
-        }, buildControl());
+        }, buildDataSourceTable());
     }
 
     function component() {
