@@ -1,0 +1,17 @@
+/* 
+    The html and body styles establish that this plugin will stretch to the 
+    full height and width of the container node.
+*/
+html {
+    height: 100%;
+}
+
+body {
+    box-sizing: border-box;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 0px;
+}

@@ -1,0 +1,228 @@
+# types
+---
+types:
+    # COMMUNITIES
+    -
+        type: 
+            module: Communities
+            name:     Collection
+            version: any
+        icon: 
+            type: fontAwesome
+            classes: ['fa-list-ul']
+    -
+        type: 
+            module: Communities
+            name:     Heatmap
+            version: any
+        icon:     
+            type: fontAwesome
+            classes: ['fa-th']
+    -
+        type:
+            module: Communities
+            name: TaxonomicMatrix
+            version: any
+        icon:     
+            type: fontAwesome
+            classes: ['fa-table']                   
+    # TYPES DEFINED IN MODELING WIDGETS
+    -
+        type:
+            module: KBasePhenotypes
+            name: PhenotypeSet
+            version: any
+        icon:     
+            type: fontAwesome
+            classes: ['fa-list-ul']
+    -
+        type:
+            module: KBaseBiochem
+            name: CompoundSet
+            version: any
+        icon:
+            type: fontAwesome
+            classes: ['fa-list-ul']
+    -
+        type:
+            module: Communities
+            name: FunctionalMatrix
+            version: any
+        icon:     
+            type: fontAwesome
+            classes: ['fa-table']
+                                            
+    -
+        type:
+            module: Communities
+            name: Metagenome
+            version: any 
+        icon:     
+            type: kbase
+            classes: ['icon-metagenome', 'kb-data-icon-dnudge']
+    -
+        type:
+            module: Communities
+            name: FunctionalProfile
+            version: any                                                                    
+    # GENOME COMPARISON
+    - 
+        type:
+            module: GenomeComparison
+            name: ProteomeComparison
+            version: any
+        icon:     
+            type: fontAwesome
+            classes: ['fa-arrows-h']
+    # ASSEMBLY
+    -
+        type:
+            module: KBaseAssembly
+            name: AssemblyInput
+            version: any
+        icon: 
+            type: kbase
+            classes: ['icon-reads', 'kb-data-icon-dnudge']
+    -
+        type:
+            module: KBaseAssembly
+            name: AssemblyReport
+            version: any
+    -
+        type:
+            module: KBaseAssembly
+            name: PairedEndLibrary
+            version: any
+        icon:     
+            type: kbase
+            classes: ['icon-reads', 'kb-data-icon-dnudge']
+    -
+        type:
+            module: KBaseAssembly
+            name: SingleEndLibrary
+            version: any
+        icon:     
+            type: kbase
+            classes: ['icon-reads', 'kb-data-icon-dnudge']
+            color: '#795548'                                                   
+    -
+        type:
+            module: KBaseAssembly
+            name: ReferenceAssembly
+            version: any
+    # BIOCHHEM
+    -
+        type:
+            module: KBaseBiochem
+            name: Media
+            version: any
+        icon:
+            type: fontAwesome
+            classes: ['fa-flask']
+    
+    # EXPRESSION
+    -
+        type:
+            module: KBaseExpression
+            name: ExpressionSeries
+            version: any
+        icon:    
+            type: fontAwesome
+            classes: ['fa-tachometer']
+    # FBA
+    -
+        type: 
+            module: KBaseFBA
+            name: FBA
+            version: any
+        icon:    
+            type: kbase
+            classes: ['icon-metabolism', 'kb-data-icon-dnudge']
+    -
+        type: 
+            module: KBaseFBA
+            name: FBAModel
+            version: any
+        icon:     
+            type: kbase
+            classes: ['icon-metabolism', 'kb-data-icon-dnudge']
+    -
+        type:
+            module: KBaseFBA
+            name: FBAModelSet
+            version: any
+    # SEARCH 
+    
+    -
+        type:
+            module: KBaseSearch
+            name: GenomeSet
+            version: any
+        icon:     
+            type: fontAwesome
+            classes: ['fa-list-ul']                                                    
+            
+    # KBASE FILE
+    -
+        type:
+            module: KBaseFile
+            name: PairedEndLibrary
+            version: any
+        icon:     
+            type: kbase
+            classes: ['icon-reads', 'kb-data-icon-dnudge']
+            color: '#795548'
+    -
+        type:
+            module: KBaseFile
+            name: SingleEndLibrary
+            version: any
+        icon:     
+            type: kbase
+            classes: ['icon-reads', 'kb-data-icon-dnudge']
+            color: '#795548'
+                                            
+    -
+        type:
+            module: KBaseGeneFamilies
+            name: DomainAlignments
+            version: any
+        icon:    
+            type: fontAwesome
+            classes: ['fa-sliders']
+                    
+    # KBASE GENOMES
+    
+    -
+        type:
+            module: KBaseGenomes
+            name: Genome
+            version: any
+        icon:     
+            type: kbase
+            classes: ['icon-genome', 'kb-data-icon-dnudge']
+    -
+        type:
+            module: KBaseGenomes
+            name: Pangenome
+            version: any
+        icon:     
+            type: fontAwesome
+            classes: ['fa-bullseye'] 
+    -
+        type:
+            module: KBaseGenomes
+            name: MetagenomeAnnotation
+            version: any
+        icon:
+            type: fontAwesome
+            classes: ['fa-comment-o']
+    # TREES
+    -
+        type:
+            module: KBaseTrees
+            name: Tree
+            version: any
+        icon:     
+            type: kbase
+            classes: ['icon-tree', 'kb-data-icon-dnudge']
