@@ -68,7 +68,7 @@ define([
                     target: '_blank',
                     dataBind: {
                         attr: {
-                            href: '"#spec/type/" + typeID'
+                            href: '"/#spec/type/" + typeID'
                         }
                     }
                 }, 'view')

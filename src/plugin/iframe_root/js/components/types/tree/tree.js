@@ -308,7 +308,7 @@ define([
                                 dataBind: {
                                     text: 'objectName',
                                     attr: {
-                                        href: '"#dataview/" + object.objectInfo.ref'
+                                        href: '"/#dataview/" + object.objectInfo.ref'
                                     }
                                 },
                                 target: '_blank'
@@ -318,7 +318,7 @@ define([
                             dataBind: {
                                 text: 'object.objectInfo.typeName + " " + object.objectInfo.typeMajorVersion + "." + object.objectInfo.typeMinorVersion',
                                 attr: {
-                                    href: '"#spec/type/" + object.objectInfo.type'
+                                    href: '"/#spec/type/" + object.objectInfo.type'
                                 }
                             },
                             target: '_blank'

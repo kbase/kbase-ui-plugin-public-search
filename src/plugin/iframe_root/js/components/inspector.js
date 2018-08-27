@@ -72,7 +72,7 @@ define([
 
         onView() {
             const ref = this.row.metadata.ref;
-            window.open('#dataview/' + ref, '_blank');
+            window.open('/#dataview/' + ref, '_blank');
         }
 
         fetchObjectInfo() {

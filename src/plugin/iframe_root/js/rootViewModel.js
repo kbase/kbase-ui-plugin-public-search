@@ -28,6 +28,10 @@ define([
 
             this.supportedDataTypes = [
                 {
+                    value: 'Assembly',
+                    label: 'Assembly'
+                },
+                {
                     value: 'FBAModel',
                     label: 'FBA Model',
                 },
@@ -36,8 +40,20 @@ define([
                     label: 'Genome',
                 },
                 {
+                    value: 'PairedEndLibrary',
+                    label: 'Paired-End Library'
+                },
+                {
                     value: 'Pangenome',
                     label: 'Pangenome',
+                },
+                {
+                    value: 'RNASeqSampleSet',
+                    label: 'RNA-Seq Sample Set'
+                },
+                {
+                    value: 'SingleEndLibrary',
+                    label: 'Single-End Library'
                 },
                 // {
                 //     value: 'taxon',
@@ -50,10 +66,6 @@ define([
                 {
                     value: 'Media',
                     label: 'Media'
-                },
-                {
-                    value: 'MediaCompound',
-                    label: 'Media Compound'
                 }
             ];
 
