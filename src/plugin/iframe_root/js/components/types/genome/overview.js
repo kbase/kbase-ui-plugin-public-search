@@ -72,7 +72,32 @@ define([
                     this.domain(objectData.data.domain);
                     this.dnaSize(objectData.data.dna_size);
                     this.contigCount(objectData.data.num_contigs);
-                    this.gcContent(objectData.data.gc_content);
+
+                    let gcContent;
+                    // comment below from genome landing page widget kbaseGenomeOverview
+                    /* Assume two cases for GC content.
+                    * 1. GC > 1 --> it's a raw percentage, so just render
+                    * 2. GC < 1 --> it's a decimal and should be x100
+                    * 3. (maybe?) GC > 100 --> it's an actual count of GCs and should be divided by dna length
+                    */
+                    if (typeof objectData.data.gc_content === 'number') {
+                        gcContent = objectData.data.gc_content;
+                        if (gcContent > 100) {
+                            if (objectData.data.dna_size && objectData.data.dna_size !== 0) {
+                                gcContent = gcContent / objectData.data.dna_size;
+                            } else {
+                                gcContent = 100;
+                            }
+                        } else if (gcContent > 1.0) {
+                            gcContent = gcContent / 100;
+                        }
+                    } else {
+                        gcContent = null;
+                    }
+
+                    console.log('gc content?', gcContent);
+
+                    this.gcContent(gcContent);
                     this.featureCount(objectData.info[10]['Number features'] || objectData.info[10]['Number of CDS']);
                     this.loading(false);
                     // this.scientificName(objectData.data.scientific_name);
@@ -182,7 +207,7 @@ define([
                         typedText: {
                             value: 'gcContent',
                             type: '"number"',
-                            format: '"0.00"'
+                            format: '"0.0%"'
                         }
                     }
                 })
