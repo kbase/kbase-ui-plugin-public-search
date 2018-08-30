@@ -18,6 +18,7 @@ define([
     'use strict';
 
     const t = html.tag,
+        p = t('p'),
         div = t('div'),
         span = t('span'),
         table = t('table'),
@@ -28,7 +29,8 @@ define([
 
     class ViewModel {
         constructor(params, context, element, componentInfo, name) {
-            this.methodMap = ko.utils.unwrapObservable(params.methodMap);
+            this.methodMap = context.$root.methodMap;
+            // this.methodMap = ko.utils.unwrapObservable(params.methodMap);
             const ref = ko.utils.unwrapObservable(params.ref);
             const [workspaceId, objectId, objectVersion] = ref.split('/').map((part) => {return parseInt(part, 10);});
             this.objectRef = {
@@ -41,24 +43,30 @@ define([
             this.componentId = name;
 
             this.ready = ko.observable(false);
-            this.objectInfo = ko.observable();
-            this.workspaceInfo = ko.observable();
-            this.workspaceType = ko.observable();
-            this.workspaceName = ko.observable();
-            this.workspaceOwner = ko.observable();
+            this.error = ko.observable();
+            this.provenanceMissing = false;
+
+            this.objectInfo = null;
+            this.workspaceInfo = null;
+            this.workspaceType = null;
+            this.workspaceName = null;
+            this.workspaceOwner = null;
             this.moduleInfo = null;
 
-            this.appInfo = ko.observable();
-            this.copyInfo = ko.observable();
-            this.inputObjectRefs = ko.observableArray();
-            this.scriptInfo = ko.observable();
+            this.appInfo = null;
+            this.copyInfo = null;
+            this.inputObjectRefs = [];
+            this.scriptInfo = null;
 
             this.app = null;
 
             this.showObjectDetail = ko.observable(false);
             this.showConnectionDetail = ko.observable(false);
 
-            this.getProvenance();
+            this.getProvenance()
+                .then(() => {
+                    this.ready(true);
+                });
         }
 
         getWorkspaceInfo() {
@@ -106,7 +114,7 @@ define([
             });
             return nms.callFunc('get_module_version', [
                 {
-                    module_name: this.appInfo().module
+                    module_name: this.appInfo.module
                 }
             ])
                 .spread((moduleInfo) => {
@@ -120,8 +128,8 @@ define([
 
         resolveApp() {
             return Promise.try(() => {
-                const id = this.appInfo().module + '/' +
-                        this.appInfo().method;
+                const id = this.appInfo.module + '/' +
+                        this.appInfo.method;
 
                 const cachedAppSpec = this.methodMap.release[id] ||
                                       this.methodMap.beta[id] ||
@@ -168,60 +176,67 @@ define([
         }
 
         getProvenance() {
-            Promise.all([
+            return Promise.all([
                 this.getWorkspaceInfo(),
                 this.getProvenanceInfo()
             ])
                 .spread((workspaceInfo, objectInfo) => {
-                    const provenanceAction = objectInfo.provenance[0];
+                    console.log('provenance??', objectInfo);
 
-                    this.workspaceInfo(workspaceInfo);
-                    // parse out what type of workspace it is ...
-                    this.workspaceOwner(workspaceInfo.owner);
-                    if (workspaceInfo.metadata.narrative) {
-                        this.workspaceType('Narrative');
-                        this.workspaceName(workspaceInfo.metadata.narrative_nice_name || 'Unknown');
-                    } else if (workspaceInfo.metadata.searchtags && workspaceInfo.metadata.searchtags.includes('refdata')) {
-                        this.workspaceType('RefData');
-                        this.workspaceName(workspaceInfo.name);
-                    } else {
-                        this.workspaceType('Workspace');
-                        this.workspaceName(workspaceInfo.name);
+                    if (objectInfo.provenance.length === 0) {
+                        // no provenance??
+                        this.provenanceMissing = true;
+                        return;
                     }
 
-                    this.objectInfo(serviceUtils.objectInfoToObject(objectInfo.info));
+                    const provenanceAction = objectInfo.provenance[0];
 
-                    this.inputObjectRefs(provenanceAction.resolved_ws_objects);
+                    this.workspaceInfo = workspaceInfo;
+                    // parse out what type of workspace it is ...
+                    this.workspaceOwner = workspaceInfo.owner;
+                    if (workspaceInfo.metadata.narrative) {
+                        this.workspaceType = 'Narrative';
+                        this.workspaceName = workspaceInfo.metadata.narrative_nice_name || 'Unknown';
+                    } else if (workspaceInfo.metadata.searchtags && workspaceInfo.metadata.searchtags.includes('refdata')) {
+                        this.workspaceType = 'RefData';
+                        this.workspaceName = workspaceInfo.name;
+                    } else {
+                        this.workspaceType = 'Workspace';
+                        this.workspaceName = workspaceInfo.name;
+                    }
+
+                    this.objectInfo = serviceUtils.objectInfoToObject(objectInfo.info);
+
+                    this.inputObjectRefs = provenanceAction.resolved_ws_objects;
 
                     if (objectInfo.copied) {
                         // it is a copy, no matter what provenance says...
-                        this.copyInfo({
+                        this.copyInfo = {
                             ref: objectInfo.copied,
                             isOriginalAccessible: objectInfo.copy_source_inaccessible === 0 ? true : false
-                        });
+                        };
                     } else if (provenanceAction.service && provenanceAction.method) {
-                        this.appInfo({
+                        this.appInfo = {
                             module: provenanceAction.service,
                             method: provenanceAction.method,
                             version: provenanceAction.service_ver
-                        });
+                        };
                         return this.getApp();
                     } else if (provenanceAction.script && provenanceAction.service) {
-                        this.scriptInfo({
+                        this.scriptInfo = {
                             service: provenanceAction.service,
                             serviceVersion: provenanceAction.service_ver,
                             script: provenanceAction.script,
                             version: provenanceAction.version
-                        });
+                        };
                     } else if (provenanceAction.script) {
-                        this.scriptInfo({
+                        this.scriptInfo = {
+                            service: null,
+                            serviceVersion: null,
                             script: provenanceAction.script,
                             version: provenanceAction.script_ver
-                        });
+                        };
                     }
-                })
-                .then(() => {
-                    this.ready(true);
                 })
                 .catch((error) => {
                     console.error('ERROR', error);
@@ -455,7 +470,7 @@ define([
                         name: 'componentId',
                         params: {
                             methodMap: '$component.methodMap',
-                            ref: 'copyInfo().ref'
+                            ref: 'copyInfo.ref'
                         }
                     }
                 }
@@ -729,7 +744,7 @@ define([
                                     fontWeight: 'bold'
                                 },
                                 dataBind: {
-                                    text: 'scriptInfo().script'
+                                    text: 'scriptInfo.script'
                                 }
                             }),
                             '"'
@@ -893,7 +908,7 @@ define([
                 flex: '1 1 0px',
                 marginLeft: '15px'
             }
-        }, gen.if('inputObjectRefs().length > 0',
+        }, gen.if('inputObjectRefs.length > 0',
             div({
                 dataBind: {
                     foreach: 'inputObjectRefs'
@@ -987,7 +1002,7 @@ define([
                                     fontWeight: 'bold'
                                 },
                                 dataBind: {
-                                    text: 'objectInfo().typeName'
+                                    text: 'objectInfo.typeName'
                                 }
                             }),
                             ' object named "' +
@@ -996,7 +1011,7 @@ define([
                                     fontWeight: 'bold'
                                 },
                                 dataBind: {
-                                    text: 'objectInfo().name'
+                                    text: 'objectInfo.name'
                                 }
                             }),
                             '" in ' +
@@ -1043,7 +1058,7 @@ define([
                                         th('name'),
                                         td({
                                             dataBind: {
-                                                text: 'objectInfo().name'
+                                                text: 'objectInfo.name'
                                             }
                                         })
                                     ]),
@@ -1052,7 +1067,7 @@ define([
                                         td({
                                             dataBind: {
                                                 typedText: {
-                                                    value: 'objectInfo().saveDate',
+                                                    value: 'objectInfo.saveDate',
                                                     type: '"date"',
                                                     format: '"YYYY-MM-DD"'
                                                 }
@@ -1102,17 +1117,34 @@ define([
         ]);
     }
 
+    function buildMissing() {
+        return div({
+            style: {
+                margin: '10px',
+            }
+        }, [
+            p({
+                style: {
+                    textAlign: 'center',
+                    fontStyle: 'italic'
+                }
+            }, 'No provenance for this object')
+        ]);
+    }
+
     function template() {
         return div({
             dataBind: {
                 if: 'ready'
             }
-        }, [
-            buildObjectInfo(),
-            gen.if('copyInfo', buildCopyInfo()),
-            gen.if('scriptInfo', buildScriptInfo()),
-            gen.if('appInfo', buildAppInfo())
-        ], build.loading());
+        }, gen.if('provenanceMissing',
+            buildMissing(),
+            [
+                buildObjectInfo(),
+                gen.if('copyInfo', buildCopyInfo()),
+                gen.if('scriptInfo', buildScriptInfo()),
+                gen.if('appInfo', buildAppInfo())
+            ]), build.loading());
     }
 
     function component() {

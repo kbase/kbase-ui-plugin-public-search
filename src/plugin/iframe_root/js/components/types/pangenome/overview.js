@@ -23,59 +23,57 @@ define([
     class ViewModel {
         constructor({ref}, context) {
             this.ref = ref;
-
             this.runtime = context.$root.runtime;
-
-            this.loading = ko.observable(true);
+            this.ready = ko.observable(true);
 
             // this.getOverviewInfo();
         }
 
-        getOverviewInfo() {
-            const workspace = this.runtime.service('rpc').makeClient({
-                module: 'Workspace',
-                timeout: 10000,
-                authorization: false
-            });
-            // https://github.com/kbase/workspace_deluxe/blob/8a52097748ef31b94cdf1105766e2c35108f4c41/workspace.spec#L1111
-            // https://github.com/kbase/workspace_deluxe/blob/8a52097748ef31b94cdf1105766e2c35108f4c41/workspace.spec#L265
-            workspace.callFunc('get_object_subset', [[{
-                ref: this.ref,
-                included: [
-                    'scientific_name',
-                    'scientific_lineage',
-                    'rank',
-                    'domain',
-                    'kingdom',
-                    'aliases',
-                    'genetic_code'
-                ]
-            }]])
-                .spread(([objectData]) => {
-                    // console.log('taxon object data...', objectData);
-                    this.scientificName(objectData.data.scientific_name);
-                    this.rank(objectData.data.rank);
-                    this.domain(objectData.data.domain);
-                    this.kingdom(objectData.data.kingdom);
-                    this.geneticCode(objectData.data.genetic_code);
-                    this.aliases(objectData.data.aliases);
-                    this.loading(false);
-                    // this.scientificName(objectData.data.scientific_name);
-                    const lineage = objectData.data.scientific_lineage;
-                    if (lineage) {
-                        let lineageList;
-                        if (lineage.indexOf(';') !== -1) {
-                            lineageList = lineage.split(';');
-                        } else {
-                            lineageList = lineage.split(',');
-                        }
-                        this.lineage(lineageList);
-                    }
-                })
-                .catch((err) => {
-                    console.error('ERROR', err);
-                });
-        }
+    //     getOverviewInfo() {
+    //         const workspace = this.runtime.service('rpc').makeClient({
+    //             module: 'Workspace',
+    //             timeout: 10000,
+    //             authorization: false
+    //         });
+    //         // https://github.com/kbase/workspace_deluxe/blob/8a52097748ef31b94cdf1105766e2c35108f4c41/workspace.spec#L1111
+    //         // https://github.com/kbase/workspace_deluxe/blob/8a52097748ef31b94cdf1105766e2c35108f4c41/workspace.spec#L265
+    //         workspace.callFunc('get_object_subset', [[{
+    //             ref: this.ref,
+    //             included: [
+    //                 'scientific_name',
+    //                 'scientific_lineage',
+    //                 'rank',
+    //                 'domain',
+    //                 'kingdom',
+    //                 'aliases',
+    //                 'genetic_code'
+    //             ]
+    //         }]])
+    //             .spread(([objectData]) => {
+    //                 // console.log('taxon object data...', objectData);
+    //                 this.scientificName(objectData.data.scientific_name);
+    //                 this.rank(objectData.data.rank);
+    //                 this.domain(objectData.data.domain);
+    //                 this.kingdom(objectData.data.kingdom);
+    //                 this.geneticCode(objectData.data.genetic_code);
+    //                 this.aliases(objectData.data.aliases);
+    //                 this.loading(false);
+    //                 // this.scientificName(objectData.data.scientific_name);
+    //                 const lineage = objectData.data.scientific_lineage;
+    //                 if (lineage) {
+    //                     let lineageList;
+    //                     if (lineage.indexOf(';') !== -1) {
+    //                         lineageList = lineage.split(';');
+    //                     } else {
+    //                         lineageList = lineage.split(',');
+    //                     }
+    //                     this.lineage(lineageList);
+    //                 }
+    //             })
+    //             .catch((err) => {
+    //                 console.error('ERROR', err);
+    //             });
+    //     }
     }
 
     const styles = html.makeStyles({
@@ -198,9 +196,10 @@ define([
         return div({
             class: styles.classes.component
         },
-        gen.if('loading',
-            build.loading('Loading overview data'),
-            buildOverview()));
+        gen.if('ready',
+            buildOverview(),
+            build.loading('Loading overview data')
+        ));
     }
 
     function component() {

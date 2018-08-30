@@ -4,14 +4,16 @@ define([
     'kb_knockout/registry',
     'kb_knockout/lib/generators',
     'kb_knockout/lib/viewModelBase',
-    'kb_lib/html'
+    'kb_lib/html',
+    'kb_lib/httpUtils'
 ], function (
     Uuid,
     ko,
     reg,
     gen,
     ViewModelBase,
-    html
+    html,
+    httpUtils
 ) {
     'use strict';
 
@@ -23,10 +25,12 @@ define([
         input = t('input');
 
     class ViewModel extends ViewModelBase {
-        constructor(params) {
+        constructor(params, context) {
             super(params);
 
             const {searchInput, forceSearch, searching} = params;
+
+            this.runtime = context.$root.runtime;
 
             this.logo = null;
 
@@ -135,9 +139,37 @@ define([
             this.parentBus.send('show-help');
         }
 
-        showFeedback() {
-            this.parentBus.send('show-feedback');
+        googleFormLink(arg) {
+            const baseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLScfZEQlO2Zq1ZgYQkn0pEIlXJapEOxrdeZmHY4PqvIyy7sugw/viewform';
+            const query = {
+                usp: 'pp_url',
+                'entry.45112532': arg.username,
+                'entry.1257375807': arg.realname,
+                'entry.1670959681': arg.email,
+                'entry.250050267': arg.subject
+            };
+            return baseUrl + '?' + httpUtils.encodeQuery(query);
         }
+
+        showFeedback() {
+            const fields = {
+                username: this.runtime.service('session').getUsername() || '',
+                realname: this.runtime.service('session').getRealname() || '',
+                email: this.runtime.service('session').getEmail() || '',
+                subject: 'Public Search'
+            };
+            // console.log('fields??', fields, this.runtime.service('session'));
+            window.open(this.googleFormLink(fields), '_blank');
+            // this.hostChannel.send('open-window', {
+            //     url: this.googleFormLink(fields),
+            //     name: '_blank'
+            // });
+        }
+
+        // showFeedback() {
+        //     // this.parentBus.send('show-feedback');
+        //     this.show
+        // }
 
         dispose() {
             if (this.clickListener) {
@@ -391,7 +423,7 @@ define([
 
     function component() {
         return {
-            viewModel: ViewModel,
+            viewModelWithContext: ViewModel,
             template: template(),
             stylesheet: styles.sheet
         };

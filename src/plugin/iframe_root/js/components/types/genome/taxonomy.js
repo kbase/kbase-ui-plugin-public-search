@@ -27,11 +27,18 @@ define([
 
             this.runtime = context.$root.runtime;
 
-            this.scientificName = ko.observable();
-            this.taxonomy = ko.observableArray();
+            this.ready = ko.observable(false);
 
-            this.loading = ko.observable(true);
-            this.getOverviewInfo();
+            this.scientificName = null;
+            this.taxonomy = null;
+
+            this.getOverviewInfo()
+                .then(() => {
+                    this.ready(true);
+                })
+                .catch((err) => {
+                    console.error('ERROR', err);
+                });
         }
 
         getOverviewInfo() {
@@ -40,7 +47,7 @@ define([
                 timeout: 10000,
                 authorization: false
             });
-            workspace.callFunc('get_object_subset', [[{
+            return workspace.callFunc('get_object_subset', [[{
                 ref: this.ref,
                 included: [
                     'scientific_name',
@@ -48,7 +55,7 @@ define([
                 ]
             }]])
                 .spread(([objectData]) => {
-                    this.scientificName(objectData.data.scientific_name);
+                    this.scientificName = objectData.data.scientific_name;
                     const tax = objectData.data.taxonomy;
                     if (tax) {
                         let taxList;
@@ -57,9 +64,8 @@ define([
                         } else {
                             taxList = tax.split(',');
                         }
-                        this.taxonomy(taxList);
+                        this.taxonomy = taxList;
                     }
-                    this.loading(false);
                 });
         }
     }
@@ -143,9 +149,10 @@ define([
         return div({
             class: styles.classes.component
         },
-        gen.if('loading',
-            build.loading('Loading taxonomy data'),
-            buildLineage()));
+        gen.if('ready',
+            buildLineage(),
+            build.loading('Loading taxonomy data')
+        ));
     }
 
     function component() {

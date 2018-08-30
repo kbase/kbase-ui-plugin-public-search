@@ -38,7 +38,6 @@ function (props) {
 
     class TypeManager {
         constructor({typeDefs}) {
-
             this.types = new props.Props({data: {}});
 
             typeDefs.types.forEach((typeSpec) => {
@@ -58,7 +57,6 @@ function (props) {
             const classes = icon.classes.map(function (x) {
                 return x;
             });
-            console.log('got icon!', icon, classes);
             switch (icon.type) {
             case 'kbase':
                 classes.push('icon');
@@ -104,6 +102,7 @@ function (props) {
         makeTypeId(type) {
             return type.module + '.' + type.name + '-' + type.version.major + '.' + type.version.minor;
         }
+
         parseTypeId(typeId) {
             var matched = typeId.match(/^(.+?)\.(.+?)-(.+?)\.(.+)$/);
             if (!matched) {

@@ -84,18 +84,14 @@ define([
 
             this.state = ko.observable('loading');
 
-            this.subscribe(this.scientificName, () => {
-                this.findImage();
-            });
             this.findImage();
         }
 
         findImage() {
-            const scientificName = this.scientificName();
-            if (!scientificName) {
+            if (!this.scientificName) {
                 return;
             }
-            this.getOrganismInfo(scientificName)
+            this.getOrganismInfo(this.scientificName)
                 .then(({imageUrl, url}) => {
                     this.imageUrl(imageUrl);
                     this.pageUrl(url);

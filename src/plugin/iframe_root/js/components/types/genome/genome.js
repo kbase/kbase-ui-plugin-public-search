@@ -14,7 +14,8 @@ define([
     '../container',
     '../containerTab',
     '../provenance',
-    '../wikipedia'
+    '../wikipedia',
+    './trees'
 ], function (
     Promise,
     ko,
@@ -31,7 +32,8 @@ define([
     ContainerComponent,
     ContainerTabComponent,
     ProvenanceComponent,
-    WikipediaComponent
+    WikipediaComponent,
+    TreesComponent
 ) {
     'use strict';
 
@@ -44,27 +46,17 @@ define([
         constructor(params, context) {
             super(params);
 
-            // console.log('genome params', params.object());
-
             const {object} = params;
-
             this.object = object;
-
-            this.ref = ko.pureComputed(() => {
-                if (object() && object().objectInfo) {
-                    return object().objectInfo.ref;
-                }
-                return null;
-            });
-
             this.runtime = context.$root.runtime;
 
-            this.summaryInfo = ko.observable();
+            this.ready = ko.observable(false);
+            this.error = ko.observable();
 
-            this.scientificName = ko.observable();
-            this.taxonomy = ko.observableArray();
-
-            this.dataIcon = ko.observable();
+            this.summaryInfo = null;
+            this.scientificName = null;
+            this.taxonomy = null;
+            this.dataIcon = this.getDataIcon();
 
             this.tabs = [
                 {
@@ -76,7 +68,7 @@ define([
                         component: {
                             name: TabOverviewComponent.name(),
                             params: {
-                                ref: 'object().objectInfo.ref'
+                                ref: 'object.objectInfo.ref'
                             }
                         }
                     }
@@ -120,8 +112,7 @@ define([
                         component: {
                             name: ProvenanceComponent.name(),
                             params: {
-                                ref: 'ref',
-                                methodMap: 'methodMap'
+                                ref: 'object.objectInfo.ref'
                             }
                         }
                     }
@@ -135,7 +126,7 @@ define([
                         component: {
                             name: TaxonomyComponent.name(),
                             params: {
-                                ref: 'object().objectInfo.ref'
+                                ref: 'object.objectInfo.ref'
                             }
                         }
                     }
@@ -156,6 +147,20 @@ define([
                 },
                 {
                     tab: {
+                        label: 'Trees',
+                        component: null
+                    },
+                    panel: {
+                        component: {
+                            name: TreesComponent.name(),
+                            params: {
+                                ref: 'object.objectInfo.ref'
+                            }
+                        }
+                    }
+                },
+                {
+                    tab: {
                         label: 'Assembly & Annotation',
                         component: null
                     },
@@ -166,67 +171,16 @@ define([
                 }
             ];
 
-            this.getDataIcon();
-
-            this.methodMap = null;
-            this.ready = ko.observable(false);
 
             Promise.all([
-                this.getSummaryInfo(),
-                this.getMethodMap()
+                this.getSummaryInfo()
             ])
                 .then(() => {
-                    // console.log('method map?', this.methodMap());
                     this.ready(true);
-                });
-        }
-
-        getMethodMap() {
-            const nms = this.runtime.service('rpc').makeClient({
-                module: 'NarrativeMethodStore',
-                timeout: 10000,
-                authorization: false
-            });
-            return Promise.all([
-                nms.callFunc('list_methods_spec', [{tag: 'dev'}]),
-                nms.callFunc('list_methods_spec', [{tag: 'beta'}]),
-                nms.callFunc('list_methods_spec', [{tag: 'release'}])
-            ])
-                .spread(([dev], [beta], [release]) => {
-                    // console.log('hey, got method specs info...', result);
-                    const methodMap = {};
-
-                    const devMap = dev.reduce((methodMap, spec) => {
-                        const id = spec.behavior.kb_service_name + '/' +
-                                   spec.behavior.kb_service_method;
-                        methodMap[id] = spec;
-                        return methodMap;
-                    }, {});
-
-                    const betaMap = beta.reduce((methodMap, spec) => {
-                        const id = spec.behavior.kb_service_name + '/' +
-                                   spec.behavior.kb_service_method;
-                        methodMap[id] = spec;
-                        return methodMap;
-                    }, {});
-
-                    const releaseMap = release.reduce((methodMap, spec) => {
-                        const id = spec.behavior.kb_service_name + '/' +
-                                   spec.behavior.kb_service_method;
-                        methodMap[id] = spec;
-                        return methodMap;
-                    }, {});
-
-                    this.methodMap = {
-                        dev: devMap,
-                        beta: betaMap,
-                        release: releaseMap
-                    };
-                    // console.log('hey, got method map!!', this.methodMap);
                 })
                 .catch((err) => {
-                    console.error('ERROR', err.message);
-                    return null;
+                    console.error('Error', err);
+                    this.error(err);
                 });
         }
 
@@ -239,13 +193,13 @@ define([
             // https://github.com/kbase/workspace_deluxe/blob/8a52097748ef31b94cdf1105766e2c35108f4c41/workspace.spec#L1111
             // https://github.com/kbase/workspace_deluxe/blob/8a52097748ef31b94cdf1105766e2c35108f4c41/workspace.spec#L265
             return workspace.callFunc('get_object_subset', [[{
-                ref: this.object().objectInfo.ref,
+                ref: this.object.objectInfo.ref,
                 included: [
                     'scientific_name'
                 ]
             }]])
                 .spread(([objectData]) => {
-                    this.scientificName(objectData.data.scientific_name);
+                    this.scientificName = objectData.data.scientific_name;
                     const tax = objectData.data.taxonomy;
                     if (tax) {
                         let taxList;
@@ -254,7 +208,7 @@ define([
                         } else {
                             taxList = tax.split(',');
                         }
-                        this.taxonomy(taxList);
+                        this.taxonomy = taxList;
                     }
                 });
         }
@@ -262,19 +216,19 @@ define([
         getDataIcon() {
             try {
                 // console.log('getting type icon?', this.object().objectInfo.type);
-                const typeId = this.object().objectInfo.type,
+                const typeId = this.object.objectInfo.type,
                     type = this.runtime.service('type').parseTypeId(typeId),
                     icon = this.runtime.service('type').getIcon({ type: type });
-                this.dataIcon({
+                return {
                     classes: icon.classes.join(' '),
                     color: icon.color
-                });
+                };
             } catch (err) {
                 console.error('When fetching icon config: ', err);
-                this.dataIcon({
+                return {
                     classes: 'fa-question',
                     color: 'gray'
-                });
+                };
             }
         }
     }
@@ -332,14 +286,14 @@ define([
                                 class: 'fa fa-circle fa-stack-2x',
                                 dataBind: {
                                     style: {
-                                        color: 'dataIcon().color'
+                                        color: 'dataIcon.color'
                                     }
                                 }
                             }),
                             span({
                                 class: 'fa-inverse fa-stack-1x ',
                                 dataBind: {
-                                    class: 'dataIcon().classes'
+                                    class: 'dataIcon.classes'
                                 }
                             })
                         ])
@@ -361,7 +315,7 @@ define([
                                 dataBind: {
                                     text: 'scientificName',
                                     attr: {
-                                        href: '"/#dataview/" + object().objectInfo.ref'
+                                        href: '"/#dataview/" + object.objectInfo.ref'
                                     }
                                 },
                                 target: '_blank'
@@ -369,9 +323,9 @@ define([
                             div(build.loading())),
                         div(a({
                             dataBind: {
-                                text: 'object().objectInfo.typeName + " " + object().objectInfo.typeMajorVersion + "." + object().objectInfo.typeMinorVersion',
+                                text: 'object.objectInfo.typeName + " " + object.objectInfo.typeMajorVersion + "." + object.objectInfo.typeMinorVersion',
                                 attr: {
-                                    href: '"/#spec/type/" + object().objectInfo.type'
+                                    href: '"/#spec/type/" + object.objectInfo.type'
                                 }
                             },
                             target: '_blank'
@@ -379,7 +333,7 @@ define([
                         div({
                             dataBind: {
                                 typedText: {
-                                    value: 'object().objectInfo.saveDate',
+                                    value: 'object.objectInfo.saveDate',
                                     type: '"date"',
                                     format: '"YYYY-MM-DD"'
                                 }
@@ -440,7 +394,7 @@ define([
             }
         },
         gen.if('ready()',
-            gen.if('object()',
+            gen.if('object',
                 [
                     buildOverview(),
                     buildTabs()

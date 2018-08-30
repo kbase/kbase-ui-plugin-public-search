@@ -10,7 +10,8 @@ define([
     '../../table',
     '../../controls/scrollingText',
     '../../../lib/docUtils',
-    './authors'
+    './authors',
+    './pubMedLink'
 ], function (
     Promise,
     ko,
@@ -23,7 +24,8 @@ define([
     TableComponent,
     ScrollingTextComponent,
     docUtils,
-    AuthorsComponent
+    AuthorsComponent,
+    PubMedLinkComponent
 ) {
     'use strict';
 
@@ -41,7 +43,7 @@ define([
 
             this.runtime = context.$root.runtime;
 
-            this.queryInput = ko.observable().syncFrom(query);
+            this.queryInput = ko.observable(query);
 
             this.queryTerms = ko.pureComputed(() => {
                 const terms = this.queryInput().split((/\s+/));
@@ -118,6 +120,13 @@ define([
                                 }
                                 return 0;
                             }
+                        },
+                        component: {
+                            name: PubMedLinkComponent.name(),
+                            params: {
+                                text: 'title',
+                                id: 'id'
+                            }
                         }
                     },
                     {
@@ -156,7 +165,7 @@ define([
                         width: 35,
                         component: {
                             name: AuthorsComponent.name(),
-                            params: '{authors: authors}'
+                            params: {authors: 'authors'}
                         },
                         sort: null
                     }

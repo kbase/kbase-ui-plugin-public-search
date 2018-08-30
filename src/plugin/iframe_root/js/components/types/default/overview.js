@@ -26,9 +26,7 @@ define([
 
             this.runtime = context.$root.runtime;
 
-            this.loading = ko.observable(true);
-
-            this.loading(false);
+            this.ready = ko.observable(true);
         }
     }
 
@@ -85,7 +83,7 @@ define([
                         fontWeight: 'bold'
                     },
                     dataBind: {
-                        text: 'object().objectInfo.typeName'
+                        text: 'object.objectInfo.typeName'
                     }
                 }),
                 ' does not have a specific visualizer.'
@@ -102,7 +100,7 @@ define([
                     component: {
                         name: MetadataComponent.quotedName(),
                         params: {
-                            metadata: 'object().objectInfo.metadata'
+                            metadata: 'object.objectInfo.metadata'
                         }
                     }
                 }
@@ -114,9 +112,10 @@ define([
         return div({
             class: style.classes.component
         },
-        gen.if('loading',
-            build.loading('Loading overview data'),
-            buildOverview()));
+        gen.if('ready',
+            buildOverview(),
+            build.loading('Loading overview data')
+        ));
     }
 
     function component() {

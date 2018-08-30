@@ -366,6 +366,7 @@ define([
                     this.searchResults.removeAll();
 
                     this.searchSummary().forEach((summary) => {
+                        console.log('summary item', summary, summaryResult.type_to_count[summary.type], summaryResult.type_to_count);
                         summary.count(summaryResult.type_to_count[summary.type] || 0);
                         // if (this.omittedDataTypes().includes(summary.type)) {
                         //     summary.count(null);

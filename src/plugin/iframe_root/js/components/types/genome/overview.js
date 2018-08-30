@@ -21,32 +21,29 @@ define([
         td = t('td');
 
     class ViewModel {
-        // constructor({domain, scientificName, dnaLength, contigCount, gcContent, featureCount}, context) {
-        //     this.domain = domain;
-        //     this.scientificName = scientificName;
-        //     this.dnaLength = dnaLength;
-        //     this.contigCount = contigCount;
-        //     this.gcContent = gcContent;
-        //     this.featureCount = featureCount;
-
-        //     this.runtime = context.$root.runtime;
-        // }
         constructor(params, context) {
             const {ref} = params;
             this.ref = ref;
 
+            this.ready = ko.observable(false);
+            this.error = ko.observable();
+
             this.runtime = context.$root.runtime;
 
-            this.loading = ko.observable(true);
+            this.scientificName = null;
+            this.domain = null;
+            this.dnaSize = null;
+            this.contigCount = null;
+            this.featureCount = null;
+            this.gcContent = null;
 
-            this.scientificName = ko.observable();
-            this.domain = ko.observable();
-            this.dnaSize = ko.observable();
-            this.contigCount = ko.observable();
-            this.featureCount = ko.observable();
-            this.gcContent = ko.observable();
-
-            this.getOverviewInfo();
+            this.getOverviewInfo()
+                .then(() => {
+                    this.ready(true);
+                })
+                .catch((err) => {
+                    console.error('ERROR', err);
+                });
         }
 
         getOverviewInfo() {
@@ -57,7 +54,7 @@ define([
             });
             // https://github.com/kbase/workspace_deluxe/blob/8a52097748ef31b94cdf1105766e2c35108f4c41/workspace.spec#L1111
             // https://github.com/kbase/workspace_deluxe/blob/8a52097748ef31b94cdf1105766e2c35108f4c41/workspace.spec#L265
-            workspace.callFunc('get_object_subset', [[{
+            return workspace.callFunc('get_object_subset', [[{
                 ref: this.ref,
                 included: [
                     'scientific_name',
@@ -68,10 +65,10 @@ define([
                 ]
             }]])
                 .spread(([objectData]) => {
-                    this.scientificName(objectData.data.scientific_name);
-                    this.domain(objectData.data.domain);
-                    this.dnaSize(objectData.data.dna_size);
-                    this.contigCount(objectData.data.num_contigs);
+                    this.scientificName = objectData.data.scientific_name;
+                    this.domain = objectData.data.domain;
+                    this.dnaSize = objectData.data.dna_size;
+                    this.contigCount = objectData.data.num_contigs;
 
                     let gcContent;
                     // comment below from genome landing page widget kbaseGenomeOverview
@@ -95,21 +92,8 @@ define([
                         gcContent = null;
                     }
 
-                    console.log('gc content?', gcContent);
-
-                    this.gcContent(gcContent);
-                    this.featureCount(objectData.info[10]['Number features'] || objectData.info[10]['Number of CDS']);
-                    this.loading(false);
-                    // this.scientificName(objectData.data.scientific_name);
-                    // const tax = objectData.data.taxonomy;
-                    // if (tax) {
-                    //     let taxList;
-                    //     if (tax.indexOf(';') !== -1) {
-                    //         taxList = tax.split(';');
-                    //     } else {
-                    //         taxList = tax.split(',');
-                    //     }
-                    // }
+                    this.gcContent = gcContent;
+                    this.featureCount = objectData.info[10]['Number features'] || objectData.info[10]['Number of CDS'];
                 });
         }
     }
@@ -231,9 +215,10 @@ define([
         return div({
             class: styles.classes.component
         },
-        gen.if('loading',
-            build.loading('Loading overview data'),
-            buildOverview()));
+        gen.if('ready',
+            buildOverview(),
+            build.loading('Loading overview data')
+        ));
     }
 
     function component() {

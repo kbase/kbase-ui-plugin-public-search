@@ -76,6 +76,12 @@ define([
             }
             return style;
         }
+
+        stringify(obj) {
+            return '{' + Object.keys(obj).map((key) => {
+                return key + ':' + String(obj[key]);
+            }).join(',') + '}';
+        }
     }
 
     function buildRow() {
@@ -102,7 +108,7 @@ define([
                         component: {
                             name: 'column.component.name',
                             // hopefully params are relative to the row context...
-                            params: 'eval("(" + column.component.params + ")")'
+                            params: 'eval("(" + $component.stringify(column.component.params) + ")")'
                         }
                     }
                 })),

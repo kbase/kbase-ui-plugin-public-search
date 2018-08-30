@@ -35,16 +35,13 @@ define([
             super(params);
 
             const {object} = params;
-
             this.object = object;
-
             this.runtime = context.$root.runtime;
 
-            this.summaryInfo = ko.observable();
-            this.objectName = object().objectInfo.name;
-            this.taxonomy = ko.observableArray();
-            this.dataIcon = ko.observable();
             this.ready = ko.observable(false);
+            this.error = ko.observable();
+
+            this.dataIcon = this.getDataIcon();
 
             this.tabs = [
                 {
@@ -95,56 +92,24 @@ define([
                 // }
             ];
 
-            // this.getSummaryInfo();
-            this.getDataIcon();
             this.ready(true);
         }
 
-        // getSummaryInfo() {
-        //     const workspace = this.runtime.service('rpc').makeClient({
-        //         module: 'Workspace',
-        //         timeout: 10000,
-        //         authorization: false
-        //     });
-        //     // https://github.com/kbase/workspace_deluxe/blob/8a52097748ef31b94cdf1105766e2c35108f4c41/workspace.spec#L1111
-        //     // https://github.com/kbase/workspace_deluxe/blob/8a52097748ef31b94cdf1105766e2c35108f4c41/workspace.spec#L265
-        //     workspace.callFunc('get_object_subset', [[{
-        //         ref: this.object().objectInfo.ref,
-        //         included: [
-        //             'scientific_name'
-        //         ]
-        //     }]])
-        //         .spread(([objectData]) => {
-        //             // console.log('taxon object data');
-        //             this.scientificName(objectData.data.scientific_name);
-        //             const tax = objectData.data.taxonomy;
-        //             if (tax) {
-        //                 let taxList;
-        //                 if (tax.indexOf(';') !== -1) {
-        //                     taxList = tax.split(';');
-        //                 } else {
-        //                     taxList = tax.split(',');
-        //                 }
-        //                 this.taxonomy(taxList);
-        //             }
-        //         });
-        // }
-
         getDataIcon() {
             try {
-                const typeId = this.object().objectInfo.type,
+                const typeId = this.object.objectInfo.type,
                     type = this.runtime.service('type').parseTypeId(typeId),
                     icon = this.runtime.service('type').getIcon({ type: type });
-                this.dataIcon({
+                return {
                     classes: icon.classes.join(' '),
                     color: icon.color
-                });
+                };
             } catch (err) {
                 console.error('When fetching icon config: ', err);
-                this.dataIcon({
+                return {
                     classes: 'fa-question',
                     color: 'gray'
-                });
+                };
             }
         }
     }
@@ -201,14 +166,14 @@ define([
                                 class: 'fa fa-circle fa-stack-2x',
                                 dataBind: {
                                     style: {
-                                        color: 'dataIcon().color'
+                                        color: 'dataIcon.color'
                                     }
                                 }
                             }),
                             span({
                                 class: 'fa-inverse fa-stack-1x ',
                                 dataBind: {
-                                    class: 'dataIcon().classes'
+                                    class: 'dataIcon.classes'
                                 }
                             })
                         ])
@@ -220,7 +185,7 @@ define([
                             justifyContent: 'center'
                         }
                     }, [
-                        gen.if('objectName',
+                        gen.if('object.objectInfo.name',
                             a({
                                 style: {
                                     fontSize: '120%',
@@ -228,9 +193,9 @@ define([
                                     fontStyle: 'italic'
                                 },
                                 dataBind: {
-                                    text: 'objectName',
+                                    text: 'object.objectInfo.name',
                                     attr: {
-                                        href: '"/#dataview/" + object().objectInfo.ref'
+                                        href: '"/#dataview/" + object.objectInfo.ref'
                                     }
                                 },
                                 target: '_blank'
@@ -238,9 +203,9 @@ define([
                             div(build.loading())),
                         div(a({
                             dataBind: {
-                                text: 'object().objectInfo.typeName + " " + object().objectInfo.typeMajorVersion + "." + object().objectInfo.typeMinorVersion',
+                                text: 'object.objectInfo.typeName + " " + object.objectInfo.typeMajorVersion + "." + object.objectInfo.typeMinorVersion',
                                 attr: {
-                                    href: '"/#spec/type/" + object().objectInfo.type'
+                                    href: '"/#spec/type/" + object.objectInfo.type'
                                 }
                             },
                             target: '_blank'
@@ -248,7 +213,7 @@ define([
                         div({
                             dataBind: {
                                 typedText: {
-                                    value: 'object().objectInfo.saveDate',
+                                    value: 'object.objectInfo.saveDate',
                                     type: '"date"',
                                     format: '"YYYY-MM-DD"'
                                 }
@@ -256,24 +221,6 @@ define([
                         })
                     ])
                 ])
-            ]),
-            div({
-                style: {
-                    flex: '1 1 0px',
-                }
-            }, [
-                // div({
-                //     style: {
-                //         padding: '4px',
-                //         margin: '4px'
-                //     }
-                // }, gen.component({
-                //     name: WikipediaImageComponent.name(),
-                //     params: {
-                //         scientificName: 'scientificName',
-                //         height: '"150px"'
-                //     }
-                // }))
             ])
         ]);
     }
@@ -306,12 +253,11 @@ define([
             }
         },
         gen.if('ready()',
-            gen.if('object()',
-                [
-                    buildOverview(),
-                    buildTabs()
-                ],
-                build.loading())));
+            [
+                buildOverview(),
+                buildTabs()
+            ],
+            build.loading()));
     }
 
     function component() {

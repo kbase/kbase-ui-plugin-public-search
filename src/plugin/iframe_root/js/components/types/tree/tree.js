@@ -10,7 +10,9 @@ define([
     './overview',
     '../container',
     '../containerTab',
-    './metadata'
+    '../provenance',
+    './metadata',
+    './simpleTree'
 ], function (
     ko,
     reg,
@@ -23,7 +25,9 @@ define([
     OverviewComponent,
     ContainerComponent,
     ContainerTabComponent,
-    MetadataComponent
+    ProvenanceComponent,
+    MetadataComponent,
+    SimpleTreeComponent
 ) {
     'use strict';
 
@@ -57,16 +61,35 @@ define([
 
             this.runtime = context.$root.runtime;
 
+            this.ready = ko.observable(false);
+
+            this.tree = null;
+            this.treeInfo = null;
             this.summaryInfo = ko.observable();
-
             this.objectName = this.object.objectInfo.name;
+            this.objectRef = this.object.objectInfo.ref;
             this.taxonomy = ko.observableArray();
-
             this.dataIcon = ko.observable();
 
             this.tabs = [
                 {
                     active: true,
+                    tab: {
+                        label: 'Simple Tree',
+                        component: null
+                    },
+                    panel: {
+                        component: {
+                            name: SimpleTreeComponent.name(),
+                            params: {
+                                originRef: 'objectRef',
+                                tree: 'tree',
+                                treeInfo: 'treeInfo'
+                            }
+                        }
+                    }
+                },
+                {
                     tab: {
                         label: 'Overview'
                     },
@@ -99,6 +122,20 @@ define([
                 },
                 {
                     tab: {
+                        label: 'Provenance'
+                    },
+                    panel: {
+                        component: {
+                            name: ProvenanceComponent.name(),
+                            params: {
+                                ref: 'object.objectInfo.ref'
+                            }
+                        }
+                    }
+                },
+
+                {
+                    tab: {
                         label: 'Metadata',
                         component: null
                     },
@@ -113,8 +150,15 @@ define([
                 }
             ];
 
-            this.getSummaryInfo();
             this.getDataIcon();
+            this.getSummaryInfo()
+                .then(() => {
+                    this.ready(true);
+                })
+                .catch((err) => {
+                    console.error('ERROR', err);
+                    // TODO handle error
+                });
         }
 
         parseTree(treeData) {
@@ -197,13 +241,50 @@ define([
             });
             // https://github.com/kbase/workspace_deluxe/blob/8a52097748ef31b94cdf1105766e2c35108f4c41/workspace.spec#L1111
             // https://github.com/kbase/workspace_deluxe/blob/8a52097748ef31b94cdf1105766e2c35108f4c41/workspace.spec#L265
-            workspace.callFunc('get_objects', [[{
+            return workspace.callFunc('get_objects', [[{
                 ref: this.object.objectInfo.ref
             }]])
                 .spread(([objectData]) => {
                     // console.log('object data???', objectData);
                     const treeData = objectData.data.tree;
                     const tree = this.parseTree(treeData);
+                    const leaves = objectData.data.leaf_list.reduce((leaves, nodeID) => {
+                        const defaultLabel = objectData.data.default_node_labels[nodeID];
+                        const m = /^(.+)\s\((.+)\)$/.exec(defaultLabel);
+                        if (!m) {
+                            // console.log('what??', defaultLabel);
+                            leaves[nodeID] = {
+                                nodeID: nodeID,
+                                label: defaultLabel,
+                                scientificName: defaultLabel,
+                                genomeID: null,
+                                // TODO: how to get type ("g" - genome), and
+                                // when are there more than one refs per node?
+                                // Maybe for the general case this is relevant, but for
+                                // the species tree implementation, these are fixed at g and length 1?
+                                ref: objectData.data.ws_refs[nodeID].g[0]
+                            };
+                        } else {
+                            const [,scientificName, genomeID] = m;
+                            leaves[nodeID] = {
+                                nodeID: nodeID,
+                                label: defaultLabel,
+                                scientificName: scientificName,
+                                genomeID: genomeID,
+                                // TODO: how to get type ("g" - genome), and
+                                // when are there more than one refs per node?
+                                // Maybe for the general case this is relevant, but for
+                                // the species tree implementation, these are fixed at g and length 1?
+                                ref: objectData.data.ws_refs[nodeID].g[0]
+                            };
+                        }
+                        return leaves;
+                    }, {});
+                    this.tree = tree;
+                    this.treeInfo = {
+                        leaves: leaves
+                    };
+                    // console.log('got tree', tree);
                     // do something with the tree...
                 });
         }
@@ -371,7 +452,7 @@ define([
                 flexDirection: 'column'
             }
         },
-        gen.if('object',
+        gen.if('ready',
             [
                 buildOverview(),
                 buildTabs()

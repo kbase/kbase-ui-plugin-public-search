@@ -44,18 +44,21 @@ define([
                 authenticated: true
             });
 
-            this.object = ko.observable();
-
+            this.ready = ko.observable(false);
             this.error = ko.observable();
-            this.component = ko.pureComputed(() => {
-                const object = this.object();
-                if (!object) {
-                    return null;
-                }
-                return TypeController.typeToComponent(object.objectInfo.typeName);
-            });
 
-            TypeController.typeToComponent('genome');
+            this.object = null;
+            this.component = null;
+
+            // this.component = ko.pureComputed(() => {
+            //     const object = this.object();
+            //     if (!object) {
+            //         return null;
+            //     }
+            //     return TypeController.typeToComponent(object.objectInfo.typeName);
+            // });
+
+            // TypeController.typeToComponent('genome');
             // this.objectInfo = ko.observable();
             // this.workspaceInfo = ko.observable();
 
@@ -63,7 +66,15 @@ define([
                 this.parent.send('close');
             });
 
-            this.fetchObjectInfo();
+            this.fetchObjectInfo()
+                .then((object) => {
+                    this.object = object;
+                    this.component = TypeController.typeToComponent(object.objectInfo.typeName);
+                    this.ready(true);
+                })
+                .catch((err) => {
+                    console.error('ERROR', err);
+                });
         }
 
         onClose() {
@@ -81,7 +92,7 @@ define([
                 String(this.row.metadata.objectId),
                 String(1)
             ].join('/');
-            Promise.all([
+            return Promise.all([
                 this.workspace.callFunc('get_object_info3', [{
                     objects: [{
                         ref: this.row.metadata.ref,
@@ -102,7 +113,6 @@ define([
                     })
             ])
                 .spread((obj_info_result, workspace_info) => {
-                // .spread(([[object_info]], [workspace_info]) => {
                     const [object_info, first_object_info] = obj_info_result.infos;
                     if (!object_info) {
                         throw new Error('Object could not be accessed');
@@ -119,8 +129,7 @@ define([
                     } else {
                         obj.workspaceType = 'unknown';
                     }
-                    // console.log('obj', obj);
-                    this.object(obj);
+                    return obj;
                 })
                 .catch((err) => {
                     this.error(err);
@@ -136,7 +145,7 @@ define([
     function buildBody() {
         return gen.if('component',
             gen.component2({
-                name: 'component().name()',
+                name: 'component.name()',
                 params: {
                     object: 'object'
                 }
@@ -169,7 +178,7 @@ define([
                 flexDirection: 'column'
             }
         },
-        gen.if('object',
+        gen.if('ready',
             ui.buildFullHeightDialog({
                 type: 'info',
                 title: buildTitle(),

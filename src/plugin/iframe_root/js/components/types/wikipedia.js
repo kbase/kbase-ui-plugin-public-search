@@ -115,6 +115,7 @@ define([
             this.loaded = ko.observable(false);
 
             this.scientificName = scientificName;
+
             this.error = ko.observable();
             this.subscribe(this.error, (newValue) => {
                 if (newValue) {
@@ -124,22 +125,22 @@ define([
 
             this.state = ko.observable('loading');
 
-            this.subscribe(this.scientificName, () => {
-                this.findImage();
-            });
             this.findImage();
         }
 
         findImage() {
-            const scientificName = this.scientificName();
-            if (!scientificName) {
+            if (!this.scientificName) {
                 return;
             }
-            this.getOrganismInfo(scientificName)
+            this.getOrganismInfo(this.scientificName)
                 .then(({imageUrl, url, introText}) => {
                     this.imageUrl(imageUrl);
                     this.pageUrl(url);
-                    this.introText = introText.replace(/==/g, '##').replace(/\n/g, '  \n');
+                    this.introText = introText
+                        .replace(/====/g, '####')
+                        .replace(/===/g, '###')
+                        .replace(/==/g, '##')
+                        .replace(/\n/g, '  \n');
                     this.loaded(true);
                     this.state('loaded');
                 })
@@ -407,7 +408,7 @@ define([
     }
 
     function buildLoading() {
-        return div(build.loading('Locating image at Wikipedia'));
+        return div(build.loading('Finding page at Wikipedia'));
     }
 
     function template() {

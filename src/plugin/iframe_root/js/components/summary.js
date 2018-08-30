@@ -433,7 +433,7 @@ define([
             buildSummaryTable(),
             div({
                 class: style.classes.columnSubHeader
-            }, 'Totals in Search'),
+            }, 'Search Results'),
             buildTotalsTable()
         ]);
     }
