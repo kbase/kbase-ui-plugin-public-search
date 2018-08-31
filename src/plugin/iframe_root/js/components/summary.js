@@ -408,7 +408,7 @@ define([
                             typedText: {
                                 value: 'excludedTotal',
                                 type: '"number"',
-                                format: '"0,0"',
+                                format: '"0,0a"',
                                 missing: '"-"'
                             },
                             style: {

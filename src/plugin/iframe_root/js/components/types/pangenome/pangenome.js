@@ -9,7 +9,8 @@ define([
     './overview',
     '../container',
     '../containerTab',
-    '../metadata'
+    '../metadata',
+    '../provenance'
 ], function (
     ko,
     reg,
@@ -21,7 +22,8 @@ define([
     OverviewComponent,
     ContainerComponent,
     ContainerTabComponent,
-    MetadataComponent
+    MetadataComponent,
+    ProvenanceComponent
 ) {
     'use strict';
 
@@ -44,7 +46,7 @@ define([
             this.taxonomy = [];
             this.dataIcon = this.getDataIcon();
 
-            console.log('object is...', object);
+            // console.log('object is...', object);
 
             this.tabs = [
                 {
@@ -75,6 +77,19 @@ define([
                             name: ContainerComponent.name(),
                             params: {
                                 object: 'object'
+                            }
+                        }
+                    }
+                },
+                {
+                    tab: {
+                        label: 'Provenance'
+                    },
+                    panel: {
+                        component: {
+                            name: ProvenanceComponent.name(),
+                            params: {
+                                ref: 'object.objectInfo.ref'
                             }
                         }
                     }

@@ -33,6 +33,7 @@ define([
     class ViewModel extends ViewModelBase {
         constructor(params, context) {
             super(params);
+            console.log('inspector loading...');
             this.parent = context.$parent;
 
             const {row} = params;
@@ -135,6 +136,11 @@ define([
                     this.error(err);
                     console.error('ERROR', err);
                 });
+        }
+
+        dispose() {
+            console.log('inspector is closing');
+            super.dispose();
         }
     }
 

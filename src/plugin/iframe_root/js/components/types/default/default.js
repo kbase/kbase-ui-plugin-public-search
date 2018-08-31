@@ -6,10 +6,10 @@ define([
     'kb_knockout/components/tabset',
     'kb_lib/html',
     'kb_lib/htmlBuilders',
-    '../wikipediaImage',
     './overview',
     '../container',
-    '../containerTab'
+    '../containerTab',
+    '../provenance'
 ], function (
     ko,
     reg,
@@ -18,10 +18,10 @@ define([
     TabsetComponent,
     html,
     build,
-    WikipediaImageComponent,
     OverviewComponent,
     ContainerComponent,
-    ContainerTabComponent
+    ContainerTabComponent,
+    ProvenanceComponent
 ) {
     'use strict';
 
@@ -76,6 +76,19 @@ define([
                         }
                     }
                 },
+                {
+                    tab: {
+                        label: 'Provenance'
+                    },
+                    panel: {
+                        component: {
+                            name: ProvenanceComponent.name(),
+                            params: {
+                                ref: 'object.objectInfo.ref'
+                            }
+                        }
+                    }
+                }
                 // {
                 //     tab: {
                 //         label: 'Metadata',
