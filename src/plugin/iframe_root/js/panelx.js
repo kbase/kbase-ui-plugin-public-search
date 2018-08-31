@@ -17,6 +17,8 @@ define([
 ) {
     'use strict';
 
+    ko.options.deferUpdates = true;
+
     const t = html.tag,
         div = t('div');
 

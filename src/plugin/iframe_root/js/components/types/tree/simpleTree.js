@@ -17,6 +17,7 @@ define([
             this.tree = tree;
             this.leaves = treeInfo.leaves;
             this.originRef = originRef;
+            this.componentName = SimpleTreeNodeComponent.name();
         }
     }
 
@@ -26,6 +27,7 @@ define([
                 component: {
                     name: SimpleTreeNodeComponent.quotedName(),
                     params: {
+                        componentName: 'componentName',
                         node: 'tree',
                         leaves: '$component.leaves',
                         originRef: 'originRef'

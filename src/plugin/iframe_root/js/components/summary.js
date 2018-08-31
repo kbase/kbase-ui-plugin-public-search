@@ -202,11 +202,51 @@ define([
             });
         }
 
-        doSelectDataType(data) {
-            if (this.omittedDataTypes().includes(data.type)) {
-                this.omittedDataTypes.remove(data.type);
+        doSelectDataType(data, jqueryEvent) {
+            const event = jqueryEvent.originalEvent;
+
+            if (event.altKey) {
+                // Alt key means to toggle this checkbox, and to toggle all others to
+                // the opposite state.
+
+                // toggle this one
+                if (this.omittedDataTypes().includes(data.type)) {
+                    this.omittedDataTypes.remove(data.type);
+                } else {
+                    this.omittedDataTypes.push(data.type);
+                }
+
+                // then the rest
+                const omitted = this.omittedDataTypes().includes(data.type);
+                this.searchSummary().forEach((type) => {
+                    if (type.type !== data.type) {
+                        if (omitted) {
+                            this.omittedDataTypes.remove(type.type);
+                        } else {
+                            this.omittedDataTypes.push(type.type);
+                        }
+                    }
+                });
+            } else if (event.metaKey) {
+                // Control key means to keep ensure this checkbox is on, and all others
+                // are off.
+                if (this.omittedDataTypes().includes(data.type)) {
+                    this.omittedDataTypes.remove(data.type);
+                }
+                this.searchSummary().forEach((type) => {
+                    if (type.type !== data.type) {
+                        if (!this.omittedDataTypes().includes(type.type)) {
+                            this.omittedDataTypes.push(type.type);
+                        }
+                    }
+                });
             } else {
-                this.omittedDataTypes.push(data.type);
+                // just toggle this one
+                if (this.omittedDataTypes().includes(data.type)) {
+                    this.omittedDataTypes.remove(data.type);
+                } else {
+                    this.omittedDataTypes.push(data.type);
+                }
             }
         }
     }

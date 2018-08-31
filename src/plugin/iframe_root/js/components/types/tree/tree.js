@@ -65,11 +65,11 @@ define([
 
             this.tree = null;
             this.treeInfo = null;
-            this.summaryInfo = ko.observable();
+            // this.summaryInfo = ko.observable();
             this.objectName = this.object.objectInfo.name;
             this.objectRef = this.object.objectInfo.ref;
-            this.taxonomy = ko.observableArray();
-            this.dataIcon = ko.observable();
+            // this.taxonomy = ko.observableArray();
+            this.dataIcon = this.getDataIcon();
 
             this.tabs = [
                 {
@@ -150,7 +150,6 @@ define([
                 }
             ];
 
-            this.getDataIcon();
             this.getSummaryInfo()
                 .then(() => {
                     this.ready(true);
@@ -294,16 +293,16 @@ define([
                 const typeId = this.object.objectInfo.type,
                     type = this.runtime.service('type').parseTypeId(typeId),
                     icon = this.runtime.service('type').getIcon({ type: type });
-                this.dataIcon({
+                return {
                     classes: icon.classes.join(' '),
                     color: icon.color
-                });
+                };
             } catch (err) {
                 console.error('When fetching icon config: ', err);
-                this.dataIcon({
+                return {
                     classes: 'fa-question',
                     color: 'gray'
-                });
+                };
             }
         }
     }
@@ -360,14 +359,14 @@ define([
                                 class: 'fa fa-circle fa-stack-2x',
                                 dataBind: {
                                     style: {
-                                        color: 'dataIcon().color'
+                                        color: 'dataIcon.color'
                                     }
                                 }
                             }),
                             span({
                                 class: 'fa-inverse fa-stack-1x ',
                                 dataBind: {
-                                    class: 'dataIcon().classes'
+                                    class: 'dataIcon.classes'
                                 }
                             })
                         ])

@@ -13,15 +13,15 @@ define([
         div = t('div');
 
     class ViewModel {
-        constructor(params) {
-            const {node, leaves, first, last, originRef, componentName} = params;
+        constructor(params, context, element, componentInfo, name) {
+            const {node, leaves, first, last, originRef} = params;
             this.node = node;
             this.leaves = leaves;
             this.first = first;
             this.last = last;
             this.originRef = originRef;
 
-            this.componentName = componentName;
+            this.componentId = name;
 
             this.showLength = false;
 
@@ -200,9 +200,8 @@ define([
                 }, div({
                     dataBind: {
                         component: {
-                            name: '$component.componentName',
+                            name: '$component.componentId',
                             params: {
-                                componentName: '$component.componentName',
                                 node: '$data',
                                 leaves: '$component.leaves',
                                 first: '$index() === 0',
@@ -227,7 +226,7 @@ define([
 
     function component() {
         return {
-            viewModel: ViewModel,
+            viewModelWithContext: ViewModel,
             template: template()
         };
     }

@@ -61,7 +61,6 @@ require([
     boot(window);
 
     require([
-        'knockout',
         'kb_knockout/load',
         'kb_knockout/registry',
         'kb_lib/html',
@@ -76,7 +75,6 @@ require([
         'css!font-awesome_css',
         'css!normalize_css'
     ], function (
-        ko,
         knockoutLoader,
         reg,
         html,
@@ -120,7 +118,7 @@ require([
                 return JSON.parse(decodeURIComponent(this.rootWindow.frameElement.getAttribute('data-params')));
             }
 
-            render() {
+            render(ko) {
                 this.rootViewModel = new RootViewModel({
                     runtime: this.runtime,
                     hostChannel: this.hostChannel
@@ -187,7 +185,7 @@ require([
                             this.config = config;
 
                             this.runtime = new runtime.Runtime({config, token, username, realname, email});
-                            this.render();
+                            this.render(ko);
 
                             this.channel.on('show-feedback', () => {
                                 // this.showFeedback();

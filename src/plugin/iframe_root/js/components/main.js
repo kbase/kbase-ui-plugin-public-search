@@ -18,7 +18,8 @@ define([
     './dataSource',
     './feedback',
     'kb_knockout/components/overlayPanel',
-    'kb_knockout/lib/nanoBus'
+    'kb_knockout/lib/nanoBus',
+    '../lib/debug'
 ], function (
     Promise,
     ko,
@@ -39,7 +40,8 @@ define([
     DataSourceComponent,
     FeedbackComponent,
     OverlayPanelComponent,
-    NanoBus
+    NanoBus,
+    debug
 ) {
     'use strict';
 
@@ -200,6 +202,7 @@ define([
                 if (!newValue.paging.pageSize) {
                     return;
                 }
+                // console.log('do search through searchQuery');
                 this.doSearch(newValue);
             });
 
@@ -311,9 +314,10 @@ define([
                 this.resetSearchSummary();
                 this.totalCount(0);
                 this.realTotalCount(0);
-                this.page(null);
+                this.page(1);
                 return;
             }
+            // console.log('do search 2');
 
             let start;
             if (query.paging.page) {
@@ -366,7 +370,6 @@ define([
                     this.searchResults.removeAll();
 
                     this.searchSummary().forEach((summary) => {
-                        console.log('summary item', summary, summaryResult.type_to_count[summary.type], summaryResult.type_to_count);
                         summary.count(summaryResult.type_to_count[summary.type] || 0);
                         // if (this.omittedDataTypes().includes(summary.type)) {
                         //     summary.count(null);
@@ -381,7 +384,7 @@ define([
                         this.searchState('notfound');
                         this.totalCount(0);
                         this.realTotalCount(0);
-                        this.page(null);
+                        this.page(1);
                         return;
                     }
 
@@ -450,12 +453,12 @@ define([
                     }
 
                     // Calculate page stats
-                    if (!this.page()) {
-                        this.page(1);
-                    }
+                    // if (!this.page()) {
+                    //     this.page(1);
+                    // }
 
                     // Populate results
-                    result.objects.forEach((object) => {
+                    const searchResults = result.objects.map((object) => {
                         // just testing...
                         const [, workspaceId, objectId, version] = object.guid.match(/^WS:(\d+)\/(\d+)\/(\d+)$/);
                         const workspace = workspaces[workspaceId];
@@ -492,6 +495,7 @@ define([
                             owner = 'n/a';
                             name = 'n/a';
                             mode = 'inaccessible';
+                            // debug.tryInaccessibleObject(this.runtime, [workspaceId, objectId, version].join('/'));
                             break;
                         default:
                             owner = '** err';
@@ -528,10 +532,12 @@ define([
                                 }
                             }
                         };
+                        return row;
 
                         // quick hack
-                        this.searchResults.push(row);
+                        // this.searchResults.push(row);
                     });
+                    this.searchResults(searchResults);
                     this.searchState('success');
                 })
                 .catch((error) => {
@@ -540,7 +546,7 @@ define([
                     this.resetSearchSummary();
                     this.totalCount(0);
                     this.realTotalCount(0);
-                    this.page(null);
+                    this.page(1);
                     this.searchState('error');
                     this.error(error);
                     // this.showError();

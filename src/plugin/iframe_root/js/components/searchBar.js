@@ -107,7 +107,6 @@ define([
             if (emptyRe.test(query)) {
                 return;
             }
-
             this.forceSearch(new Uuid(4).format());
             this.searchInput(query);
         }

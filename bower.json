@@ -42,7 +42,7 @@
         "bootstrap": "3.3.7",
         "bower-knockout-mapping": "2.6.0",
         "font-awesome": "4.7.0",
-        "kbase-knockout-extensions-es6": "0.6.3",
+        "kbase-knockout-extensions-es6": "0.6.4",
         "knockout-projections": "eapearson/knockout-projections#1.1.1",
         "knockout-switch-case": "2.1.0",
         "knockout-validation": "2.0.3",
