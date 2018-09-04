@@ -13,12 +13,7 @@ define([
 
     const t = html.tag,
         span = t('span'),
-        div = t('div'),
-        table = t('table'),
-        tbody = t('tbody'),
-        tr = t('tr'),
-        td = t('td');
-    // const [span, div, table, tbody, tr, td] = html.tags(['span', 'div', 'table', 'tbody', 'tr', 'th', 'td']);
+        div = t('div');
 
     const style = html.makeStyles({
         component: {
@@ -202,8 +197,10 @@ define([
             });
         }
 
-        doSelectDataType(data, jqueryEvent) {
-            const event = jqueryEvent.originalEvent;
+        doSelectDataType(data, event) {
+            // note - knockout should return the same type of event no matter
+            // how it is being listened for...
+            // const event = jqueryEvent.originalEvent;
 
             if (event.altKey) {
                 // Alt key means to toggle this checkbox, and to toggle all others to
@@ -242,6 +239,7 @@ define([
                 });
             } else {
                 // just toggle this one
+                console.log('hmm', data);
                 if (this.omittedDataTypes().includes(data.type)) {
                     this.omittedDataTypes.remove(data.type);
                 } else {
@@ -291,12 +289,6 @@ define([
                     div({
                         class: '-cell'
                     },
-                    // input({
-                    //     type: 'checkbox',
-                    //     dataBind: {
-                    //         checked: 'selected'
-                    //     }
-                    // })),
                     span({
                         class: 'fa',
                         dataBind: {
@@ -420,50 +412,6 @@ define([
                 ])
             ]))
         ]);
-    }
-
-    function buildTotals() {
-        return table({
-            style: {
-                borderSpacing: '4px',
-                borderCollapse: 'separate'
-            }
-        },
-        tbody([
-            tr([
-                td('Included'),
-                td(span({
-                    dataBind: {
-                        typedText: {
-                            value: 'includedTotal',
-                            type: '"number"',
-                            format: '"0,0"',
-                            missing: '"-"'
-                        }
-                    }
-                }))
-            ]),
-            tr([
-                td('Excluded'),
-                td(span({
-                    dataBind: {
-                        typedText: {
-                            value: 'excludedTotal',
-                            type: '"number"',
-                            format: '"0,0"',
-                            missing: '"-"'
-                        }
-                    }
-                }))
-            ])
-        ])
-        );
-    }
-
-    function buildTotal() {
-        return div({
-            class: style.classes.statusRow
-        }, buildTotals());
     }
 
     function template() {

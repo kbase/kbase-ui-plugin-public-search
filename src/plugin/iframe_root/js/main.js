@@ -39,7 +39,7 @@ require([
                 'knockout-projections': 'vendor/knockout-projections/knockout-projections',
                 'knockout-switch-case': 'vendor/knockout-switch-case/knockout-switch-case',
                 'knockout-validation': 'vendor/knockout-validation/knockout.validation',
-                knockout: 'vendor/knockout/knockout',
+                knockout: 'vendor/kbase-knockout/knockout',
                 marked: 'vendor/marked/marked',
                 moment: 'vendor/moment/moment',
                 normalize_css: 'vendor/normalize-css/normalize',
@@ -174,6 +174,7 @@ require([
                 return knockoutLoader.load()
                     .then((ko) => {
                         ko.options.deferUpdates = true;
+                        ko.options.createChildContextWithAs = true;
 
                         this.channel.start();
                         this.hostChannel.start();

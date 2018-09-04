@@ -5,7 +5,7 @@ define([
 ) {
     'use strict';
 
-    function tryInaccessibleObject(runtime, ref) {
+    function tryInaccessibleObject(runtime, guid, ref) {
         const workspace = new GenericClient({
             runtime: runtime,
             module: 'Workspace',
@@ -21,7 +21,7 @@ define([
                 return null;
             })
             .catch((err) => {
-                console.error('inaccessible object', err.message);
+                console.error('inaccessible object', ref, guid, err.message);
                 return null;
             });
     }

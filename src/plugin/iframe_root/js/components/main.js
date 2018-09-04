@@ -495,7 +495,7 @@ define([
                             owner = 'n/a';
                             name = 'n/a';
                             mode = 'inaccessible';
-                            // debug.tryInaccessibleObject(this.runtime, [workspaceId, objectId, version].join('/'));
+                            // debug.tryInaccessibleObject(this.runtime, object.guid, [workspaceId, objectId, version].join('/'));
                             break;
                         default:
                             owner = '** err';
