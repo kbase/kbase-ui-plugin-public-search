@@ -16,6 +16,7 @@ define([
     './help',
     './tooltipManager',
     './dataSource',
+    './dataPrivacy',
     './feedback',
     'kb_knockout/components/overlayPanel',
     'kb_knockout/lib/nanoBus',
@@ -38,6 +39,7 @@ define([
     HelpComponent,
     TooltipComponent,
     DataSourceComponent,
+    DataPrivacyComponent,
     FeedbackComponent,
     OverlayPanelComponent,
     NanoBus,
@@ -86,6 +88,10 @@ define([
                     return error.message;
                 }
             });
+
+            // Auth state
+            // TODO: this should be set by an auth event.
+            this.authorized = ko.observable(this.runtime.service('session').getAuthToken());
 
             // And... search results.
             this.searchResults= ko.observableArray();
@@ -357,17 +363,22 @@ define([
                     count: count,
                     withUserData: query.input.withUserData,
                     withReferenceData: query.input.withReferenceData,
-                    sorting: query.sorting.sortSpec
+                    sorting: query.sorting.sortSpec,
+                    withPrivate: query.input.withPrivateData,
+                    withPublic: query.input.withPublicData
                 }),
                 this.model.searchSummary({
                     types: query.input.supportedDataTypes,
                     query: query.input.searchInput,
                     withUserData: query.input.withUserData,
-                    withReferenceData: query.input.withReferenceData
+                    withReferenceData: query.input.withReferenceData,
+                    withPrivate: query.input.withPrivateData,
+                    withPublic: query.input.withPublicData
                 })
             ])
                 .spread((result, summaryResult) => {
                     this.searchResults.removeAll();
+                    console.log('result', result, summaryResult);
 
                     this.searchSummary().forEach((summary) => {
                         summary.count(summaryResult.type_to_count[summary.type] || 0);
@@ -421,7 +432,9 @@ define([
                         };
                         if (info == null) {
                             workspace.type = 'inaccessible';
+                            console.log('not provided');
                         } else if (info.globalread === 'n' && info.user_permission === 'n') {
+                            console.log('not readable?');
                             workspace.type = 'inaccessible';
                         } else {
                             workspace.owner = info.owner;
@@ -676,12 +689,27 @@ define([
                     div({
                         class: style.classes.columnHeader
                     }, 'Filters'),
+                    gen.if('authorized',
+                        div({
+                            class: style.classes.columnGroup
+                        }, [
+                            div({
+                                class: style.classes.fieldGroupLabel
+                            }, 'Data Privacy'),
+                            gen.component({
+                                name: DataPrivacyComponent.name(),
+                                params: {
+                                    withPrivateData: 'withPrivateData',
+                                    withPublicData: 'withPublicData'
+                                }
+                            })
+                        ])),
                     div({
                         class: style.classes.columnGroup
                     }, [
                         div({
                             class: style.classes.fieldGroupLabel
-                        }, 'Data Sources'),
+                        }, 'Data Containers'),
                         gen.component({
                             name: DataSourceComponent.name(),
                             params: {

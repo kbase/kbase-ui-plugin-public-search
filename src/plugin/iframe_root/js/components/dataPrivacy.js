@@ -82,7 +82,6 @@ define([
                     width: '1em'
                 },
                 'td:nth-child(2)': {
-                    // width: '90%'
                 }
             }
         },
@@ -129,23 +128,23 @@ define([
     });
 
     class ViewModel {
-        constructor({withUserData, withReferenceData}) {
-            this.withUserData = withUserData;
-            this.withReferenceData = withReferenceData;
+        constructor({withPrivateData, withPublicData}) {
+            this.withPrivateData = withPrivateData;
+            this.withPublicData = withPublicData;
         }
-        toggleUserData() {
-            if (this.withReferenceData()) {
-                this.withUserData(!this.withUserData());
+        togglePrivateData() {
+            if (this.withPublicData()) {
+                this.withPrivateData(!this.withPrivateData());
             }
         }
-        toggleReferenceData() {
-            if (this.withUserData()) {
-                this.withReferenceData(!this.withReferenceData());
+        togglePublicData() {
+            if (this.withPrivateData()) {
+                this.withPublicData(!this.withPublicData());
             }
         }
     }
 
-    function buildDataSourceTable() {
+    function buildPrivacyTable() {
         return div({
             class: styles.classes.table
         }, [
@@ -158,9 +157,9 @@ define([
                     class: '-row',
                     dataBind: {
                         css: {
-                            [styles.classes.activeFilterInput]: 'withUserData()'
+                            [styles.classes.activeFilterInput]: 'withPrivateData()'
                         },
-                        click: 'function(d,e){$component.toggleUserData.call($component,d,e);}'
+                        click: 'function(d,e){$component.togglePrivateData.call($component,d,e);}'
                     }
                 }, [
                     div({
@@ -170,26 +169,26 @@ define([
                         class: 'fa',
                         dataBind: {
                             style: {
-                                color: 'withReferenceData() ? "#000" : "#AAA"'
+                                color: 'withPublicData() ? "#000" : "#AAA"'
                             },
                             css: {
-                                'fa-check-square-o': 'withUserData()',
-                                'fa-square-o': '!withUserData()'
+                                'fa-check-square-o': 'withPrivateData()',
+                                'fa-square-o': '!withPrivateData()'
                             }
                         }
                     })
                     ),
                     div({
                         class: '-cell'
-                    }, 'Narratives')
+                    }, 'Private Data')
                 ]),
                 div({
                     class: '-row',
                     dataBind: {
                         css: {
-                            [styles.classes.activeFilterInput]: 'withReferenceData()'
+                            [styles.classes.activeFilterInput]: 'withPublicData()'
                         },
-                        click: 'function(d,e){$component.toggleReferenceData($component,d,e);}'
+                        click: 'function(d,e){$component.togglePublicData($component,d,e);}'
                     }
                 }, [
                     div({
@@ -199,18 +198,18 @@ define([
                         class: 'fa',
                         dataBind: {
                             style: {
-                                color: 'withUserData() ? "#000" : "#AAA"'
+                                color: 'withPrivateData() ? "#000" : "#AAA"'
                             },
                             css: {
-                                'fa-check-square-o': 'withReferenceData()',
-                                'fa-square-o': '!withReferenceData()'
+                                'fa-check-square-o': 'withPublicData()',
+                                'fa-square-o': '!withPublicData()'
                             }
                         }
                     })
                     ),
                     div({
                         class: '-cell'
-                    }, 'Reference Data')
+                    }, 'Public Data')
                 ])
             ]))
         ]);
@@ -219,7 +218,7 @@ define([
     function template() {
         return div({
             class: 'component'
-        }, buildDataSourceTable());
+        }, buildPrivacyTable());
     }
 
     function component() {

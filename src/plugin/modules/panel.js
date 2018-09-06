@@ -35,7 +35,7 @@ define([
                 pluginPath: pluginPath
             });
 
-            this.runtime.send('ui', 'setTitle', 'KBase Public Search!');
+            this.runtime.send('ui', 'setTitle', 'KBase Search');
 
             return this.iframer.start();
         }
