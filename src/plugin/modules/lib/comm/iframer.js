@@ -141,54 +141,58 @@ define([
         */
 
         start() {
-            return Promise.try(() => {
+            return new Promise((resolve, reject) => {
+                try {
+                    this.channel.start();
 
-                this.channel.start();
-
-                this.channel.on('get-auth-status', () => {
-                    this.channel.send('auth-status', {
-                        // id: message.enevelope.id,
-                        token: this.runtime.service('session').getAuthToken(),
-                        username: this.runtime.service('session').getUsername()
+                    this.channel.on('get-auth-status', () => {
+                        this.channel.send('auth-status', {
+                            // id: message.enevelope.id,
+                            token: this.runtime.service('session').getAuthToken(),
+                            username: this.runtime.service('session').getUsername()
+                        });
                     });
-                });
 
-                this.channel.on('get-config', () => {
-                    this.channel.send('config', {
-                        // id: message.id,
-                        value: this.runtime.rawConfig()
+                    this.channel.on('get-config', () => {
+                        this.channel.send('config', {
+                            // id: message.id,
+                            value: this.runtime.rawConfig()
+                        });
                     });
-                });
 
-                this.channel.on('add-button', ({button}) => {
-                    button.callback = () => {
-                        this.iframeChannel.send.apply(this.iframeChannel, button.callbackMessage);
-                    };
-                    this.runtime.send('ui', 'addButton', button);
-                });
-
-                this.channel.on('open-window', ({url, name}) => {
-                    window.location.href = url;
-                    // window.open(url, name);
-                });
-
-                this.channel.on('ready', (message) => {
-                    this.iframeChannel = new WindowChannel.Channel({
-                        window: this.iframe.iframe.contentWindow,
-                        channelId: message.channelId,
-                        host: message.channelHost
+                    this.channel.on('add-button', ({button}) => {
+                        button.callback = () => {
+                            this.iframeChannel.send.apply(this.iframeChannel, button.callbackMessage);
+                        };
+                        this.runtime.send('ui', 'addButton', button);
                     });
-                    this.iframeChannel.start();
-                    this.iframeChannel.send('start', {
-                        token: this.runtime.service('session').getAuthToken(),
-                        username: this.runtime.service('session').getUsername(),
-                        realname: this.runtime.service('session').getRealname(),
-                        email: this.runtime.service('session').getEmail(),
-                        config: this.runtime.rawConfig()
-                    });
-                });
 
-                this.iframe.start();
+                    this.channel.on('open-window', ({url, name}) => {
+                        window.location.href = url;
+                        // window.open(url, name);
+                    });
+
+                    this.channel.on('ready', (message) => {
+                        this.iframeChannel = new WindowChannel.Channel({
+                            window: this.iframe.iframe.contentWindow,
+                            channelId: message.channelId,
+                            host: message.channelHost
+                        });
+                        this.iframeChannel.start();
+                        this.iframeChannel.send('start', {
+                            token: this.runtime.service('session').getAuthToken(),
+                            username: this.runtime.service('session').getUsername(),
+                            realname: this.runtime.service('session').getRealname(),
+                            email: this.runtime.service('session').getEmail(),
+                            config: this.runtime.rawConfig()
+                        });
+                    });
+
+                    this.iframe.start();
+                    resolve();
+                } catch (ex) {
+                    reject(ex);
+                }
             });
 
         }

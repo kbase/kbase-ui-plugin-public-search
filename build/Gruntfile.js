@@ -9,7 +9,7 @@ module.exports = function (grunt) {
                 expand: true,
                 flatten: true,
                 src: 'node_modules/vega-lib/build/vega.js',
-                dest: 'src/plugin/iframe_root/js/vendor/vega'
+                dest: '../src/plugin/iframe_root/js/vendor/vega'
             }
         }
     });
