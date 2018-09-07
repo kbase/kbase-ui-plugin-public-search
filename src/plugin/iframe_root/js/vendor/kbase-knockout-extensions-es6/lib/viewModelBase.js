@@ -19,7 +19,7 @@ define([
             // this.observable = ko.observable;
             // this.observableArray = ko.observableArray;
             this.bus = new NanoBus({
-                link: params.link || params.bus
+                link: params.bus || params.link
             });
 
             this.parentBus = params.bus;
@@ -30,7 +30,6 @@ define([
         }
 
         sendToParent(message, payload) {
-            console.log('sending to parent...', message, payload, this.parentBus);
             if (this.parentBus) {
                 this.parentBus.send(message, payload);
             }
@@ -45,7 +44,6 @@ define([
         }
 
         on(message, handler) {
-            console.log('on', message);
             this.bus.on(message, handler);
         }
 

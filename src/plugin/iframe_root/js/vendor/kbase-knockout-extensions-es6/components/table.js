@@ -96,16 +96,6 @@ define([
             flexDirection: 'row',
             alignItems: 'center'
         },
-        // cellSelectable: {
-        //     css: {
-        //         cursor: 'pointer'
-        //     },
-        //     pseudo: {
-        //         hover: {
-        //             backgroundColor: '#CCC'
-        //         }
-        //     }
-        // },
         headerCell: {
             css: {
                 flex: '0 0 0px',

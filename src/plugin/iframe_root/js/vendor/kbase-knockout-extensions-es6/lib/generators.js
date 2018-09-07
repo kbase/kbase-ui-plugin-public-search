@@ -142,39 +142,8 @@ define([], function () {
     }
 
     function koWith(identifier, markup) {
-        let withValue, noChildContext, as;
-        if (typeof identifier === 'string') {
-            withValue = identifier;
-            noChildContext = null;
-            as = null;
-        } else {
-            withValue = identifier.value;
-            noChildContext = identifier.noChildContext;
-            as = identifier.as;
-        }
-        const expression = [
-            {
-                op: 'with',
-                value: withValue
-            }
-        ];
-        if (noChildContext) {
-            expression.push({
-                op: 'noChildContext',
-                value: noChildContext
-            });
-        }
-        if (as) {
-            expression.push({
-                op: 'as',
-                value: as
-            });
-        }
-        const expressionString = expression.map((item) => {
-            return item.op + ':' + item.value;
-        }).join(',');
         return [
-            '<!-- ko ' + expressionString  + '  -->',
+            '<!-- ko with: ' + identifier + '-->',
             markup,
             '<!-- /ko -->'
         ];
