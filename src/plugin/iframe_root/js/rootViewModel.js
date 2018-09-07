@@ -2,12 +2,14 @@ define([
     'bluebird',
     'knockout',
     'kb_knockout/lib/viewModelBase',
-    'kb_lib/httpUtils'
+    'kb_lib/httpUtils',
+    './components/columns/selection'
 ], function (
     Promise,
     ko,
     ViewModelBase,
-    httpUtils
+    httpUtils,
+    SelectionComponent
 ) {
     'use strict';
 
@@ -77,9 +79,7 @@ define([
             ];
 
             this.bus.on('show-feedback', () => {
-                // console.log('show feedback?');
                 this.showFeedback();
-
             });
 
             this.getMethodMap()
@@ -90,6 +90,107 @@ define([
                 .catch((err) => {
                     this.error(err);
                 });
+
+            this.columns = [
+                {
+                    name: 'selected',
+                    label: 'Select',
+                    type: 'boolean',
+                    sort: null,
+                    width: 0.5,
+                    style: {
+                        textAlign: 'center'
+                    },
+                    noSelect: true,
+                    component: SelectionComponent.name()
+                },
+                {
+                    name: 'description',
+                    label: 'Name',
+                    type: 'string',
+                    sort: null,
+                    // width is more like a weight... for all current columns the
+                    // widths are summed, and each column's actual width attribute
+                    // is set as the percent of total.
+                    width: 3
+                },
+                {
+                    name: 'date',
+                    label: 'Date',
+                    type: 'date',
+                    format: 'MM/DD/YYYY',
+                    sort: {
+                        propertyKey: 'timestamp',
+                        isObject: false,
+                        direction: ko.observable('descending'),
+                        active: ko.observable(true)
+                    },
+                    width: 1
+                },
+                {
+                    name: 'type',
+                    label: 'Data Type',
+                    type: 'string',
+                    sort: {
+                        propertyKey: 'type',
+                        isObject: false,
+                        direction: ko.observable('ascending'),
+                        active: ko.observable(false)
+                    },
+                    // width is more like a weight... for all current columns the
+                    // widths are summed, and each column's actual width attribute
+                    // is set as the percent of total.
+                    width: 1
+                },
+                {
+                    name: 'source',
+                    label: 'Data Source',
+                    type: 'string',
+                    width: 1
+                },
+                {
+                    name: 'owner',
+                    label: 'Owner',
+                    type: 'string',
+                    width: 1
+                },
+                {
+                    name: 'name',
+                    label: 'Title',
+                    type: 'string',
+                    width: 3
+                }
+                // {
+                //     name: 'inspect',
+                //     label: 'Inspect',
+                //     type: 'action',
+                //     width: 5,
+                //     component: InspectControl.name(),
+                //     rowStyle: {
+                //         textAlign: 'center'
+                //     },
+                //     headerStyle: {
+                //         textAlign: 'center'
+                //     }
+                // },
+                // {
+                //     name: 'copy',
+                //     label: 'Copy',
+                //     width: 6,
+                //     component: StageControl.name(),
+                //     rowStyle: {
+                //         textAlign: 'center'
+                //     },
+                //     headerStyle: {
+                //         textAlign: 'center'
+                //     }
+                // }
+            ];
+
+            this.columnsMap = this.columns.reduce(function (acc, col) {
+                acc[col.name] = col;
+                return acc;
+            }, {});
         }
 
         googleFormLink(arg) {
@@ -111,7 +212,6 @@ define([
                 email: this.runtime.service('session').getEmail() || '',
                 subject: 'Public Search'
             };
-            // console.log('fields??', fields, this.runtime.service('session'));
             // window.open(this.googleFormLink(fields), '_blank');
             this.hostChannel.send('open-window', {
                 url: this.googleFormLink(fields),
@@ -131,7 +231,6 @@ define([
                 nms.callFunc('list_methods_spec', [{tag: 'release'}])
             ])
                 .spread(([dev], [beta], [release]) => {
-                    // console.log('hey, got method specs info...', result);
                     const devMap = dev.reduce((methodMap, spec) => {
                         const id = spec.behavior.kb_service_name + '/' +
                                    spec.behavior.kb_service_method;
@@ -158,7 +257,6 @@ define([
                         beta: betaMap,
                         release: releaseMap
                     };
-                    // console.log('hey, got method map!!', this.methodMap);
                 })
                 .catch((err) => {
                     console.error('ERROR', err.message);

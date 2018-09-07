@@ -46,8 +46,6 @@ define([
             this.taxonomy = [];
             this.dataIcon = this.getDataIcon();
 
-            // console.log('object is...', object);
-
             this.tabs = [
                 {
                     active: true,
@@ -128,7 +126,6 @@ define([
         //         ]
         //     }]])
         //         .spread(([objectData]) => {
-        //             // console.log('taxon object data');
         //             this.scientificName(objectData.data.scientific_name);
         //             const tax = objectData.data.taxonomy;
         //             if (tax) {

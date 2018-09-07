@@ -5,7 +5,8 @@ define([
     'kb_knockout/lib/generators',
     'kb_knockout/lib/viewModelBase',
     'kb_lib/html',
-    'kb_lib/httpUtils'
+    'kb_lib/httpUtils',
+    './copy/copyObjectsControl'
 ], function (
     Uuid,
     ko,
@@ -13,7 +14,8 @@ define([
     gen,
     ViewModelBase,
     html,
-    httpUtils
+    httpUtils,
+    CopyObjectsControlComponent
 ) {
     'use strict';
 
@@ -21,6 +23,7 @@ define([
         p = t('p'),
         img = t('img'),
         div = t('div'),
+        button = t('button'),
         span = t('span'),
         input = t('input');
 
@@ -28,7 +31,9 @@ define([
         constructor(params, context) {
             super(params);
 
-            const {searchInput, forceSearch, searching} = params;
+            const {searchInput, forceSearch, searching, selectedObjects} = params;
+
+            this.selectedObjects = selectedObjects;
 
             this.runtime = context.$root.runtime;
 
@@ -157,7 +162,6 @@ define([
                 email: this.runtime.service('session').getEmail() || '',
                 subject: 'Public Search'
             };
-            // console.log('fields??', fields, this.runtime.service('session'));
             window.open(this.googleFormLink(fields), '_blank');
             // this.hostChannel.send('open-window', {
             //     url: this.googleFormLink(fields),
@@ -191,7 +195,7 @@ define([
         },
         inputColumn: {
             css: {
-                flex: '2 1 0px'
+                flex: '1 1 0px'
             }
         },
         buttonColumn: {
@@ -378,7 +382,11 @@ define([
         return div({
             class: 'btn-toolbar pull-right'
         }, [
-            div({
+            gen.component({
+                name: CopyObjectsControlComponent.name(),
+                params: ['selectedObjects', 'bus']
+            }),
+            button({
                 class: 'btn btn-default',
                 dataBind: {
                     click: 'function(d,e){$component.showFeedback.call($component,d,e);}'
@@ -389,7 +397,7 @@ define([
                 }),
                 ' Feedback'
             ]),
-            div({
+            button({
                 class: 'btn btn-default',
                 dataBind: {
                     click: 'function(d,e){$component.showHelp.call($component,d,e);}'

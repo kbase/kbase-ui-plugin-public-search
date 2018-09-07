@@ -33,7 +33,6 @@ define([
     class ViewModel extends ViewModelBase {
         constructor(params, context) {
             super(params);
-            console.log('inspector loading...');
             this.parent = context.$parent;
 
             const {row} = params;
@@ -63,10 +62,6 @@ define([
             // this.objectInfo = ko.observable();
             // this.workspaceInfo = ko.observable();
 
-            this.bus.on('close', () => {
-                this.parent.send('close');
-            });
-
             this.fetchObjectInfo()
                 .then((object) => {
                     this.object = object;
@@ -79,7 +74,7 @@ define([
         }
 
         onClose() {
-            this.parent.send('close');
+            this.send('close');
         }
 
         onView() {
@@ -139,7 +134,6 @@ define([
         }
 
         dispose() {
-            console.log('inspector is closing');
             super.dispose();
         }
     }

@@ -127,7 +127,6 @@ define([
                 ]
             }]])
                 .spread(([objectData]) => {
-                    // console.log('taxon object data');
                     this.scientificName(objectData.data.scientific_name);
                     const tax = objectData.data.taxonomy;
                     if (tax) {

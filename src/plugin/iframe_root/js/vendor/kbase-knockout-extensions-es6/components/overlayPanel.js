@@ -304,20 +304,24 @@ define([
                 class: styles.classes.panelBody
             }, [
                 gen.if('embeddedComponentName()',
-                    gen.with('embeddedViewModel()',
-                        div({
-                            dataBind: {
-                                component: {
-                                    name: '$component.embeddedComponentName',
-                                    params: '$data',
-                                }
-                            },
-                            style: {
-                                flex: '1 1 0px',
-                                display: 'flex',
-                                flexDirection: 'column'
+                    gen.with({
+                        value: 'embeddedViewModel()',
+                        noChildContext: 'false'
+                    },
+                    // gen.with('embeddedViewModel()',
+                    div({
+                        dataBind: {
+                            component: {
+                                name: '$component.embeddedComponentName',
+                                params: '$data',
                             }
-                        })))
+                        },
+                        style: {
+                            flex: '1 1 0px',
+                            display: 'flex',
+                            flexDirection: 'column'
+                        }
+                    })))
             ])
         ]));
     }

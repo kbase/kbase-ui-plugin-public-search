@@ -25,13 +25,11 @@ define([
             this.table = params.table;
 
             // this.rows = ko.pureComputed(() => {
-            //     console.log('sort compute?', this.table.sort.column(), this.table.sort.direction());
             //     const rows = params.rows.sorted((a, b) => {
             //         const c = this.table.sort.column();
             //         const x = this.table.sort.direction() * this.table.columnMap[c].sort.comparator(a[c], b[c]);
             //         return x;
             //     });
-            //     console.log('sorted!', rows);
             //     return rows
             //     // return params.rows;
             // });
@@ -49,8 +47,6 @@ define([
 
             const currentSortColumn = this.table.sort.column();
             const currentSortDirection = this.table.sort.direction();
-            // console.log('do sort', currentSortColumn, currentSortDirection, data.name);
-            // console.log('sorting?', data, currentSortColumn, currentSortDirection);
             if (currentSortColumn === data.name) {
                 if (currentSortDirection === 'asc') {
                     this.table.sort.direction('desc');
@@ -84,11 +80,19 @@ define([
         }
     }
 
+    // TODO: seriously twisted withing and asing.
+    // The issue is that the 'row' is lost in the with context without
+    // setting it with as, and then unpacking again with with: 'row' below.
+    // maybe use noChildContext for the column foreach?
+    // Anyhoo, it works now.
     function buildRow() {
         return div({
             dataBind: {
                 with: 'row',
-                style: 'table.rowStyle'
+                as: '"row"',
+                // noChildContext: 'true',
+                style: '$component.table.rowStyle',
+                // log: 'table'
             }
         }, gen.foreachAs('$component.table.columns', 'column',
             // make the implicit context the row again.
@@ -103,15 +107,17 @@ define([
                     dataBind: {
                         style: '$component.calcColumnStyle(column)'
                     }
-                }, span({
+                }, gen.with('row', span({
                     dataBind: {
+                        // text: '$component.stringify(column.component.params)'
+                        // text: 'console.log(row)'
                         component: {
                             name: 'column.component.name',
                             // hopefully params are relative to the row context...
                             params: 'eval("(" + $component.stringify(column.component.params) + ")")'
                         }
                     }
-                })),
+                }))),
                 // else use the row's column value directly
                 div({
                     style: {
@@ -199,7 +205,7 @@ define([
         // we loop across all the columns; remember, this is invoked
         // within the row, so we need to reach back up to get the
         // row context.
-        const row = buildRow();
+        const rowTemplate = buildRow();
 
         return div({
             dataBind: {
@@ -222,7 +228,7 @@ define([
             }, gen.foreachAs(
                 'rows.sorted((a,b) => {return $component.sortTable.call($component,a,b)})',
                 'row',
-                row))
+                rowTemplate))
         ]);
     }
 

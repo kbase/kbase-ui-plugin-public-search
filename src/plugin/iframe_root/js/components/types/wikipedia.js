@@ -294,7 +294,6 @@ define([
                             // if (wikiResponse.error) {
                             // } else {
                             // }
-                            // console.log('wiki response', wikiResponse);
                             return props.getProp(wikiResponse, ['query', 'pages', String(pageId), 'thumbnail', 'source'], null);
                         } catch (ex) {
                             throw new Error('Error parsing wikipedia response: ' + ex.message);

@@ -181,8 +181,6 @@ define([
                 this.getProvenanceInfo()
             ])
                 .spread((workspaceInfo, objectInfo) => {
-                    // console.log('provenance??', objectInfo);
-
                     if (objectInfo.provenance.length === 0) {
                         // no provenance??
                         this.provenanceMissing = true;

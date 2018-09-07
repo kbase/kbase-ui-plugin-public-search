@@ -8,7 +8,7 @@ define([
     'kb_lib/htmlBuilders',
     'kb_common_ts/HttpClient',
     '../../table',
-    '../../controls/scrollingText',
+    // '../../controls/scrollingText',
     '../../../lib/docUtils',
     './authors',
     './pubMedLink'
@@ -22,7 +22,7 @@ define([
     build,
     HttpClient,
     TableComponent,
-    ScrollingTextComponent,
+    // ScrollingTextComponent,
     docUtils,
     AuthorsComponent,
     PubMedLinkComponent
@@ -250,7 +250,6 @@ define([
             })
                 .then((result) => {
                     const json = docUtils.docToJSON(result.response);
-                    // console.log('json doc', json);
                     return docUtils.find(json, ['eSearchResult', 'IdList']).children
                         .reduce((ids, node) => {
                             if (node.name === 'Id') {
@@ -279,7 +278,6 @@ define([
             })
                 .then((result) => {
                     const abstractsResult = docUtils.docToJSON(result.response);
-                    // console.log('got abstracts!', abstractsResult);
                     const abstractsNode = docUtils.find(abstractsResult, ['PubmedArticleSet'], null);
                     // TODO Loop over article set, filtering for PubmedArticle...
                     if (!abstractsNode) {

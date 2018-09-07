@@ -46,6 +46,7 @@ require([
                 numeral: 'vendor/numeral/numeral',
                 uuid: 'vendor/pure-uuid/uuid',
                 require: 'vendor/requirejs/require',
+                select2: 'vendor/select2/select2',
                 text: 'vendor/requirejs-text/text',
                 vega: 'vendor/vega/vega',
                 yaml: 'vendor/requirejs-yaml/yaml'
@@ -165,7 +166,6 @@ require([
                     email: this.runtime.service('session').getEmail() || '',
                     subject: 'Public Search'
                 };
-                // console.log('fields??', fields, this.runtime.service('session'));
                 return this.googleFormLink(fields);
                 // window.open(this.googleFormLink(fields), '_blank');
             }
@@ -190,7 +190,6 @@ require([
 
                             this.channel.on('show-feedback', () => {
                                 // this.showFeedback();
-                                console.log('sending open window?');
                                 this.hostChannel.send('open-window', {
                                     url: this.getFeedbackLink(),
                                     name: '_blank'

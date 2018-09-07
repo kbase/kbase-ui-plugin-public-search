@@ -96,8 +96,6 @@ define([
                     runtime: this
                 })
             };
-
-            // console.log('hmm', this.services.rpc);
         }
 
         service(name) {

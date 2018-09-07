@@ -1,5 +1,5 @@
 /*!
- * Knockout JavaScript library v3.5.1-beta5
+ * Knockout JavaScript library v3.5.1-beta6
  * (c) The Knockout.js team - http://knockoutjs.com/
  * License: MIT (http://www.opensource.org/licenses/mit-license.php)
  */
@@ -49,7 +49,7 @@ ko.exportSymbol = function(koPath, object) {
 ko.exportProperty = function(owner, publicName, object) {
     owner[publicName] = object;
 };
-ko.version = "3.5.1-beta5";
+ko.version = "3.5.1-beta6";
 
 ko.exportSymbol('version', ko.version);
 // For any options that may affect various areas of Knockout and aren't directly associated with data binding.
@@ -3183,7 +3183,10 @@ ko.exportSymbol('virtualElements.setDomNodeChildren', ko.virtualElements.setDomN
 })();
 
 ko.exportSymbol('bindingProvider', ko.bindingProvider);
+/*global ko,jQueryInstance*/
 (function () {
+    'use strict';
+
     // Hide or don't minify context properties, see https://github.com/knockout/knockout/issues/2294
     var contextSubscribable = ko.utils.createSymbolOrString('_subscribable');
     var contextAncestorBindingInfo = ko.utils.createSymbolOrString('_ancestorBindingInfo');
@@ -3203,7 +3206,7 @@ ko.exportSymbol('bindingProvider', ko.bindingProvider);
     };
 
     // Use an overridable method for retrieving binding handlers so that plugins may support dynamically created handlers
-    ko['getBindingHandler'] = function(bindingKey) {
+    ko['getBindingHandler'] = function (bindingKey) {
         return ko.bindingHandlers[bindingKey];
     };
 
@@ -3211,7 +3214,7 @@ ko.exportSymbol('bindingProvider', ko.bindingProvider);
 
     // The ko.bindingContext constructor is only called directly to create the root context. For child
     // contexts, use bindingContext.createChildContext or bindingContext.extend.
-    ko.bindingContext = function(dataItemOrAccessor, parentContext, dataItemAlias, extendCallback, options) {
+    ko.bindingContext = function (dataItemOrAccessor, parentContext, dataItemAlias, extendCallback, options) {
 
         // The binding context object includes static properties for the current, parent, and root view models.
         // If a view model is actually stored in an observable, the corresponding binding context object, and
@@ -3271,8 +3274,7 @@ ko.exportSymbol('bindingProvider', ko.bindingProvider);
         var self = this,
             shouldInheritData = dataItemOrAccessor === inheritParentVm,
             realDataItemOrAccessor = shouldInheritData ? undefined : dataItemOrAccessor,
-            isFunc = typeof(realDataItemOrAccessor) == "function" && !ko.isObservable(realDataItemOrAccessor),
-            nodes,
+            isFunc = typeof(realDataItemOrAccessor) == 'function' && !ko.isObservable(realDataItemOrAccessor),
             subscribable;
 
         if (options && options['exportDependencies']) {
@@ -3294,25 +3296,29 @@ ko.exportSymbol('bindingProvider', ko.bindingProvider);
                 self[contextSubscribable] = undefined;
             }
         }
-    }
+    };
 
     // Extend the binding context hierarchy with a new view model object. If the parent context is watching
     // any observables, the new child context will automatically get a dependency on the parent context.
     // But this does not mean that the $data value of the child context will also get updated. If the child
     // view model also depends on the parent view model, you must provide a function that returns the correct
     // view model on each update.
-    ko.bindingContext.prototype['createChildContext'] = function (dataItemOrAccessor, dataItemAlias, extendCallback, options) {
-        if (!options && dataItemAlias && typeof dataItemAlias == "object") {
-            options = dataItemAlias;
+    ko.bindingContext.prototype['createChildContext'] = function (dataItemOrAccessor, dataItemAliasOrOptions, extendCallback, options) {
+        let dataItemAlias;
+        if (!options && dataItemAliasOrOptions && typeof dataItemAliasOrOptions == 'object') {
+            options = dataItemAliasOrOptions;
             dataItemAlias = options['as'];
             extendCallback = options['extend'];
+        } else {
+            dataItemAlias = dataItemAliasOrOptions;
         }
 
         if (dataItemAlias && options && options['noChildContext']) {
-            var isFunc = typeof(dataItemOrAccessor) == "function" && !ko.isObservable(dataItemOrAccessor);
+            const isFunc = typeof(dataItemOrAccessor) == 'function' && !ko.isObservable(dataItemOrAccessor);
             return new ko.bindingContext(inheritParentVm, this, null, function (self) {
-                if (extendCallback)
+                if (extendCallback) {
                     extendCallback(self);
+                }
                 self[dataItemAlias] = isFunc ? dataItemOrAccessor() : dataItemOrAccessor;
             }, options);
         }
@@ -3331,11 +3337,11 @@ ko.exportSymbol('bindingProvider', ko.bindingProvider);
     // Extend the binding context with new custom properties. This doesn't change the context hierarchy.
     // Similarly to "child" contexts, provide a function here to make sure that the correct values are set
     // when an observable view model is updated.
-    ko.bindingContext.prototype['extend'] = function(properties) {
+    ko.bindingContext.prototype['extend'] = function (properties) {
         // If the parent context references an observable view model, "contextSubscribable" will always be the
         // latest view model object. If not, "contextSubscribable" isn't set, and we can use the static "$data" value.
-        return new ko.bindingContext(inheritParentVm, this, null, function(self, parentContext) {
-            ko.utils.extend(self, typeof(properties) == "function" ? properties(self) : properties);
+        return new ko.bindingContext(inheritParentVm, this, null, function (self) {
+            ko.utils.extend(self, typeof(properties) == 'function' ? properties(self) : properties);
         });
     };
 
@@ -3386,8 +3392,8 @@ ko.exportSymbol('bindingProvider', ko.bindingProvider);
     };
 
     ko.bindingEvent = {
-        childrenComplete: "childrenComplete",
-        descendantsComplete : "descendantsComplete",
+        childrenComplete: 'childrenComplete',
+        descendantsComplete : 'descendantsComplete',
 
         subscribe: function (node, event, callback, context) {
             var bindingInfo = ko.utils.domData.getOrSet(node, boundElementDomDataKey, {});
@@ -3409,7 +3415,7 @@ ko.exportSymbol('bindingProvider', ko.bindingProvider);
                     } else if (bindingInfo.asyncContext === undefined && bindingInfo.eventSubscribable && bindingInfo.eventSubscribable.hasSubscriptionsForEvent(ko.bindingEvent.descendantsComplete)) {
                         // It's currently an error to register a descendantsComplete handler for a node that was never registered as completing asynchronously.
                         // That's because without the asyncContext, we don't have a way to know that all descendants have completed.
-                        throw new Error("descendantsComplete event not supported for bindings on this node");
+                        throw new Error('descendantsComplete event not supported for bindings on this node');
                     }
                 }
             }
@@ -3435,7 +3441,7 @@ ko.exportSymbol('bindingProvider', ko.bindingProvider);
 
     // Returns the valueAccessor function for a binding value
     function makeValueAccessor(value) {
-        return function() {
+        return function () {
             return value;
         };
     }
@@ -3450,8 +3456,8 @@ ko.exportSymbol('bindingProvider', ko.bindingProvider);
     // so that it always gets the latest value and all dependencies are captured. This is used
     // by ko.applyBindingsToNode and getBindingsAndMakeAccessors.
     function makeAccessorsFromFunction(callback) {
-        return ko.utils.objectMap(ko.dependencyDetection.ignore(callback), function(value, key) {
-            return function() {
+        return ko.utils.objectMap(ko.dependencyDetection.ignore(callback), function (value, key) {
+            return function () {
                 return callback()[key];
             };
         });
@@ -3476,7 +3482,7 @@ ko.exportSymbol('bindingProvider', ko.bindingProvider);
     function validateThatBindingIsAllowedForVirtualElements(bindingName) {
         var validator = ko.virtualElements.allowedBindings[bindingName];
         if (!validator)
-            throw new Error("The binding '" + bindingName + "' cannot be used with virtual elements")
+            throw new Error('The binding \'' + bindingName + '\' cannot be used with virtual elements');
     }
 
     function applyBindingsToDescendantsInternal(bindingContext, elementOrVirtualElement) {
@@ -3540,10 +3546,10 @@ ko.exportSymbol('bindingProvider', ko.bindingProvider);
                     // First add dependencies (if any) of the current binding
                     if (binding['after']) {
                         cyclicDependencyStack.push(bindingKey);
-                        ko.utils.arrayForEach(binding['after'], function(bindingDependencyKey) {
+                        ko.utils.arrayForEach(binding['after'], function (bindingDependencyKey) {
                             if (bindings[bindingDependencyKey]) {
                                 if (ko.utils.arrayIndexOf(cyclicDependencyStack, bindingDependencyKey) !== -1) {
-                                    throw Error("Cannot combine the following bindings, because they have a cyclic dependency: " + cyclicDependencyStack.join(", "));
+                                    throw Error('Cannot combine the following bindings, because they have a cyclic dependency: ' + cyclicDependencyStack.join(', '));
                                 } else {
                                     pushBinding(bindingDependencyKey);
                                 }
@@ -3568,7 +3574,7 @@ ko.exportSymbol('bindingProvider', ko.bindingProvider);
         var alreadyBound = bindingInfo.alreadyBound;
         if (!sourceBindings) {
             if (alreadyBound) {
-                throw Error("You cannot apply bindings multiple times to the same element.");
+                throw Error('You cannot apply bindings multiple times to the same element.');
             }
             bindingInfo.alreadyBound = true;
         }
@@ -3587,7 +3593,7 @@ ko.exportSymbol('bindingProvider', ko.bindingProvider);
             // Get the binding from the provider within a computed observable so that we can update the bindings whenever
             // the binding context is updated or if the binding provider accesses observables.
             var bindingsUpdater = ko.dependentObservable(
-                function() {
+                function () {
                     bindings = sourceBindings ? sourceBindings(bindingContext, node) : getBindings.call(provider, node, bindingContext);
                     // Register a dependency on the binding context to support observable view models.
                     if (bindings && bindingContext[contextSubscribable])
@@ -3603,28 +3609,28 @@ ko.exportSymbol('bindingProvider', ko.bindingProvider);
 
         var contextToExtend = bindingContext;
         var bindingHandlerThatControlsDescendantBindings;
+        // Use of allBindings as a function is maintained for backwards compatibility, but its use is deprecated
+        function allBindings() {
+            return ko.utils.objectMap(bindingsUpdater ? bindingsUpdater() : bindings, evaluateValueAccessor);
+        }
         if (bindings) {
             // Return the value accessor for a given binding. When bindings are static (won't be updated because of a binding
             // context update), just return the value accessor from the binding. Otherwise, return a function that always gets
             // the latest binding value and registers a dependency on the binding updater.
             var getValueAccessor = bindingsUpdater
-                ? function(bindingKey) {
-                    return function() {
+                ? function (bindingKey) {
+                    return function () {
                         return evaluateValueAccessor(bindingsUpdater()[bindingKey]);
                     };
-                } : function(bindingKey) {
+                } : function (bindingKey) {
                     return bindings[bindingKey];
                 };
 
-            // Use of allBindings as a function is maintained for backwards compatibility, but its use is deprecated
-            function allBindings() {
-                return ko.utils.objectMap(bindingsUpdater ? bindingsUpdater() : bindings, evaluateValueAccessor);
-            }
             // The following is the 3.x allBindings API
-            allBindings['get'] = function(key) {
+            allBindings['get'] = function (key) {
                 return bindings[key] && evaluateValueAccessor(getValueAccessor(key));
             };
-            allBindings['has'] = function(key) {
+            allBindings['has'] = function (key) {
                 return key in bindings;
             };
 
@@ -3654,11 +3660,11 @@ ko.exportSymbol('bindingProvider', ko.bindingProvider);
             var orderedBindings = topologicalSortBindings(bindings);
 
             // Go through the sorted bindings, calling init and update for each
-            ko.utils.arrayForEach(orderedBindings, function(bindingKeyAndHandler) {
+            ko.utils.arrayForEach(orderedBindings, function (bindingKeyAndHandler) {
                 // Note that topologicalSortBindings has already filtered out any nonexistent binding handlers,
                 // so bindingKeyAndHandler.handler will always be nonnull.
-                var handlerInitFn = bindingKeyAndHandler.handler["init"],
-                    handlerUpdateFn = bindingKeyAndHandler.handler["update"],
+                var handlerInitFn = bindingKeyAndHandler.handler['init'],
+                    handlerUpdateFn = bindingKeyAndHandler.handler['update'],
                     bindingKey = bindingKeyAndHandler.key;
 
                 if (node.nodeType === 8) {
@@ -3667,23 +3673,23 @@ ko.exportSymbol('bindingProvider', ko.bindingProvider);
 
                 try {
                     // Run init, ignoring any dependencies
-                    if (typeof handlerInitFn == "function") {
-                        ko.dependencyDetection.ignore(function() {
+                    if (typeof handlerInitFn == 'function') {
+                        ko.dependencyDetection.ignore(function () {
                             var initResult = handlerInitFn(node, getValueAccessor(bindingKey), allBindings, contextToExtend['$data'], contextToExtend);
 
                             // If this binding handler claims to control descendant bindings, make a note of this
                             if (initResult && initResult['controlsDescendantBindings']) {
                                 if (bindingHandlerThatControlsDescendantBindings !== undefined)
-                                    throw new Error("Multiple bindings (" + bindingHandlerThatControlsDescendantBindings + " and " + bindingKey + ") are trying to control descendant bindings of the same element. You cannot use these bindings together on the same element.");
+                                    throw new Error('Multiple bindings (' + bindingHandlerThatControlsDescendantBindings + ' and ' + bindingKey + ') are trying to control descendant bindings of the same element. You cannot use these bindings together on the same element.');
                                 bindingHandlerThatControlsDescendantBindings = bindingKey;
                             }
                         });
                     }
 
                     // Run update in its own computed wrapper
-                    if (typeof handlerUpdateFn == "function") {
+                    if (typeof handlerUpdateFn == 'function') {
                         ko.dependentObservable(
-                            function() {
+                            function () {
                                 handlerUpdateFn(node, getValueAccessor(bindingKey), allBindings, contextToExtend['$data'], contextToExtend);
                             },
                             null,
@@ -3691,7 +3697,7 @@ ko.exportSymbol('bindingProvider', ko.bindingProvider);
                         );
                     }
                 } catch (ex) {
-                    ex.message = "Unable to process binding \"" + bindingKey + ": " + bindings[bindingKey] + "\"\nMessage: " + ex.message;
+                    ex.message = 'Unable to process binding "' + bindingKey + ': ' + bindings[bindingKey] + '"\nMessage: ' + ex.message;
                     throw ex;
                 }
             });
@@ -3702,12 +3708,12 @@ ko.exportSymbol('bindingProvider', ko.bindingProvider);
             'shouldBindDescendants': shouldBindDescendants,
             'bindingContextForDescendants': shouldBindDescendants && contextToExtend
         };
-    };
+    }
 
     ko.storedBindingContextForNode = function (node) {
         var bindingInfo = ko.utils.domData.get(node, boundElementDomDataKey);
         return bindingInfo && bindingInfo.context;
-    }
+    };
 
     function getBindingContext(viewModelOrBindingContext, extendContextCallback) {
         return viewModelOrBindingContext && (viewModelOrBindingContext instanceof ko.bindingContext)
@@ -3726,7 +3732,7 @@ ko.exportSymbol('bindingProvider', ko.bindingProvider);
         return ko.applyBindingAccessorsToNode(node, makeBindingAccessors(bindings, context, node), context);
     };
 
-    ko.applyBindingsToDescendants = function(viewModelOrBindingContext, rootNode) {
+    ko.applyBindingsToDescendants = function (viewModelOrBindingContext, rootNode) {
         if (rootNode.nodeType === 1 || rootNode.nodeType === 8)
             applyBindingsToDescendantsInternal(getBindingContext(viewModelOrBindingContext), rootNode);
     };
@@ -3740,24 +3746,24 @@ ko.exportSymbol('bindingProvider', ko.bindingProvider);
         if (arguments.length < 2) {
             rootNode = window.document.body;
             if (!rootNode) {
-                throw Error("ko.applyBindings: could not find window.document.body; has the document been loaded?");
+                throw Error('ko.applyBindings: could not find window.document.body; has the document been loaded?');
             }
         } else if (!rootNode || (rootNode.nodeType !== 1 && rootNode.nodeType !== 8)) {
-            throw Error("ko.applyBindings: first parameter should be your view model; second parameter should be a DOM node");
+            throw Error('ko.applyBindings: first parameter should be your view model; second parameter should be a DOM node');
         }
 
         applyBindingsToNodeAndDescendantsInternal(getBindingContext(viewModelOrBindingContext, extendContextCallback), rootNode);
     };
 
     // Retrieving binding context from arbitrary nodes
-    ko.contextFor = function(node) {
+    ko.contextFor = function (node) {
         // We can only do something meaningful for elements and comment nodes (in particular, not text nodes, as IE can't store domdata for them)
         if (node && (node.nodeType === 1 || node.nodeType === 8)) {
             return ko.storedBindingContextForNode(node);
         }
         return undefined;
     };
-    ko.dataFor = function(node) {
+    ko.dataFor = function (node) {
         var context = ko.contextFor(node);
         return context ? context['$data'] : undefined;
     };
@@ -4794,10 +4800,10 @@ ko.bindingHandlers['html'] = {
 
                         var childContext;
                         if (ifCondition.isActive()) {
-                        // this next line caused much recursion when children are recursively build components,
+                        // this next line caused much recursion when children recursively build components,
                         // and the if condition switches from true to false.
-                        // childContext = bindingContext['extend'](function() { ifCondition(); return null; });
-                            childContext = bindingContext;
+                            childContext = bindingContext['extend'](function () { ifCondition(); return null; });
+                            // childContext = bindingContext;
                         } else {
                             childContext = bindingContext;
                         }
@@ -4826,20 +4832,56 @@ ko.bindingHandlers['html'] = {
     // Construct the actual binding handlers
     makeIfBinding('if');
     makeIfBinding('ifnot', true /* isNot */);
-
 })();/*global ko*/
 (function () {
     'use strict';
     function makeWithBinding(bindingKey) {
         ko.bindingHandlers[bindingKey] = {
             init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
-                var savedNodes, completeOnRender, needAsyncContext;
-                var as = allBindings.get('as');
-                var noChildContext = allBindings.get('noChildContext');
-                var withOptions = {
+                // var withValue = ko.computed(function () {
+                //     return ko.utils.unwrapObservable(valueAccessor());
+                // }, null, {
+                //     disposeWhenNodeIsRemoved: element
+                // });
+
+                // store children nodes if need to re-render in the future.
+                let savedNodes = null;
+
+                // Flag telling us that the children had previously been rendered.
+                // Used for the logic handing a 'with' binding flipping between null/undefined
+                // and a value.
+                let wasDisplayed = false;
+
+                // Supports the logic for first-time actions within the computed handler.
+                let isFirstTime = true;
+
+                const isValueObservable = ko.isObservable(valueAccessor());
+                const as = allBindings.get('as');
+                const noChildContext = allBindings.get('noChildContext');
+                const withOptions = {
                     as: as,
                     noChildContext: noChildContext
                 };
+
+                // The 'noChildContext' option determines whether a new binding is created
+                // for children; the 'as' option will create an alias for the with value
+                // and make it available in a new child context.
+                // If we are going to create a child context (not requested not to!), and
+                // are going to create an alias (requiring a child context!) we need to
+                // re-render (re-insert the cloned child nodes and re-bind them).
+                // why?
+                // not totally sure.
+                // perhaps because the actual 'with' property name may itself have changed.
+                // Seems like a rare usage.
+                const reRenderOnChange = (() => {
+                    if (!isValueObservable) {
+                        return false;
+                    }
+                    if (noChildContext && as) {
+                        return false;
+                    }
+                    return true;
+                })();
 
                 // 'with' is similar to 'if' in that it controls descendent elements if the
                 // value is set to 'null' or 'undefined', but different in that 'false' would
@@ -4851,18 +4893,23 @@ ko.bindingHandlers['html'] = {
                 // It is true that with is typically used with objects, to ease access to properties, and
                 // it is common to 'null out' an object if it is not populated yet.
 
-                completeOnRender = allBindings.get('completeOn') == 'render';
-                needAsyncContext = completeOnRender || allBindings['has'](ko.bindingEvent.descendantsComplete);
+                const completeOnRender = allBindings.get('completeOn') === 'render';
+                const needAsyncContext = completeOnRender || allBindings.has(ko.bindingEvent.descendantsComplete);
 
                 ko.computed(function () {
-                    var value =  ko.utils.unwrapObservable(valueAccessor());
-                    var shouldDisplay = !(value === null || typeof value === 'undefined');
-                    var isFirstRender = !savedNodes;
+                    const value =  ko.utils.unwrapObservable(valueAccessor());
+
+
+                    // The rule for 'with' is that if the bound value is null or undefined, there
+                    // are no children and no bindings are made. If the value is observable, and the
+                    // value changes to non-null and non-undefined, we need to add the nodes and bind
+                    // the context.
+                    const shouldDisplay = !(value === null || typeof value === 'undefined');
 
                     // Save a copy of the inner nodes on the initial update, but only if we have dependencies.
                     // TODO: and only if the value is an observable? otherwise, there is never a need to
                     // remove/add the children.
-                    if (isFirstRender && ko.computedContext.getDependenciesCount()) {
+                    if (isFirstTime && ko.computedContext.getDependenciesCount()) {
                         savedNodes = ko.utils.cloneNodes(ko.virtualElements.childNodes(element), true /* shouldCleanNodes */);
                     }
 
@@ -4871,20 +4918,43 @@ ko.bindingHandlers['html'] = {
                     }
 
                     if (shouldDisplay) {
-                        if (!isFirstRender) {
-                            ko.virtualElements.setDomNodeChildren(element, ko.utils.cloneNodes(savedNodes));
+                        let applyBindings = false;
+                        if (isFirstTime) {
+                            // We are only here upon the first call and the value is true, and we
+                            // need to apply bindings for the first time to existing nodes, if any.
+                            applyBindings = true;
+                        } else {
+                            // Only re-add the children if we detected that we may need to.
+                            // Actually, we should never get here otherwise!
+                            if (!wasDisplayed) {
+                                // We are here if the value has switched from empty (null, undefined) to
+                                // non-empty.
+                                ko.virtualElements.setDomNodeChildren(element, ko.utils.cloneNodes(savedNodes));
+                                applyBindings = true;
+                            } else {
+                                if (reRenderOnChange) {
+                                    ko.virtualElements.setDomNodeChildren(element, ko.utils.cloneNodes(savedNodes));
+                                    applyBindings = true;
+                                }
+                            }
                         }
 
-                        var childContext = bindingContext['createChildContext'](typeof value == 'function' ? value : valueAccessor, withOptions);
+                        if (applyBindings) {
+                            const childContext = bindingContext.createChildContext(typeof value == 'function' ? value : valueAccessor, withOptions);
+                            ko.applyBindingsToDescendants(childContext, element);
+                        }
 
-                        ko.applyBindingsToDescendants(childContext, element);
+                        wasDisplayed = true;
                     } else {
                         ko.virtualElements.emptyNode(element);
 
                         if (!completeOnRender) {
                             ko.bindingEvent.notify(element, ko.bindingEvent.childrenComplete);
                         }
+
+                        wasDisplayed = false;
                     }
+                    isFirstTime = false;
                 }, null, {
                     disposeWhenNodeIsRemoved: element
                 });
@@ -5372,154 +5442,180 @@ ko.bindingHandlers['textinput'] = {
     }
 };
 
-})();ko.bindingHandlers['uniqueName'] = {
-    'init': function (element, valueAccessor) {
-        if (valueAccessor()) {
-            var name = "ko_unique_" + (++ko.bindingHandlers['uniqueName'].currentIndex);
-            ko.utils.setElementName(element, name);
-        }
-    }
-};
-ko.bindingHandlers['uniqueName'].currentIndex = 0;
-ko.bindingHandlers['using'] = {
-    'init': function(element, valueAccessor, allBindings, viewModel, bindingContext) {
-        var innerContext = bindingContext['createChildContext'](valueAccessor);
-        ko.applyBindingsToDescendants(innerContext, element);
-
-        return { 'controlsDescendantBindings': true };
-    }
-};
-ko.virtualElements.allowedBindings['using'] = true;
-ko.bindingHandlers['value'] = {
-    'after': ['options', 'foreach'],
-    'init': function (element, valueAccessor, allBindings) {
-        var tagName = ko.utils.tagNameLower(element),
-            isInputElement = tagName == "input";
-
-        // If the value binding is placed on a radio/checkbox, then just pass through to checkedValue and quit
-        if (isInputElement && (element.type == "checkbox" || element.type == "radio")) {
-            ko.applyBindingAccessorsToNode(element, { 'checkedValue': valueAccessor });
-            return;
-        }
-
-        // Always catch "change" event; possibly other events too if asked
-        var eventsToCatch = ["change"];
-        var requestedEventsToCatch = allBindings.get("valueUpdate");
-        var propertyChangedFired = false;
-        var elementValueBeforeEvent = null;
-
-        if (requestedEventsToCatch) {
-            if (typeof requestedEventsToCatch == "string") // Allow both individual event names, and arrays of event names
-                requestedEventsToCatch = [requestedEventsToCatch];
-            ko.utils.arrayPushAll(eventsToCatch, requestedEventsToCatch);
-            eventsToCatch = ko.utils.arrayGetDistinctValues(eventsToCatch);
-        }
-
-        var valueUpdateHandler = function() {
-            elementValueBeforeEvent = null;
-            propertyChangedFired = false;
-            var modelValue = valueAccessor();
-            var elementValue = ko.selectExtensions.readValue(element);
-            ko.expressionRewriting.writeValueToProperty(modelValue, allBindings, 'value', elementValue);
-        }
-
-        // Workaround for https://github.com/SteveSanderson/knockout/issues/122
-        // IE doesn't fire "change" events on textboxes if the user selects a value from its autocomplete list
-        var ieAutoCompleteHackNeeded = ko.utils.ieVersion && isInputElement && element.type == "text"
-                                       && element.autocomplete != "off" && (!element.form || element.form.autocomplete != "off");
-        if (ieAutoCompleteHackNeeded && ko.utils.arrayIndexOf(eventsToCatch, "propertychange") == -1) {
-            ko.utils.registerEventHandler(element, "propertychange", function () { propertyChangedFired = true });
-            ko.utils.registerEventHandler(element, "focus", function () { propertyChangedFired = false });
-            ko.utils.registerEventHandler(element, "blur", function() {
-                if (propertyChangedFired) {
-                    valueUpdateHandler();
-                }
-            });
-        }
-
-        ko.utils.arrayForEach(eventsToCatch, function(eventName) {
-            // The syntax "after<eventname>" means "run the handler asynchronously after the event"
-            // This is useful, for example, to catch "keydown" events after the browser has updated the control
-            // (otherwise, ko.selectExtensions.readValue(this) will receive the control's value *before* the key event)
-            var handler = valueUpdateHandler;
-            if (ko.utils.stringStartsWith(eventName, "after")) {
-                handler = function() {
-                    // The elementValueBeforeEvent variable is non-null *only* during the brief gap between
-                    // a keyX event firing and the valueUpdateHandler running, which is scheduled to happen
-                    // at the earliest asynchronous opportunity. We store this temporary information so that
-                    // if, between keyX and valueUpdateHandler, the underlying model value changes separately,
-                    // we can overwrite that model value change with the value the user just typed. Otherwise,
-                    // techniques like rateLimit can trigger model changes at critical moments that will
-                    // override the user's inputs, causing keystrokes to be lost.
-                    elementValueBeforeEvent = ko.selectExtensions.readValue(element);
-                    ko.utils.setTimeout(valueUpdateHandler, 0);
-                };
-                eventName = eventName.substring("after".length);
+})();/*global ko*/
+(function () {
+    'use strict';
+    ko.bindingHandlers.uniqueName = {
+        init: function (element, valueAccessor) {
+            if (valueAccessor()) {
+                var name = 'ko_unique_' + (++ko.bindingHandlers['uniqueName'].currentIndex);
+                ko.utils.setElementName(element, name);
             }
-            ko.utils.registerEventHandler(element, eventName, handler);
-        });
+        }
+    };
+    ko.bindingHandlers.uniqueName.currentIndex = 0;
+})();/*global ko*/
+(function () {
+    'use strict';
+    ko.bindingHandlers.using = {
+        init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+            var innerContext = bindingContext.createChildContext(valueAccessor);
+            ko.applyBindingsToDescendants(innerContext, element);
 
-        var updateFromModel;
-
-        if (isInputElement && element.type == "file") {
-            // For file input elements, can only write the empty string
-            updateFromModel = function () {
-                var newValue = ko.utils.unwrapObservable(valueAccessor());
-                if (newValue === null || newValue === undefined || newValue === "") {
-                    element.value = "";
-                } else {
-                    ko.dependencyDetection.ignore(valueUpdateHandler);  // reset the model to match the element
-                }
-            }
-        } else {
-            updateFromModel = function () {
-                var newValue = ko.utils.unwrapObservable(valueAccessor());
-                var elementValue = ko.selectExtensions.readValue(element);
-
-                if (elementValueBeforeEvent !== null && newValue === elementValueBeforeEvent) {
-                    ko.utils.setTimeout(updateFromModel, 0);
-                    return;
-                }
-
-                var valueHasChanged = newValue !== elementValue;
-
-                if (valueHasChanged || elementValue === undefined) {
-                    if (tagName === "select") {
-                        var allowUnset = allBindings.get('valueAllowUnset');
-                        ko.selectExtensions.writeValue(element, newValue, allowUnset);
-                        if (!allowUnset && newValue !== ko.selectExtensions.readValue(element)) {
-                            // If you try to set a model value that can't be represented in an already-populated dropdown, reject that change,
-                            // because you're not allowed to have a model value that disagrees with a visible UI selection.
-                            ko.dependencyDetection.ignore(valueUpdateHandler);
-                        }
-                    } else {
-                        ko.selectExtensions.writeValue(element, newValue);
-                    }
-                }
+            return {
+                controlsDescendantBindings: true
             };
         }
+    };
+    ko.virtualElements.allowedBindings['using'] = true;
+})();/*global ko*/
+(function () {
+    'use strict';
+    ko.bindingHandlers.value = {
+        after: ['options', 'foreach'],
+        init: function (element, valueAccessor, allBindings) {
+            const tagName = ko.utils.tagNameLower(element);
+            const isInputElement = tagName == 'input';
 
-        ko.computed(updateFromModel, null, { disposeWhenNodeIsRemoved: element });
-    },
-    'update': function() {} // Keep for backwards compatibility with code that may have wrapped value binding
-};
-ko.expressionRewriting.twoWayBindings['value'] = true;
-ko.bindingHandlers['visible'] = {
-    'update': function (element, valueAccessor) {
-        var value = ko.utils.unwrapObservable(valueAccessor());
-        var isCurrentlyVisible = !(element.style.display == "none");
-        if (value && !isCurrentlyVisible)
-            element.style.display = "";
-        else if ((!value) && isCurrentlyVisible)
-            element.style.display = "none";
-    }
-};
+            // If the value binding is placed on a radio/checkbox, then just pass through to checkedValue and quit
+            if (isInputElement && (element.type == 'checkbox' || element.type == 'radio')) {
+                ko.applyBindingAccessorsToNode(element, { 'checkedValue': valueAccessor });
+                return;
+            }
 
-ko.bindingHandlers['hidden'] = {
-    'update': function (element, valueAccessor) {
-        ko.bindingHandlers['visible']['update'](element, function() { return !ko.utils.unwrapObservable(valueAccessor()) });
-    }
-};
+            // Always catch "change" event; possibly other events too if asked
+            let eventsToCatch = ['change'];
+            let requestedEventsToCatch = allBindings.get('valueUpdate');
+
+            if (requestedEventsToCatch) {
+                // Allow both individual event names, and arrays of event names
+                if (typeof requestedEventsToCatch === 'string') {
+                    requestedEventsToCatch = [requestedEventsToCatch];
+                }
+                ko.utils.arrayPushAll(eventsToCatch, requestedEventsToCatch);
+                eventsToCatch = ko.utils.arrayGetDistinctValues(eventsToCatch);
+            }
+
+            let elementValueBeforeEvent = null;
+            let propertyChangedFired = false;
+            var valueUpdateHandler = function () {
+                elementValueBeforeEvent = null;
+                propertyChangedFired = false;
+                const modelValue = valueAccessor();
+                const elementValue = ko.selectExtensions.readValue(element);
+                ko.expressionRewriting.writeValueToProperty(modelValue, allBindings, 'value', elementValue);
+            };
+
+            // Workaround for https://github.com/SteveSanderson/knockout/issues/122
+            // IE doesn't fire "change" events on textboxes if the user selects a value from its autocomplete list
+            const ieAutoCompleteHackNeeded = ko.utils.ieVersion
+                && isInputElement && element.type == 'text'
+                && element.autocomplete != 'off'
+                && (!element.form || element.form.autocomplete != 'off');
+
+            if (ieAutoCompleteHackNeeded && ko.utils.arrayIndexOf(eventsToCatch, 'propertychange') == -1) {
+                ko.utils.registerEventHandler(element, 'propertychange', function () { propertyChangedFired = true; });
+                ko.utils.registerEventHandler(element, 'focus', function () { propertyChangedFired = false; });
+                ko.utils.registerEventHandler(element, 'blur', function () {
+                    if (propertyChangedFired) {
+                        valueUpdateHandler();
+                    }
+                });
+            }
+
+            ko.utils.arrayForEach(eventsToCatch, function (eventName) {
+                // The syntax "after<eventname>" means "run the handler asynchronously after the event"
+                // This is useful, for example, to catch "keydown" events after the browser has updated the control
+                // (otherwise, ko.selectExtensions.readValue(this) will receive the control's value *before* the key event)
+                let handler;
+                if (ko.utils.stringStartsWith(eventName, 'after')) {
+                    handler = function () {
+                        // The elementValueBeforeEvent variable is non-null *only* during the brief gap between
+                        // a keyX event firing and the valueUpdateHandler running, which is scheduled to happen
+                        // at the earliest asynchronous opportunity. We store this temporary information so that
+                        // if, between keyX and valueUpdateHandler, the underlying model value changes separately,
+                        // we can overwrite that model value change with the value the user just typed. Otherwise,
+                        // techniques like rateLimit can trigger model changes at critical moments that will
+                        // override the user's inputs, causing keystrokes to be lost.
+                        elementValueBeforeEvent = ko.selectExtensions.readValue(element);
+                        ko.utils.setTimeout(valueUpdateHandler, 0);
+                    };
+                    eventName = eventName.substring('after'.length);
+                } else {
+                    handler = valueUpdateHandler;
+                }
+                ko.utils.registerEventHandler(element, eventName, handler);
+            });
+
+            var updateFromModel;
+
+            if (isInputElement && element.type == 'file') {
+                // For file input elements, can only write the empty string
+                updateFromModel = function () {
+                    const newValue = ko.utils.unwrapObservable(valueAccessor());
+                    if (newValue === null || newValue === undefined || newValue === '') {
+                        element.value = '';
+                    } else {
+                        ko.dependencyDetection.ignore(valueUpdateHandler);  // reset the model to match the element
+                    }
+                };
+            } else {
+                updateFromModel = function () {
+                    const newValue = ko.utils.unwrapObservable(valueAccessor());
+                    const elementValue = ko.selectExtensions.readValue(element);
+
+                    if (elementValueBeforeEvent !== null && newValue === elementValueBeforeEvent) {
+                        ko.utils.setTimeout(updateFromModel, 0);
+                        return;
+                    }
+
+                    const valueHasChanged = newValue !== elementValue;
+
+                    if (valueHasChanged || elementValue === undefined) {
+                        if (tagName === 'select') {
+                            const allowUnset = allBindings.get('valueAllowUnset');
+                            ko.selectExtensions.writeValue(element, newValue, allowUnset);
+                            if (!allowUnset && newValue !== ko.selectExtensions.readValue(element)) {
+                                // If you try to set a model value that can't be represented in an already-populated dropdown, reject that change,
+                                // because you're not allowed to have a model value that disagrees with a visible UI selection.
+                                ko.dependencyDetection.ignore(valueUpdateHandler);
+                            }
+                        } else {
+                            ko.selectExtensions.writeValue(element, newValue);
+                        }
+                    }
+                };
+            }
+
+            ko.computed(updateFromModel, null, { disposeWhenNodeIsRemoved: element });
+        },
+        update: function () {} // Keep for backwards compatibility with code that may have wrapped value binding
+    };
+    ko.expressionRewriting.twoWayBindings.value = true;
+})();/*global ko*/
+(function () {
+    'use strict';
+    ko.bindingHandlers.visible = {
+        update: function (element, valueAccessor) {
+            const value = ko.utils.unwrapObservable(valueAccessor());
+            const isCurrentlyVisible = !(element.style.display == 'none');
+
+            if (value && !isCurrentlyVisible) {
+                element.style.display = '';
+            } else if ((!value) && isCurrentlyVisible) {
+                element.style.display = 'none';
+            }
+        }
+    };
+
+    ko.bindingHandlers.hidden = {
+        update: function (element, valueAccessor) {
+            ko.bindingHandlers.visible.update(element, function () {
+                return !ko.utils.unwrapObservable(valueAccessor());
+            });
+        }
+    };
+})();
 // 'click' is just a shorthand for the usual full-length event:{click:handler}
 makeEventHandlerShortcut('click');
 // If you want to make a custom template engine,

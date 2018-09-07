@@ -1,27 +1,27 @@
 define([
-    'bluebird',
     'knockout',
-    'kb_ko/KO',
-    'kb_ko/lib/generators',
-    'kb_common/html',
-    'kb_common/bootstrapUtils',
-    'kb_service/utils',
+    'kb_knockout/registry',
+    'kb_knockout/lib/generators',
+    'kb_knockout/lib/viewModelBase',
+    'kb_lib/html',
+    'kb_lib/htmlBootstrapBuilders',
+    'kb_lib/htmlBuilders',
     '../../lib/ui',
-    '../../lib/rpc',
-    '../../lib/data',
-    '../controls/narrativeSelector',
-    'select2',
+    '../../lib/model',
+    './narrativeSelector',
+
+    // for effect
+    'select2'
 ], function (
-    Promise,
     ko,
-    KO,
+    reg,
     gen,
+    ViewModelBase,
     html,
     BS,
-    apiUtils,
+    htmlBuilders,
     ui,
-    Rpc,
-    Data,
+    model,
     NarrativeSelectorComponent
 ) {
     'use strict';
@@ -41,35 +41,128 @@ define([
 
     // VIEWMODEL
 
-    function viewModel(params, componentInfo) {
-        var context = ko.contextFor(componentInfo.element);
-        var runtime = context['$root'].runtime;
-        var objectsToCopy = ko.unwrap(params.objectsToCopy);
-        var objectToView = ko.observable();
-        var subscriptions = ko.kb.SubscriptionManager.make();
+    class ViewModel extends ViewModelBase {
+        constructor(params, context) {
+            super(params);
+            this.runtime = context.$root.runtime;
+            this.objectsToCopy = ko.unwrap(params.objectsToCopy);
+            this.objectToView = ko.observable();
 
-        var messages = {
-            removeObjectFromList: 'Remove this object from the list of selected objects to copy.',
-            cannotRemoveLastObjectFromList: 'Sorry, cannot remove the last object from the list.'
-        };
+            this.copyMethod = ko.observable();
+            this.selectedNarrative = ko.observable();
+            this.selectedNarrativeObject = ko.observable();
+            this.errorMessage = ko.observable();
+            this.completionMessage = ko.observable();
+            this.newNarrativeName = ko.observable();
+            this.copyStatus = ko.observable('none');
+            this.selectedObjects = ko.observableArray();
+            this.title = 'Copy Object';
 
-        function viewObject(ref) {
-            data.getObjectInfo(ref)
-                .then(function (objectInfo) {
-                    objectToView(objectInfo);
+            this.messages = {
+                removeObjectFromList: 'Remove this object from the list of selected objects to copy.',
+                cannotRemoveLastObjectFromList: 'Sorry, cannot remove the last object from the list.'
+            };
+
+            this.model = new model.Model({
+                runtime: this.runtime
+            });
+
+            this.canCopy = ko.pureComputed(() => {
+                switch (this.copyStatus()) {
+                case 'none':
+                    switch (this.copyMethod()) {
+                    case 'existing':
+                        if (this.selectedNarrativeObject()) {
+                            return true;
+                        }
+                        break;
+                    case 'new':
+                        if (this.newNarrativeName()) {
+                            return true;
+                        }
+                    }
+                    return false;
+
+                case 'copying':
+                    return false;
+                case 'success':
+                    return true;
+                case 'error':
+                    return false;
+                default:
+                    console.warn('Unknown copy status: ', this.copyStatus());
+                    return false;
+                }
+            });
+
+            // subscriptions
+
+            this.subscribe(this.copyMethod, (newValue) => {
+                switch (newValue) {
+                case 'new':
+                    this.selectedNarrative(null);
+                    break;
+                }
+            });
+
+            this.subscribe(this.selectedNarrative, (newValue) => {
+                if (!newValue) {
+                    this.copyMethod('new');
+                } else {
+                    this.copyMethod('existing');
+                    const parts = newValue.split('/');
+                    const workspaceId = parts[0];
+                    const objectId = parts[1];
+                    this.model.getNarrative({
+                        workspaceId: workspaceId,
+                        objectId: objectId
+                    })
+                        .then((narrative) => {
+                            this.selectedNarrativeObject(narrative);
+                        })
+                        .catch(Error, (err) => {
+                            console.error(err);
+                            this.copyStatus('error');
+                            this.errorMessage(err.message);
+                        })
+                        .catch((err) => {
+                            console.error(err);
+                            this.copyStatus('error');
+                            this.errorMessage('unknown error');
+                        });
+                }
+            });
+
+            // MAIN
+            this.model.getObjectsInfo(this.objectsToCopy)
+                .then((objectsInfo) => {
+                    this.selectedObjects(objectsInfo.map((objectInfo) => {
+                        return {
+                            workspaceInfo: objectInfo.workspaceInfo,
+                            objectInfo: objectInfo.objectInfo,
+                            selected: ko.observable()
+                        };
+                    }));
                 });
         }
 
-        function doSelectObject(data) {
+        viewObject(ref) {
+            this.model.getObjectInfo(ref)
+                .then((objectInfo) => {
+                    this.objectToView(objectInfo);
+                });
+        }
+
+        doSelectObject(data) {
             if (data.selected()) {
                 data.selected(false);
-                objectToView(null);
+                this.objectToView(null);
             } else {
-                selectedObjects().forEach(function (obj) {
+                this.selectedObjects().forEach((obj) => {
                     obj.selected(false);
                 });
                 data.selected(true);
-                viewObject({
+                this.viewObject({
                     workspaceId: data.workspaceInfo.id,
                     objectId: data.objectInfo.id,
                     version: data.objectInfo.version
@@ -77,115 +170,34 @@ define([
             }
         }
 
-        var data = Data.make({
-            runtime: runtime
-        });
-
-        function makeNarrativeUrl(path) {
-            var base = runtime.getConfig('services.narrative.url');
+        makeNarrativeUrl(path) {
+            const base = this.runtime.config('services.narrative.url');
             return base + path;
         }
 
-        // Values
-        var copyMethod = ko.observable();
-        var selectedNarrative = ko.observable();
-        var selectedNarrativeObject = ko.observable();
-        var errorMessage = ko.observable();
-        var completionMessage = ko.observable();
-        var newNarrativeName = ko.observable();
-        var copyStatus = ko.observable('none');
-
-        // new narrative stuff...
-
-        // Computeds
-        var canCopy = ko.pureComputed(function () {
-            switch (copyStatus()) {
-            case 'none':
-                switch (copyMethod()) {
-                case 'existing':
-                    if (selectedNarrativeObject()) {
-                        return true;
-                    }
-                    break;
-                case 'new':
-                    if (newNarrativeName()) {
-                        return true;
-                    }
-                }
-                return false;
-
-            case 'copying':
-                return false;
-            case 'success':
-                return true;
-            case 'error':
-                return false;
-            default:
-                console.warn('Unknown copy status: ', copyStatus());
-                return false;
-            }
-        });
-
-        // Methods
-        subscriptions.add(copyMethod.subscribe(function (newValue) {
-            switch (newValue) {
-            case 'new':
-                selectedNarrative(null);
-                break;
-            }
-        }.bind(this)));
-
-        subscriptions.add(selectedNarrative.subscribe(function (newValue) {
-            if (!newValue) {
-                copyMethod('new');
-            } else {
-                copyMethod('existing');
-                var parts = newValue.split('/');
-                var workspaceId = parts[0];
-                var objectId = parts[1];
-                data.getNarrative({
-                    workspaceId: workspaceId,
-                    objectId: objectId
-                })
-                    .then(function (narrative) {
-                        selectedNarrativeObject(narrative);
-                    })
-                    .catch(Error, function (err) {
-                        console.error(err);
-                        copyStatus('error');
-                        errorMessage(err.message);
-                    })
-                    .catch(function (err) {
-                        console.error(err);
-                        copyStatus('error');
-                        errorMessage('unknown error');
-                    });
-            }
-        }.bind(this)));
-
         // DATA CALLS
 
-        function copyIntoNarrative(arg) {
-            return data.copyObjects({
-                sourceObjectRefs: selectedObjects().map(function (object) {
+        copyIntoNarrative(arg) {
+            return this.model.copyObjects({
+                sourceObjectRefs: this.selectedObjects().map((object) => {
                     return object.objectInfo.ref;
                 }),
                 targetWorkspaceId: arg.workspaceId
             });
         }
 
-        function copyIntoNewNarrative(newNarrativeTitle) {
-            return data.createNarrative({
+        copyIntoNewNarrative(newNarrativeTitle) {
+            return this.model.createNarrative({
                 title: newNarrativeTitle
             })
-                .then(function (newNarrative) {
-                    return data.copyObjects({
-                        sourceObjectRefs: selectedObjects().map(function (object) {
+                .then((newNarrative) => {
+                    return this.model.copyObjects({
+                        sourceObjectRefs: this.selectedObjects().map((object) => {
                             return object.objectInfo.ref;
                         }),
                         targetWorkspaceId: newNarrative.workspaceInfo.id
                     })
-                        .then(function () {
+                        .then(() => {
                             return newNarrative;
                         });
                 });
@@ -193,114 +205,76 @@ define([
 
         // ACTIONS
 
-        function doClose() {
-            params.onClose();
+        doClose() {
+            // TODO.
+            // params.onClose();
+            this.send('close');
         }
 
-        function doCopy() {
-            errorMessage('');
-            copyStatus('copying');
-            switch (copyMethod()) {
+        doCopy() {
+            this.errorMessage('');
+            this.copyStatus('copying');
+            switch (this.copyMethod()) {
             case 'new':
-                copyIntoNewNarrative(newNarrativeName())
-                    .then(function (newNarrative) {
-                        var narrativeId = [
+                this.copyIntoNewNarrative(this.newNarrativeName())
+                    .then((newNarrative) => {
+                        const narrativeId = [
                             'ws',
                             newNarrative.workspaceInfo.id,
                             'obj',
                             newNarrative.objectInfo.id
                         ].join('.');
-                        var narrativeUrl = makeNarrativeUrl('/narrative/' + narrativeId);
-                        selectedNarrativeObject({
+                        const narrativeUrl = this.makeNarrativeUrl('/narrative/' + narrativeId);
+                        this.selectedNarrativeObject({
                             workspaceInfo: newNarrative.workspaceInfo,
                             objectInfo: newNarrative.objectInfo,
                             url: narrativeUrl
                         });
-                        copyStatus('success');
+                        this.copyStatus('success');
                     })
-                    .catch(function (err) {
-                        copyStatus('error');
-                        errorMessage(err.message);
+                    .catch((err) => {
+                        this.copyStatus('error');
+                        this.errorMessage(err.message);
                     });
                 break;
             case 'existing':
-                if (selectedNarrativeObject()) {
-                    var narrative = selectedNarrativeObject();
-                    copyIntoNarrative({
+                if (this.selectedNarrativeObject()) {
+                    const narrative = this.selectedNarrativeObject();
+                    this.copyIntoNarrative({
                         workspaceId: narrative.workspaceInfo.id
                     })
-                        .then(function () {
-                            var narrativeId = [
+                        .then(() => {
+                            const narrativeId = [
                                 'ws',
                                 narrative.workspaceInfo.id,
                                 'obj',
                                 narrative.objectInfo.id
                             ].join('.');
-                            var narrativeUrl = makeNarrativeUrl('/narrative/' + narrativeId);
-                            selectedNarrativeObject({
+                            const narrativeUrl = this.makeNarrativeUrl('/narrative/' + narrativeId);
+                            this.selectedNarrativeObject({
                                 workspaceInfo: narrative.workspaceInfo,
                                 objectInfo: narrative.objectInfo,
                                 url: narrativeUrl
                             });
-                            copyStatus('success');
+                            this.copyStatus('success');
                         })
-                        .catch(function (err) {
-                            copyStatus('error');
-                            errorMessage(err.message);
+                        .catch((err) => {
+                            this.copyStatus('error');
+                            this.errorMessage(err.message);
                         });
                 } else {
-                    errorMessage('You must select a narrative before copying the data object into it.');
+                    this.errorMessage('You must select a narrative before copying the data object into it.');
                 }
                 break;
             }
         }
 
-        var selectedObjects = ko.observableArray();
-
-        data.getObjectsInfo(objectsToCopy)
-            .then(function (objectsInfo) {
-                objectsInfo.forEach(function (objectInfo) {
-                    selectedObjects.push({
-                        workspaceInfo: objectInfo.workspaceInfo,
-                        objectInfo: objectInfo.objectInfo,
-                        selected: ko.observable()
-                    });
-                });
-            });
-
-        function doRemoveObject(data) {
+        doRemoveObject(data) {
             if (data.selected()) {
-                objectToView(null);
+                this.objectToView(null);
             }
-            selectedObjects.remove(data);
+            this.selectedObjects.remove(data);
         }
-
-        function dispose() {
-            subscriptions.dispose();
-        }
-
-        return {
-            title: 'Copy Object',
-            copyMethod: copyMethod,
-            selectedNarrative: selectedNarrative,
-            selectedNarrativeObject: selectedNarrativeObject,
-            selectedObjects: selectedObjects,
-            errorMessage: errorMessage,
-            completionMessage: completionMessage,
-            newNarrativeName: newNarrativeName,
-            canCopy: canCopy,
-            objectToView: objectToView,
-            copyStatus: copyStatus,
-            messages: messages,
-
-            // Actions
-            doClose: doClose,
-            doCopy: doCopy,
-            doRemoveObject: doRemoveObject,
-            doSelectObject: doSelectObject,
-
-            dispose: dispose
-        };
     }
 
     // UI
@@ -374,6 +348,67 @@ define([
         }
     });
 
+    function buildObjectView() {
+        return table({
+            class: styles.classes.viewTable
+        }, [
+            tr([
+                th('name'),
+                td({
+                    dataBind: {
+                        text: 'objectInfo.name'
+                    }
+                })]),
+            tr([
+                th('modified'),
+                td({
+                    dataBind: {
+                        typedText: {
+                            value: 'objectInfo.saveDate',
+                            type: '"date"',
+                            format: '"MM/DD/YYYY"'
+                        }
+                    }
+                })]),
+            tr([
+                th('by'),
+                td({
+                    dataBind: {
+                        text: 'objectInfo.saved_by'
+                    }
+                })]),
+            tr([
+                th('type'),
+                td({
+                    dataBind: {
+                        text: 'objectInfo.typeName'
+                    }
+                })]),
+            tr([
+                th('module'),
+                td({
+                    dataBind: {
+                        text: 'objectInfo.typeModule'
+                    }
+                })]),
+            tr([
+                th('version'),
+                td([
+                    span({
+                        dataBind: {
+                            text: 'objectInfo.typeMajorVersion'
+                        }
+                    }),
+                    '.',
+                    span({
+                        dataBind: {
+                            text: 'objectInfo.typeMinorVersion'
+                        }
+                    })
+                ])])
+        ]);
+    }
+
     function buildObjectList() {
         return div({class: 'container-fluid'}, [
             h3('Selected objects'),
@@ -406,7 +441,7 @@ define([
                                         cursor: 'pointer'
                                     },
                                     dataBind: {
-                                        click: '$component.doSelectObject',
+                                        click: 'function(d,e){$component.doSelectObject.call($component,d,e)}',
                                         class: 'selected() ? "' + styles.scopes.selected + '" : false'
                                     }
                                 }, [
@@ -431,7 +466,7 @@ define([
                                         type: 'button',
                                         class: 'btn btn-xs btn-danger btn-kb-flat',
                                         dataBind: {
-                                            click: '$component.doRemoveObject',
+                                            click: 'function(d,e){$component.doRemoveObject.call($component,d,e)}',
                                             enable: '$component.selectedObjects().length > 1',
                                             attr: {
                                                 title: '$component.selectedObjects().length > 1 ? $component.messages.removeObjectFromList : $component.messages.cannotRemoveLastObjectFromList'
@@ -467,80 +502,9 @@ define([
                     div({
                         class: 'panel-body'
                     }, [
-                        '<!-- ko ifnot: objectToView -->',
-                        'If you click on an object listed on the left, details will show here',
-                        '<!-- /ko -->',
-
-                        '<!-- ko if: objectToView -->',
-                        '<!-- ko with: objectToView -->',
-                        table({
-                            class: styles.classes.viewTable
-                        }, [
-                            // tr([
-                            //     th('type'),
-                            //     td({
-                            //         dataBind: {
-                            //             text: 'objectInfo.type'
-                            //         }
-                            //     })]),
-
-                            tr([
-                                th('name'),
-                                td({
-                                    dataBind: {
-                                        text: 'objectInfo.name'
-                                    }
-                                })]),
-                            tr([
-                                th('modified'),
-                                td({
-                                    dataBind: {
-                                        typedText: {
-                                            value: 'objectInfo.saveDate',
-                                            type: '"date"',
-                                            format: '"MM/DD/YYYY"'
-                                        }
-                                    }
-                                })]),
-                            tr([
-                                th('by'),
-                                td({
-                                    dataBind: {
-                                        text: 'objectInfo.saved_by'
-                                    }
-                                })]),
-                            tr([
-                                th('type'),
-                                td({
-                                    dataBind: {
-                                        text: 'objectInfo.typeName'
-                                    }
-                                })]),
-                            tr([
-                                th('module'),
-                                td({
-                                    dataBind: {
-                                        text: 'objectInfo.typeModule'
-                                    }
-                                })]),
-                            tr([
-                                th('version'),
-                                td([
-                                    span({
-                                        dataBind: {
-                                            text: 'objectInfo.typeMajorVersion'
-                                        }
-                                    }),
-                                    '.',
-                                    span({
-                                        dataBind: {
-                                            text: 'objectInfo.typeMinorVersion'
-                                        }
-                                    })
-                                ])])
-                        ]),
-                        '<!-- /ko -->',
-                        '<!-- /ko -->'
+                        gen.if('objectToView',
+                            gen.with('objectToView', buildObjectView()),
+                            'If you click on an object listed on the left, details will show here')
                     ])
                 ]))
             ])
@@ -578,46 +542,45 @@ define([
                             class: 'col-sm-10'
                         }, 'Copy into New Narrative')
                     ]),
-                    '<!-- ko if: copyMethod() === "new" -->',
-                    div({
-                        class: 'row'
-                    }, [
+                    gen.if('copyMethod() === "new"',
                         div({
-                            class: 'col-sm-2'
-                        }),
-                        div({
-                            class: 'col-sm-10'
-                        }, div({
-                            style: {
-                                display: 'flex',
-                                flexDirection: 'row',
-                                alignItems: 'center'
-                            }
+                            class: 'row'
                         }, [
                             div({
-                                style: {
-                                    flex: '0 0 auto',
-                                    weight: 'bold',
-                                    color: 'rgb(100,100,100)',
-                                    marginRight: '4px'
-                                }
-                            }, 'Name '),
+                                class: 'col-sm-2'
+                            }),
                             div({
+                                class: 'col-sm-10'
+                            }, div({
                                 style: {
-                                    flex: '1'
+                                    display: 'flex',
+                                    flexDirection: 'row',
+                                    alignItems: 'center'
                                 }
-                            }, input({
-                                class: 'form-control',
-                                style: {
-                                    width: '100%'
-                                },
-                                dataBind: {
-                                    textInput: 'newNarrativeName'
-                                }
-                            }))
-                        ]))
-                    ]),
-                    '<!-- /ko -->',
+                            }, [
+                                div({
+                                    style: {
+                                        flex: '0 0 auto',
+                                        weight: 'bold',
+                                        color: 'rgb(100,100,100)',
+                                        marginRight: '4px'
+                                    }
+                                }, 'Name '),
+                                div({
+                                    style: {
+                                        flex: '1'
+                                    }
+                                }, input({
+                                    class: 'form-control',
+                                    style: {
+                                        width: '100%'
+                                    },
+                                    dataBind: {
+                                        textInput: 'newNarrativeName'
+                                    }
+                                }))
+                            ]))
+                        ])),
                     div({
                         class: 'row'
                     }, [
@@ -688,72 +651,68 @@ define([
                             ])
                         ]),
                         div({class: 'panel-body'}, [
-                            '<!-- ko ifnot: copyMethod -->',
-                            'When you have selected a narrative to copy into, details about it will be shown here',
-                            '<!-- /ko -->',
+                            gen.ifnot('copyMethod',
+                                'When you have selected a narrative to copy into, details about it will be shown here'),
 
-                            '<!-- ko if: copyMethod() === "existing" -->',
-                            p([
-                                'The data object will be copied into the following Narrative:'
-                            ]),
-                            '<!-- ko ifnot: selectedNarrativeObject() -->',
-                            p({
-                                style: {
-                                    fontStyle: 'italic',
-                                    textAlign: 'center'
-                                }
-                            }, 'Select a narrative from those available to you on the left.'),
-                            '<!-- /ko -->',
-                            '<!-- ko with: selectedNarrativeObject -->',
-                            table({
-                                class: styles.classes.viewTable
-                            }, [
+                            gen.if('copyMethod() === "existing"', [
+                                p([
+                                    'The data object will be copied into the following Narrative:'
+                                ]),
+                                gen.ifnot('selectedNarrativeObject()',
+                                    p({
+                                        style: {
+                                            fontStyle: 'italic',
+                                            textAlign: 'center'
+                                        }
+                                    }, 'Select a narrative from those available to you on the left.')),
+                                gen.with('selectedNarrativeObject',
+                                    table({
+                                        class: styles.classes.viewTable
+                                    }, [
 
-                                tr([
-                                    th('Name'),
-                                    td({
-                                        dataBind: {
-                                            text: 'workspaceInfo.metadata.narrative_nice_name'
-                                        }
-                                    })
-                                ]),
-                                tr([
-                                    th('Ref'),
-                                    td({
-                                        dataBind: {
-                                            text: 'objectInfo.ref'
-                                        }
-                                    })
-                                ]),
-                                tr([
-                                    th('Owner'),
-                                    td({
-                                        dataBind: {
-                                            text: 'objectInfo.saved_by'
-                                        }
-                                    })
-                                ]),
-                                tr([
-                                    th('Modified'),
-                                    td({
-                                        dataBind: {
-                                            typedText: {
-                                                value: 'objectInfo.saveDate',
-                                                type: '"date"',
-                                                format: '"MM/DD/YYYY"'
-                                            }
-                                        }
-                                    })
-                                ])
+                                        tr([
+                                            th('Name'),
+                                            td({
+                                                dataBind: {
+                                                    text: 'workspaceInfo.metadata.narrative_nice_name'
+                                                }
+                                            })
+                                        ]),
+                                        tr([
+                                            th('Ref'),
+                                            td({
+                                                dataBind: {
+                                                    text: 'objectInfo.ref'
+                                                }
+                                            })
+                                        ]),
+                                        tr([
+                                            th('Owner'),
+                                            td({
+                                                dataBind: {
+                                                    text: 'objectInfo.saved_by'
+                                                }
+                                            })
+                                        ]),
+                                        tr([
+                                            th('Modified'),
+                                            td({
+                                                dataBind: {
+                                                    typedText: {
+                                                        value: 'objectInfo.saveDate',
+                                                        type: '"date"',
+                                                        format: '"MM/DD/YYYY"'
+                                                    }
+                                                }
+                                            })
+                                        ])
+                                    ]))
                             ]),
-                            '<!-- /ko -->',
-                            '<!-- /ko -->',
 
-                            '<!-- ko if: copyMethod() === "new" -->',
-                            p([
-                                'A new narrative will be created containing this data object.'
-                            ]),
-                            '<!-- /ko -->'
+                            gen.if('copyMethod() === "new"',
+                                p([
+                                    'A new narrative will be created containing this data object.'
+                                ]))
                         ])
                     ])
                 ])
@@ -771,25 +730,22 @@ define([
                 div({
                     class: 'col-md-8'
                 }, [
-                    '<!-- ko if: $component.selectedObjects().length === 0 -->',
-                    'No objects to copy!',
-                    '<!-- /ko -->',
-                    '<!-- ko if: $component.selectedObjects().length > 0 -->',
-                    button({
-                        type: 'button',
-                        class: 'btn btn-primary',
-                        dataBind: {
-                            enable: 'canCopy',
-                            click: 'doCopy'
-                        }
-                    }, [
-                        'Copy Object',
-                        '<!-- ko if: $component.selectedObjects().length > 1 -->',
-                        's',
-                        '<!-- /ko -->',
-                        ' into Narrative'
-                    ]),
-                    '<!-- /ko -->'
+                    gen.if('$component.selectedObjects().length === 0',
+                        'No objects to copy!'),
+                    gen.if('$component.selectedObjects().length > 0',
+                        button({
+                            type: 'button',
+                            class: 'btn btn-primary',
+                            dataBind: {
+                                enable: 'canCopy',
+                                click: 'doCopy'
+                            }
+                        }, [
+                            'Copy Object',
+                            gen.if('$component.selectedObjects().length > 1',
+                                's'),
+                            ' into Narrative'
+                        ]))
                 ]),
                 div({
                     class: 'col-md-4'
@@ -800,73 +756,70 @@ define([
 
     function buildSuccessPanel() {
         return [
-            '<!-- ko if: copyStatus() === "success" -->',
-            BS.buildPanel({
-                type: 'success',
-                title: 'Successfully Copied',
-                body:  div([
-                    p([
-                        'Successfully copied this data object to the Narrative ',
-                        span({
-                            style: {
-                                fontWeight: 'bold'
-                            },
-                            dataBind: {
-                                text: 'selectedNarrativeObject().workspaceInfo.metadata.narrative_nice_name'
-                            }
-                        })
-                    ]),
-                    p([
-                        span({
-                            style: {
-                                fontStyle: 'italic'
-                            }
-                        }, a({
-                            dataBind: {
-                                attr: {
-                                    href: 'selectedNarrativeObject().url'
+            gen.if('copyStatus() === "success"',
+                BS.buildPanel({
+                    type: 'success',
+                    title: 'Successfully Copied',
+                    body:  div([
+                        p([
+                            'Successfully copied this data object to the Narrative ',
+                            span({
+                                style: {
+                                    fontWeight: 'bold'
+                                },
+                                dataBind: {
+                                    text: 'selectedNarrativeObject().workspaceInfo.metadata.narrative_nice_name'
                                 }
-                            },
-                            class: 'btn btn-default',
-                            target: '_blank'
-                        }, 'Open this Narrative'))
+                            })
+                        ]),
+                        p([
+                            span({
+                                style: {
+                                    fontStyle: 'italic'
+                                }
+                            }, a({
+                                dataBind: {
+                                    attr: {
+                                        href: 'selectedNarrativeObject().url'
+                                    }
+                                },
+                                class: 'btn btn-default',
+                                target: '_blank'
+                            }, 'Open this Narrative'))
+                        ])
                     ])
-                ])
-            }),
-            '<!-- /ko -->'
+                })),
         ];
     }
 
     function buildErrorPanel() {
         return [
-            '<!-- ko if: copyStatus() === "error" -->',
-            BS.buildPanel({
-                type: 'error',
-                title: 'Error',
-                body:  div([
-                    p('An error occurred attempting to copy the data:'),
-                    p({
-                        dataBind: {
-                            text: 'error'
-                        }
-                    })
-                ])
-            }),
-            '<!-- /ko -->'
+            gen.if('copyStatus() === "error"',
+                BS.buildPanel({
+                    type: 'error',
+                    title: 'Error',
+                    body:  div([
+                        p('An error occurred attempting to copy the data:'),
+                        p({
+                            dataBind: {
+                                text: 'errorMessage'
+                            }
+                        })
+                    ])
+                }))
         ];
     }
 
     function buildInProgressPanel() {
         return [
-            '<!-- ko if: copyStatus() === "copying" -->',
-            BS.buildPanel({
-                type: 'info',
-                title: 'In Progress',
-                body:  div([
-                    html.loading('Copying')
-                ])
-            }),
-            '<!-- /ko -->'
+            gen.if('copyStatus() === "copying"',
+                BS.buildPanel({
+                    type: 'info',
+                    title: 'In Progress',
+                    body:  div([
+                        htmlBuilders.loading('Copying')
+                    ])
+                })),
         ];
     }
 
@@ -905,13 +858,11 @@ define([
 
     function component() {
         return {
-            viewModel: {
-                createViewModel: viewModel
-            },
+            viewModelWithContext: ViewModel,
             template: template(),
             stylesheet: styles.sheet
         };
     }
 
-    return KO.registerComponent(component);
+    return reg.registerComponent(component);
 });

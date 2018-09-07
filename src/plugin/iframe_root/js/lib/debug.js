@@ -17,7 +17,7 @@ define([
             }]
         }])
             .then((result) => {
-                console.log('inaccessible object', result);
+                console.warn('inaccessible object', result);
                 return null;
             })
             .catch((err) => {

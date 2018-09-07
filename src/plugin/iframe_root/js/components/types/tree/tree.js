@@ -244,14 +244,12 @@ define([
                 ref: this.object.objectInfo.ref
             }]])
                 .spread(([objectData]) => {
-                    // console.log('object data???', objectData);
                     const treeData = objectData.data.tree;
                     const tree = this.parseTree(treeData);
                     const leaves = objectData.data.leaf_list.reduce((leaves, nodeID) => {
                         const defaultLabel = objectData.data.default_node_labels[nodeID];
                         const m = /^(.+)\s\((.+)\)$/.exec(defaultLabel);
                         if (!m) {
-                            // console.log('what??', defaultLabel);
                             leaves[nodeID] = {
                                 nodeID: nodeID,
                                 label: defaultLabel,
@@ -283,7 +281,6 @@ define([
                     this.treeInfo = {
                         leaves: leaves
                     };
-                    // console.log('got tree', tree);
                     // do something with the tree...
                 });
         }

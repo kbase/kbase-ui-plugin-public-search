@@ -72,7 +72,6 @@ define([
             }])
                 .spread(({data}) => {
                     const [objectData] = data;
-                    // console.log('object data...', objectData);
                     this.type = objectData.data.type;
                     this.count = Object.keys(objectData.data.kb_refs).length;
                     // this.name = objectData.data.newick_tree.name;

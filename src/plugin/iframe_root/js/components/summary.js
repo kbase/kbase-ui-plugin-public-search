@@ -239,7 +239,6 @@ define([
                 });
             } else {
                 // just toggle this one
-                console.log('hmm', data);
                 if (this.omittedDataTypes().includes(data.type)) {
                     this.omittedDataTypes.remove(data.type);
                 } else {

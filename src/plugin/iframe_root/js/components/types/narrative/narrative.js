@@ -104,7 +104,6 @@ define([
         //         }]
         //     }])
         //         .spread(({genomes}) => {
-        //             console.log('result', genomes);
         //             const [genomeData] = genomes;
         //             // see: https://github.com/kbase/genome_annotation_api/blob/e609b0c45c7d9462e3a33c7e5a7982fc4e0d5f46/KBaseGenomes.spec#L389
         //             this.scientificName(genomeData.data.scientific_name);
@@ -127,7 +126,6 @@ define([
             //     ]
             // }]])
             //     .spread(([objectData]) => {
-            //         console.log('taxon object data');
             //         this.scientificName(objectData.data.scientific_name);
             //         const tax = objectData.data.taxonomy;
             //         if (tax) {

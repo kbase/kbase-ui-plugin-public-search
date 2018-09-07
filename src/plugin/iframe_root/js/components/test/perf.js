@@ -114,8 +114,6 @@ define([
                 });
                 let overage = 0;
 
-                // console.log('bins', min, max, span, count, binWidth, bins);
-
                 values.forEach((value) => {
                     let bin;
                     if (value > max) {
@@ -125,9 +123,8 @@ define([
                     } else {
                         bin = Math.floor((value - min)/binWidth);
                     }
-                    // console.log('bin', value, value - min, min, max, bin);
                     if (bins[bin] === undefined) {
-                        console.log('bin', value, value - min, binWidth, min, max, bin);
+                        console.warn('bin', value, value - min, binWidth, min, max, bin);
                     }
                     bins[bin].count = bins[bin].count + 1;
                 });
@@ -231,7 +228,7 @@ define([
                             if (result) {
                                 size = JSON.stringify(result).length;
                             } else {
-                                console.log('Error', error);
+                                console.error('Error', error);
                                 throw new Error('Error!');
                             }
                             this.samples.push({

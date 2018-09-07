@@ -18,6 +18,7 @@ define([
     './dataSource',
     './dataPrivacy',
     './feedback',
+    './copy/copyObjects',
     'kb_knockout/components/overlayPanel',
     'kb_knockout/lib/nanoBus',
     '../lib/debug'
@@ -41,6 +42,7 @@ define([
     DataSourceComponent,
     DataPrivacyComponent,
     FeedbackComponent,
+    CopyObjectsComponent,
     OverlayPanelComponent,
     NanoBus,
     debug
@@ -56,6 +58,7 @@ define([
 
             this.runtime = context.$root.runtime;
             this.supportedDataTypes = context.$root.supportedDataTypes;
+            this.columns = context.$root.columns;
 
             // Primary search inputs
             this.searchInput = ko.observable();
@@ -175,7 +178,7 @@ define([
             // sorting interface
             this.sortSpec = ko.pureComputed(() => {
                 return {
-                    sortSpec: model.columns
+                    sortSpec: this.columns
                         .filter((column) => {
                             if (!column.sort) {
                                 return false;
@@ -192,6 +195,16 @@ define([
                 };
             });
 
+            // object selection - for copying and ??
+            this.selectedRows = ko.observableArray();
+
+            this.selectedObjects = ko.pureComputed(() => {
+                return this.selectedRows().map((rowId) => {
+                    const [,workspaceId, objectId, version] = /WS:(\d+)\/(\d+)\/(\d+)/.exec(rowId);
+                    return [workspaceId, objectId, version].join('/');
+                });
+            });
+
             // computeds
             this.searchQuery = ko.pureComputed(() => {
                 return {
@@ -204,11 +217,9 @@ define([
             // subscriptions
             this.subscribe(this.searchQuery, (newValue) => {
                 // don't run search until page size is set.
-                // console.log('new query...', newValue, newValue.paging);
                 if (!newValue.paging.pageSize) {
                     return;
                 }
-                // console.log('do search through searchQuery');
                 this.doSearch(newValue);
             });
 
@@ -219,12 +230,13 @@ define([
                 this.overlayComponent(newValue);
             });
 
-
             // Help.
             this.parentBus.on('help', () => {
                 this.showOverlay({
                     name: HelpComponent.name(),
-                    viewModel: {}
+                    viewModel: {
+                        bus: this.bus
+                    }
                 });
             });
 
@@ -242,8 +254,20 @@ define([
             this.bus.on('show-help', () => {
                 this.showOverlay({
                     name: HelpComponent.name(),
-                    viewModel: {}
+                    viewModel: {
+                        bus: this.bus
+                    }
                 });
+            });
+
+            this.bus.on('show-copy-objects', () => {
+                this.showOverlay({
+                    name: CopyObjectsComponent.name(),
+                    viewModel: {
+                        objectsToCopy: this.selectedObjects
+                    }
+                });
+                // window.alert('copying objects...');
             });
 
             this.tooltipChannel = new NanoBus();
@@ -312,7 +336,6 @@ define([
         }
 
         doSearch(query) {
-            // console.log('do search 1', query);
             // translate query to model call
             if (!query.input.searchInput || query.input.searchInput.trim().length === 0) {
                 this.searchState('none');
@@ -323,7 +346,6 @@ define([
                 this.page(1);
                 return;
             }
-            // console.log('do search 2');
 
             let start;
             if (query.paging.page) {
@@ -352,7 +374,6 @@ define([
                 dataTypes = query.input.dataTypes;
             }
 
-            // console.log('about to search...');
             this.searching(true);
             this.searchState('searching');
             Promise.all([
@@ -378,7 +399,6 @@ define([
             ])
                 .spread((result, summaryResult) => {
                     this.searchResults.removeAll();
-                    console.log('result', result, summaryResult);
 
                     this.searchSummary().forEach((summary) => {
                         summary.count(summaryResult.type_to_count[summary.type] || 0);
@@ -432,9 +452,7 @@ define([
                         };
                         if (info == null) {
                             workspace.type = 'inaccessible';
-                            console.log('not provided');
                         } else if (info.globalread === 'n' && info.user_permission === 'n') {
-                            console.log('not readable?');
                             workspace.type = 'inaccessible';
                         } else {
                             workspace.owner = info.owner;
@@ -496,7 +514,6 @@ define([
                                 name = object.data.source;
                             } else {
                                 owner = 'kbase';
-                                // console.log('hmm', workspace, object);
                                 name = 'n/a';
                             }
                             break;
@@ -517,7 +534,15 @@ define([
 
                         const row = {
                             mode: mode,
+                            id: object.guid,
+                            // should be added in the table component; we shouldn't necessarily
+                            // know about this here. or perhaps in an class provided by the table
+                            // module.
+                            over: ko.observable(false),
                             data: {
+                                selected: {
+                                    value: ko.observable(this.selectedRows().includes(object.guid))
+                                },
                                 type: {
                                     value: object.type
                                 },
@@ -676,7 +701,7 @@ define([
                 }, [
                     gen.component({
                         name: SearchBarComponent.name(),
-                        params: ['bus', 'searchInput', 'forceSearch', 'searching']
+                        params: ['bus', 'searchInput', 'forceSearch', 'searching', 'selectedObjects']
                     }),
                 ]),
             ]),
@@ -743,15 +768,15 @@ define([
                     }),
                     gen.component({
                         name: ResultsAreaComponent.name(),
-                        params: ['bus', 'searchResults', 'searching', 'pageSize', 'searchState', 'showOverlay', 'errorMessage']
+                        params: ['bus', 'searchResults', 'searching', 'pageSize', 'searchState', 'showOverlay', 'errorMessage', 'selectedRows']
                     })
                 ])
             ]),
             gen.component({
                 name: OverlayPanelComponent.name(),
                 params: {
-                    component: 'overlayComponent',
-                    hostVm: '$data'
+                    component: 'overlayComponent'
+                    // hostVm: '$data'
                 }
             }),
             gen.component({

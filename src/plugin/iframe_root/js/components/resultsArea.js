@@ -30,30 +30,33 @@ define([
         hr = t('hr');
 
     class ViewModel extends ViewModelBase {
-        constructor(params) {
+        constructor(params, context) {
             super(params);
-            const {searchResults, searching, pageSize, searchState, showOverlay, errorMessage} = params;
+            const {searchResults, searching, pageSize, searchState, showOverlay, errorMessage, selectedRows} = params;
 
             this.searchResults = searchResults;
             this.searching = searching;
             this.showOverlay = showOverlay;
+            this.selectedRows = selectedRows;
+
+            const columns = context.$root.columns;
 
             this.table = {
                 rows: this.searchResults,
-                columns: model.columns,
+                selectedRows: selectedRows,
+                columns: columns,
                 isLoading: searching,
                 pageSize: pageSize,
                 state: searchState,
                 errorMessage: errorMessage,
                 env: {
-                    search: this.search
+                    selectedRows: selectedRows
                 },
                 actions: {
                 },
                 sortBy: (column) => {
-                    // console.log('sorting!', column);
                     column.sort.direction(column.sort.direction()==='ascending'? 'descending' : 'ascending');
-                    model.columns.forEach((column) => {
+                    columns.forEach((column) => {
                         if (column.sort) {
                             column.sort.active(false);
                         }
@@ -68,12 +71,11 @@ define([
                     // } else {
                     //     window.open('#dataview/' + row.metadata.ref, '_blank');
                     // }
-                    // console.log('row action?', row);
                     this.showOverlay({
                         name: InspectorComponent.name(),
                         type: 'info',
                         viewModel: {
-                            row: row
+                            row: row.data
                         }
                     });
 
@@ -172,7 +174,7 @@ define([
 
     function component() {
         return {
-            viewModel: ViewModel,
+            viewModelWithContext: ViewModel,
             template: template(),
             stylesheet: styles.sheet
         };

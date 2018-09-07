@@ -215,7 +215,6 @@ define([
 
         getDataIcon() {
             try {
-                // console.log('getting type icon?', this.object().objectInfo.type);
                 const typeId = this.object.objectInfo.type,
                     type = this.runtime.service('type').parseTypeId(typeId),
                     icon = this.runtime.service('type').getIcon({ type: type });

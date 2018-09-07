@@ -102,8 +102,6 @@ define([
             // Will be created when the "ready" message is received.
             this.iframeChannel = null;
 
-            // console.log('created new window channel with id', this.channel.id);
-
             this.iframe = new Iframe({
                 origin: document.location.origin,
                 pathRoot: this.pluginPath,
@@ -170,7 +168,6 @@ define([
                 });
 
                 this.channel.on('open-window', ({url, name}) => {
-                    console.log('iframer open-window', url, name);
                     window.location.href = url;
                     // window.open(url, name);
                 });
@@ -192,40 +189,6 @@ define([
                 });
 
                 this.iframe.start();
-
-                // this.chn.send('hi');
-
-                // return this.channel.when('ready', 1000)
-                //     .then(() => {
-                //         // console.log('got ready!');
-                //         // The initial "ready" message is sent when the iframe has finished loading and is ready
-                //         // to interact with the kbase-ui host.
-                //         this.channel.on('rendered', (message) => {
-                //             let height = message.height;
-                //             let iframe = this.container.getElementById(this.iframe.id);
-                //             iframe.style.height = height + 'px';
-                //         });
-
-                //         this.channel.on('get-auth-status', (message) => {
-                //             this.channel.send('auth-status', {
-                //                 id: message.id,
-                //                 token: this.runtime.service('session').getAuthToken(),
-                //                 username: this.runtime.service('session').getUsername()
-                //             });
-                //         });
-
-                //         this.channel.on('get-config', (message) => {
-                //             this.channel.send('config', {
-                //                 id: message.id,
-                //                 value: this.runtime.rawConfig()
-                //             });
-                //         });
-
-                //         this.channel.send('start');
-                //     })
-                //     .catch((err) => {
-                //         console.error('Error: ', err);
-                //     });
             });
 
         }

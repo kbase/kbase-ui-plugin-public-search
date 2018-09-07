@@ -1,16 +1,29 @@
 define([
-    'knockout'
+    'bluebird',
+    'kb_lib/workspaceUtils'
 ], function (
-    ko
+    Promise,
+    workspaceUtils
 ) {
     'use strict';
 
     class Model {
         constructor({runtime}) {
             this.runtime = runtime;
-            // console.log('runtime?', runtime);
             this.searchAPI = this.runtime.service('rpc').makeClient({
                 module: 'KBaseSearchEngine',
+                timeout: 10000,
+                authenticated: true
+            });
+
+            this.workspace = this.runtime.service('rpc').makeClient({
+                module: 'Workspace',
+                timeout: 10000,
+                authenticated: true
+            });
+
+            this.userProfile = this.runtime.service('rpc').makeClient({
+                module: 'UserProfile',
                 timeout: 10000,
                 authenticated: true
             });
@@ -62,7 +75,7 @@ define([
             }
 
             return this.searchAPI.callFunc('search_types', [param])
-                .spread(function (result) {
+                .spread((result) => {
                     return result;
                 });
         }
@@ -130,125 +143,126 @@ define([
             }
 
             return this.searchAPI.callFunc('search_objects', [param])
-                .spread(function (result) {
+                .spread((result) => {
                     return result;
                 });
         }
 
-        // TO PORT 
+        // TO PORT
 
         getNarrative(ref) {
-            return rpc.call('Workspace', 'get_object_info3', {
+            return this.workspace.callFunc('get_object_info3', [{
                 objects: [{
                     wsid: ref.workspaceId,
                     objid: ref.objectId
                 }],
                 ignoreErrors: 1
-            })
-                .spread(function (result) {
+            }])
+                .spread((result) => {
                     if (result.infos.length === 0) {
                         throw new Error('No Narrative found with reference ' + ref.workspaceId + '/' + ref.objectId);
                     }
                     if (result.infos.length > 1) {
                         throw new Error('Too many Narratives found with reference ' + ref.workspaceId + '/' + ref.objectId);
                     }
-                    var objectInfo = apiUtils.objectInfoToObject(result.infos[0]);
+                    const objectInfo = workspaceUtils.objectInfoToObject(result.infos[0]);
                     return Promise.all([
                         objectInfo,
-                        rpc.call('Workspace', 'get_workspace_info', {
+                        this.workspace.callFunc('get_workspace_info', [{
                             id: objectInfo.wsid
-                        })
-                            .spread(function (info) {
+                        }])
+                            .spread((info) => {
                                 return info;
                             })
                     ]);
                 })
-                .spread(function (objectInfo, wsInfo) {
-                    var workspaceInfo = apiUtils.workspaceInfoToObject(wsInfo);
+                .spread((objectInfo, wsInfo) => {
                     return {
                         objectInfo: objectInfo,
-                        workspaceInfo: workspaceInfo
+                        workspaceInfo: workspaceUtils.workspaceInfoToObject(wsInfo)
                     };
                 });
         }
 
         getObjectInfo(ref) {
-            return rpc.call('Workspace', 'get_object_info3', {
+            return this.workspace.callFunc('get_object_info3', [{
                 objects: [{
                     wsid: ref.workspaceId,
                     objid: ref.objectId,
                     ver: ref.version
                 }],
                 ignoreErrors: 1
-            })
-                .spread(function (result) {
+            }])
+                .spread((result) => {
                     if (result.infos.length === 0) {
                         throw new Error('No object found with reference ' + ref);
                     }
                     if (result.infos.length > 1) {
                         throw new Error('Too many objects found with reference ' + ref);
                     }
-                    var objectInfo = apiUtils.objectInfoToObject(result.infos[0]);
-                    return Promise.all([objectInfo, rpc.call('Workspace', 'get_workspace_info', {id: objectInfo.wsid})]);
+                    const objectInfo = workspaceUtils.objectInfoToObject(result.infos[0]);
+                    return Promise.all([
+                        objectInfo,
+                        this.workspace.callFunc('get_workspace_info', [{id: objectInfo.wsid}
+                        ])]);
                 })
-                .spread(function (objectInfo, wsInfo) {
-                    var workspaceInfo = apiUtils.workspaceInfoToObject(wsInfo[0]);
+                .spread((objectInfo, wsInfo) => {
                     return {
                         objectInfo: objectInfo,
-                        workspaceInfo: workspaceInfo
+                        workspaceInfo: workspaceUtils.workspaceInfoToObject(wsInfo[0])
                     };
                 });
         }
 
         getObjectsInfo(refs) {
-            var normalizedRefs = refs.map(function (ref) {
+            var normalizedRefs = refs.map((ref) => {
                 if (typeof ref === 'string') {
-                    var a = ref.split('/').map(function (x) {
+                    const [workspaceId, objectId, version] = ref.split('/').map((x) => {
                         return parseInt(x, 10);
                     });
                     return {
-                        workspaceId: a[0],
-                        objectId: a[1],
-                        version: a[2]
+                        workspaceId: workspaceId,
+                        objectId: objectId,
+                        version: version
                     };
                 }
             });
 
-            return Promise.all(normalizedRefs.map(function (ref) {
-                return getObjectInfo(ref);
+            return Promise.all(normalizedRefs.map((ref) => {
+                return this.getObjectInfo(ref);
             }));
         }
 
         getWritableNarratives() {
-            return rpc.call('Workspace', 'list_workspace_info', {
+            return this.workspace.callFunc('list_workspace_info', [{
                 perm: 'w'
-            })
-                .spread(function (data) {
-                    var objects = data.map(function (workspaceInfo) {
-                        return apiUtils.workspace_metadata_to_object(workspaceInfo);
+            }])
+                .spread((data) => {
+                    var objects = data.map((workspaceInfo) => {
+                        return workspaceUtils.workspaceInfoToObject(workspaceInfo);
                     });
-                    return objects.filter(function (obj) {
-                        if (obj.metadata.narrative && (!isNaN(parseInt(obj.metadata.narrative, 10))) &&
+                    return objects.filter((workpaceInfo) => {
+                        if (workpaceInfo.metadata.narrative && (!isNaN(parseInt(workpaceInfo.metadata.narrative, 10))) &&
                             // don't keep the current narrative workspace.
-                            obj.metadata.narrative_nice_name &&
-                            obj.metadata.is_temporary && obj.metadata.is_temporary !== 'true') {
+                            workpaceInfo.metadata.narrative_nice_name &&
+                            workpaceInfo.metadata.is_temporary && workpaceInfo.metadata.is_temporary !== 'true') {
                             return true;
                         }
                         return false;
                     });
                 })
-                .then(function (narratives) {
-                    var owners = Object.keys(narratives.reduce(function (owners, narrative) {
+                .then((narratives) => {
+                    const owners = Object.keys(narratives.reduce((owners, narrative) => {
                         owners[narrative.owner] = true;
                         return owners;
                     }, {}));
-                    return rpc.call('UserProfile', 'get_user_profile', owners)
-                        .spread(function (profiles) {
-                            var ownerProfiles = profiles.reduce(function (ownerProfiles, profile) {
+                    return this.userProfile.callFunc('get_user_profile', [owners])
+                        .spread((profiles) => {
+                            const ownerProfiles = profiles.reduce((ownerProfiles, profile) => {
                                 ownerProfiles[profile.user.username] = profile;
                                 return ownerProfiles;
                             }, {});
-                            narratives.forEach(function (narrative) {
+                            narratives.forEach((narrative) => {
                                 narrative.ownerRealName = ownerProfiles[narrative.owner].user.realname;
                             });
                             return narratives;
@@ -257,11 +271,16 @@ define([
         }
 
         copyObject(arg) {
-            return rpc.call('NarrativeService', 'copy_object', {
+            const narrativeService = this.runtime.service('rpc').makeClient({
+                module: 'NarrativeService',
+                timeout: 10000,
+                authenticated: true
+            });
+            return narrativeService.callFunc('copy_object', [{
                 ref: arg.sourceObjectRef,
                 target_ws_id: arg.targetWorkspaceId
-            })
-                .spread(function (copiedObjectInfo) {
+            }])
+                .spread((copiedObjectInfo) => {
                     // NB: the narrative service will have already transformed
                     // the workspace object info into a structure compatible with
                     // the venerable objectInfoToObject :)
@@ -269,30 +288,35 @@ define([
                 });
         }
 
-        copyObjects(arg) {
-            return Promise.all(arg.sourceObjectRefs.map(function (ref) {
-                return copyObject({
+        copyObjects({sourceObjectRefs, targetWorkspaceId}) {
+            return Promise.all(sourceObjectRefs.map((ref) => {
+                return this.copyObject({
                     sourceObjectRef: ref,
-                    targetWorkspaceId: arg.targetWorkspaceId
+                    targetWorkspaceId: targetWorkspaceId
                 });
             }));
         }
 
         createNarrative(arg) {
-            var commentCell = [
+            const commentCell = [
                 '# ' + arg.title,
                 '',
                 'This narrative was created by the "Copy Object" dialog in the "Data Search" web app.',
                 '',
                 'You will find your copied data in the Data panel on the left-hand side of the Narrative.',
             ].join('\n');
+            const narrativeService = this.runtime.service('rpc').makeClient({
+                module: 'NarrativeService',
+                timeout: 10000,
+                authenticated: true
+            });
 
-            return rpc.call('NarrativeService', 'create_new_narrative', {
+            return narrativeService.callFunc('create_new_narrative', [{
                 title: arg.title,
                 includeIntroCell: 0,
                 markdown: commentCell
-            })
-                .spread(function (newNarrative) {
+            }])
+                .spread((newNarrative) => {
                     return {
                         workspaceInfo: newNarrative.workspaceInfo,
                         objectInfo: newNarrative.narrativeInfo
@@ -301,120 +325,5 @@ define([
         }
     }
 
-    const columns = [
-        {
-            name: 'description',
-            label: 'Name',
-            type: 'string',
-            sort: null,
-            // width is more like a weight... for all current columns the
-            // widths are summed, and each column's actual width attribute
-            // is set as the percent of total.
-            width: 3
-        },
-        {
-            name: 'date',
-            label: 'Date',
-            type: 'date',
-            format: 'MM/DD/YYYY',
-            sort: {
-                propertyKey: 'timestamp',
-                isObject: false,
-                direction: ko.observable('descending'),
-                active: ko.observable(true)
-            },
-            width: 1
-        },
-        {
-            name: 'type',
-            label: 'Data Type',
-            type: 'string',
-            sort: {
-                propertyKey: 'type',
-                isObject: false,
-                direction: ko.observable('ascending'),
-                active: ko.observable(false)
-            },
-            // width is more like a weight... for all current columns the
-            // widths are summed, and each column's actual width attribute
-            // is set as the percent of total.
-            width: 1
-        },
-        {
-            name: 'source',
-            label: 'Data Source',
-            type: 'string',
-            // sort: {
-            //     keyName: 'source',
-            //     direction: ko.observable('ascending'),
-            //     active: ko.observable(false)
-            // },
-            width: 1,
-            // action: {
-            //     name: 'doAddPi'
-            // }
-        },
-        {
-            name: 'owner',
-            label: 'Owner',
-            type: 'string',
-            // sort: {
-            //     keyName: 'owner',
-            //     isObject: false,
-            //     direction: ko.observable('ascending'),
-            //     active: ko.observable(false)
-            // },
-            width: 1,
-            // action: {
-            //     name: 'doAddPi'
-            // }
-        },
-
-        {
-            name: 'name',
-            label: 'Title',
-            type: 'string',
-            // sort: {
-            //     keyName: 'source',
-            //     direction: ko.observable('ascending'),
-            //     active: ko.observable(false)
-            // },
-            width: 3,
-            // action: {
-            //     name: 'doAddPi'
-            // }
-        }
-        // {
-        //     name: 'inspect',
-        //     label: 'Inspect',
-        //     type: 'action',
-        //     width: 5,
-        //     component: InspectControl.name(),
-        //     rowStyle: {
-        //         textAlign: 'center'
-        //     },
-        //     headerStyle: {
-        //         textAlign: 'center'
-        //     }
-        // },
-        // {
-        //     name: 'copy',
-        //     label: 'Copy',
-        //     width: 6,
-        //     component: StageControl.name(),
-        //     rowStyle: {
-        //         textAlign: 'center'
-        //     },
-        //     headerStyle: {
-        //         textAlign: 'center'
-        //     }
-        // }
-    ];
-
-    const columnsMap = columns.reduce(function (acc, col) {
-        acc[col.name] = col;
-        return acc;
-    }, {});
-
-    return {Model, columns, columnsMap};
+    return {Model};
 });

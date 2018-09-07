@@ -61,7 +61,6 @@ define([
                 'entry.1670959681': arg.email,
                 'entry.250050267': arg.subject
             };
-            console.log('query?', query);
             return baseUrl + '?' + httpUtils.encodeQuery(query);
         }
 

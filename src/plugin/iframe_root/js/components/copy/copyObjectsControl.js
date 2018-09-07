@@ -1,11 +1,13 @@
 define([
-    'knockout-plus',
-    'kb_common/html',
-    './dialogs/copyObjects'
+    'knockout',
+    'kb_knockout/registry',
+    'kb_knockout/lib/viewModelBase',
+    'kb_lib/html'
 ], function (
     ko,
-    html,
-    CopyObjectComponent
+    reg,
+    ViewModelBase,
+    html
 ) {
     'use strict';
 
@@ -14,30 +16,41 @@ define([
         span = t('span'),
         div = t('div');
 
-    function viewModel(params) {
-        function doCopyObjects() {
-            params.overlayComponent({
-                name: CopyObjectComponent.name(),
-                viewModel: {
-                    objectsToCopy: params.selectedObjects
+    class ViewModel extends ViewModelBase {
+        constructor(params) {
+            super(params);
+            const {selectedObjects} = params;
+            this.selectedObjects = selectedObjects;
+
+            // TODO: add isAuthorized, established at the root.
+
+            // this.showOverlay = showOverlay;
+
+            this.buttonTitle = ko.pureComputed(() => {
+                if (this.selectedObjects().length > 0) {
+                    return 'Click me to open a window allowing you to copy the objects you have selected';
+                } else {
+                    return 'When you have selected objects (via the checkbox to the left of them), clicking me will allow you to copy them';
                 }
             });
         }
 
-        var buttonTitle = ko.pureComputed(function () {
-            if (params.selectedObjects().length > 0) {
-                return 'Click me to open a window allowing you to copy the objects you have selected';
-            } else {
-                return 'When you have selected objects (via the checkbox to the left of them), clicking me will allow you to copy them';
-            }
-        });
-
-        return {
-            doCopyObjects: doCopyObjects,
-            selectedObjects: params.selectedObjects,
-            buttonTitle: buttonTitle
-        };
+        doCopyObjects() {
+            this.sendToParent('show-copy-objects');
+        }
     }
+
+    // div({
+    //     class: 'btn btn-default',
+    //     dataBind: {
+    //         click: 'function(d,e){$component.showFeedback.call($component,d,e);}'
+    //     }
+    // }, [
+    //     span({
+    //         class: 'fa fa-bullhorn'
+    //     }),
+    //     ' Feedbackx'
+    // ]),
 
     function buildCopyButton() {
         return button({
@@ -53,28 +66,24 @@ define([
         }, [
             span({
                 class: 'fa fa-clone',
-                style: {
-                    marginRight: '6px'
-                }
+                // style: {
+                //     marginRight: '6px'
+                // }
             }),
-            'Copy Selected...'
+            ' Copy Selected...'
         ]);
     }
 
     function template() {
-        return div({
-            style: {
-                textAlign: 'center'
-            }
-        }, buildCopyButton());
+        return buildCopyButton();
     }
 
     function component() {
         return {
-            viewModel: viewModel,
+            viewModel: ViewModel,
             template: template()
         };
     }
 
-    return ko.kb.registerComponent(component);
+    return reg.registerComponent(component);
 });

@@ -39,7 +39,7 @@ define([
         }
 
         doClose() {
-            this.parent.bus.send('close');
+            this.send('close');
         }
     }
 
