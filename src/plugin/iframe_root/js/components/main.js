@@ -56,9 +56,15 @@ define([
         constructor(params, context) {
             super(params);
 
+            // maybe these should be passed in directly, and set up 
+            // here with let? "let" us try.
             this.runtime = context.$root.runtime;
             this.supportedDataTypes = context.$root.supportedDataTypes;
             this.columns = context.$root.columns;
+
+            this.authorized = params.authorized;
+
+
 
             // Primary search inputs
             this.searchInput = ko.observable();
@@ -94,7 +100,7 @@ define([
 
             // Auth state
             // TODO: this should be set by an auth event.
-            this.authorized = ko.observable(this.runtime.service('session').getAuthToken());
+            // this.authorized = ko.observable(this.runtime.service('session').getAuthToken());
 
             // And... search results.
             this.searchResults= ko.observableArray();
@@ -691,7 +697,12 @@ define([
 
     function template() {
         return div({
-            class: style.classes.component
+            class: style.classes.component,
+            dataBind: {
+                let: {
+                    authorized: 'authorized'
+                }
+            }
         }, [
             div({
                 class: style.classes.header
@@ -714,21 +725,20 @@ define([
                     div({
                         class: style.classes.columnHeader
                     }, 'Filters'),
-                    gen.if('authorized',
+                    div({
+                        class: style.classes.columnGroup
+                    }, [
                         div({
-                            class: style.classes.columnGroup
-                        }, [
-                            div({
-                                class: style.classes.fieldGroupLabel
-                            }, 'Data Privacy'),
-                            gen.component({
-                                name: DataPrivacyComponent.name(),
-                                params: {
-                                    withPrivateData: 'withPrivateData',
-                                    withPublicData: 'withPublicData'
-                                }
-                            })
-                        ])),
+                            class: style.classes.fieldGroupLabel
+                        }, 'Data Privacy'),
+                        gen.component({
+                            name: DataPrivacyComponent.name(),
+                            params: {
+                                withPrivateData: 'withPrivateData',
+                                withPublicData: 'withPublicData'
+                            }
+                        })
+                    ]),
                     div({
                         class: style.classes.columnGroup
                     }, [

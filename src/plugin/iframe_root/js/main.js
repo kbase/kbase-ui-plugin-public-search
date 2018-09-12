@@ -95,6 +95,8 @@ require([
                 // channelId, frameId, hostId, parentHost
                 this.hostParams = this.getParamsFromIFrame();
 
+                this.authorized = null;
+
                 // this is the channel for this window.
                 this.channel = new WindowChannel.Channel({
                     window: this.rootWindow,
@@ -122,7 +124,8 @@ require([
             render(ko) {
                 this.rootViewModel = new RootViewModel({
                     runtime: this.runtime,
-                    hostChannel: this.hostChannel
+                    hostChannel: this.hostChannel,
+                    authorized: this.authorized
                 });
                 this.container.innerHTML = div({
                     style: {
@@ -135,7 +138,8 @@ require([
                             name: MainComponent.quotedName(),
                             params: {
                                 runtime: 'runtime',
-                                bus: 'bus'
+                                bus: 'bus',
+                                authorized: 'authorized'
                             }
                         }
                     }
@@ -184,6 +188,7 @@ require([
                             this.token = token;
                             this.username = username;
                             this.config = config;
+                            this.authorized = token ? true : false;
 
                             this.runtime = new runtime.Runtime({config, token, username, realname, email});
                             this.render(ko);
@@ -198,6 +203,16 @@ require([
 
                             this.channel.on('show-help', () => {
                                 this.showHelp();
+                            });
+
+                            this.channel.on('loggedin', () => {
+                                console.log('LOGGED IN');
+                                this.rootViewModel.authorized(true);
+                            });
+
+                            this.channel.on('loggedout', () => {
+                                console.log('LOGGED OUT');
+                                this.rootViewModel.authorized(false);
                             });
 
                             // this.hostChannel.send('add-button', {

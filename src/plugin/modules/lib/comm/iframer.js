@@ -1,9 +1,7 @@
 define([
-    'bluebird',
     'kb_lib/html',
     'kb_lib/windowChannel'
 ], function (
-    Promise,
     html,
     WindowChannel
 ) {
@@ -12,7 +10,6 @@ define([
     var t = html.tag,
         div = t('div'),
         iframe = t('iframe');
-
 
     class Iframe {
         constructor(config) {
@@ -141,6 +138,7 @@ define([
         */
 
         start() {
+            // Use raw promise just to reduce a minor dependency upon bluebird.
             return new Promise((resolve, reject) => {
                 try {
                     this.channel.start();
@@ -186,6 +184,19 @@ define([
                             email: this.runtime.service('session').getEmail(),
                             config: this.runtime.rawConfig()
                         });
+                        this.runtime.receive('session', 'loggedin', () => {
+                            console.log('logged in!');
+                            this.iframeChannel.send('loggedin', {
+                                token: this.runtime.service('session').getAuthToken(),
+                                username: this.runtime.service('session').getUsername(),
+                                realname: this.runtime.service('session').getRealname(),
+                                email: this.runtime.service('session').getEmail(),
+                            });
+                        });
+                        this.runtime.receive('session', 'loggedout', () => {
+                            console.log('logged out!');
+                            this.iframeChannel.send('loggedout');
+                        });
                     });
 
                     this.iframe.start();
@@ -194,7 +205,6 @@ define([
                     reject(ex);
                 }
             });
-
         }
 
         stop() {

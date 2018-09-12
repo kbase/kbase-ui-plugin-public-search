@@ -13,8 +13,7 @@ define([
 
     var t = html.tag,
         button = t('button'),
-        span = t('span'),
-        div = t('div');
+        span = t('span');
 
     class ViewModel extends ViewModelBase {
         constructor(params) {
@@ -57,7 +56,7 @@ define([
             class: 'btn',
             dataBind: {
                 click: 'doCopyObjects',
-                enable: 'selectedObjects().length > 0',
+                enable: 'selectedObjects().length > 0 && authorized()',
                 class: 'selectedObjects().length === 0 ? "btn-default" : "btn-primary"',
                 attr: {
                     title: 'buttonTitle'
