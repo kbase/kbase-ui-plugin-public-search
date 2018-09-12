@@ -259,6 +259,7 @@ define([
                             this.copyStatus('success');
                         })
                         .catch((err) => {
+                            console.error('ERROR copying objects into narrative', err);
                             this.copyStatus('error');
                             this.errorMessage(err.message);
                         });

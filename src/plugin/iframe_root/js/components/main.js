@@ -8,7 +8,6 @@ define([
     '../lib/serviceUtils',
     '../lib/model',
     './searchBar',
-    './filterBar',
     './resultsArea',
     './navBar',
     './searchError',
@@ -20,8 +19,7 @@ define([
     './feedback',
     './copy/copyObjects',
     'kb_knockout/components/overlayPanel',
-    'kb_knockout/lib/nanoBus',
-    '../lib/debug'
+    'kb_knockout/lib/nanoBus'
 ], function (
     Promise,
     ko,
@@ -32,7 +30,6 @@ define([
     serviceUtils,
     model,
     SearchBarComponent,
-    FilterBarComponent,
     ResultsAreaComponent,
     NavBarComponent,
     SearchErrorComponent,
@@ -44,8 +41,7 @@ define([
     FeedbackComponent,
     CopyObjectsComponent,
     OverlayPanelComponent,
-    NanoBus,
-    debug
+    NanoBus
 ) {
     'use strict';
 
@@ -56,15 +52,13 @@ define([
         constructor(params, context) {
             super(params);
 
-            // maybe these should be passed in directly, and set up 
+            // maybe these should be passed in directly, and set up
             // here with let? "let" us try.
             this.runtime = context.$root.runtime;
             this.supportedDataTypes = context.$root.supportedDataTypes;
             this.columns = context.$root.columns;
 
             this.authorized = params.authorized;
-
-
 
             // Primary search inputs
             this.searchInput = ko.observable();

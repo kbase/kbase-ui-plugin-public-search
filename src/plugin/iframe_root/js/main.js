@@ -206,12 +206,10 @@ require([
                             });
 
                             this.channel.on('loggedin', () => {
-                                console.log('LOGGED IN');
                                 this.rootViewModel.authorized(true);
                             });
 
                             this.channel.on('loggedout', () => {
-                                console.log('LOGGED OUT');
                                 this.rootViewModel.authorized(false);
                             });
 

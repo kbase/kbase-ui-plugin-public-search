@@ -165,7 +165,7 @@ define([
                         this.runtime.send('ui', 'addButton', button);
                     });
 
-                    this.channel.on('open-window', ({url, name}) => {
+                    this.channel.on('open-window', ({url}) => {
                         window.location.href = url;
                         // window.open(url, name);
                     });
@@ -185,7 +185,6 @@ define([
                             config: this.runtime.rawConfig()
                         });
                         this.runtime.receive('session', 'loggedin', () => {
-                            console.log('logged in!');
                             this.iframeChannel.send('loggedin', {
                                 token: this.runtime.service('session').getAuthToken(),
                                 username: this.runtime.service('session').getUsername(),
@@ -194,7 +193,6 @@ define([
                             });
                         });
                         this.runtime.receive('session', 'loggedout', () => {
-                            console.log('logged out!');
                             this.iframeChannel.send('loggedout');
                         });
                     });
