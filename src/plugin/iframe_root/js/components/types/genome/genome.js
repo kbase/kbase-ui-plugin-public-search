@@ -7,16 +7,15 @@ define([
     'kb_knockout/components/tabset',
     'kb_lib/html',
     'kb_lib/htmlBuilders',
-    '../wikipediaImage',
     './overview',
-    './taxonomy',
-    './publications',
+    '../common/taxonomy',
+    '../common/publications',
+    './genes',
     '../container',
     '../containerTab',
-    '../provenance',
-    '../wikipedia',
+    '../common/provenance',
+    '../common/wikipedia',
     './trees',
-    '../../container/container',
     '../builders'
 ], function (
     Promise,
@@ -27,23 +26,21 @@ define([
     TabsetComponent,
     html,
     build,
-    WikipediaImageComponent,
     TabOverviewComponent,
     TaxonomyComponent,
     PublicationsComponent,
+    GenesComponent,
     ContainerComponent,
     ContainerTabComponent,
     ProvenanceComponent,
     WikipediaComponent,
     TreesComponent,
-    ContainerHeaderComponent,
     builders
 ) {
     'use strict';
 
     const t = html.tag,
         div = t('div'),
-        span = t('span'),
         a = t('a');
 
     class ViewModel extends ViewModelBase {
@@ -70,8 +67,12 @@ define([
                         component: null
                     },
                     panel: {
-                        component: null,
-                        content: div('hi!')
+                        component: {
+                            name: GenesComponent.name(),
+                            params: {
+                                ref: 'object.objectInfo.ref'
+                            }
+                        }
                     }
                 },
                 {
@@ -295,6 +296,11 @@ define([
                     target: '_blank'
                 }),
                 div(build.loading())),
+            div({
+                dataBind: {
+                    text: 'domain'
+                }
+            }),
             div(a({
                 dataBind: {
                     text: 'object.objectInfo.typeName + " " + object.objectInfo.typeMajorVersion + "." + object.objectInfo.typeMinorVersion',
@@ -303,12 +309,8 @@ define([
                     }
                 },
                 target: '_blank'
-            })),
-            div({
-                dataBind: {
-                    text: 'domain'
-                }
-            })
+            }))
+
             // div({
             //     dataBind: {
             //         typedText: {
@@ -320,82 +322,6 @@ define([
             // })
         ];
     }
-
-    // function buildObjectIdentification() {
-    //     return div({
-    //         style: {
-    //             display: 'flex',
-    //             flexDirection: 'row'
-    //         }
-    //     }, [
-    //         div([
-    //             span({ class: 'fa-stack fa-2x' }, [
-    //                 span({
-    //                     class: 'fa fa-circle fa-stack-2x',
-    //                     dataBind: {
-    //                         style: {
-    //                             color: 'dataIcon.color'
-    //                         }
-    //                     }
-    //                 }),
-    //                 span({
-    //                     class: 'fa-inverse fa-stack-1x ',
-    //                     dataBind: {
-    //                         class: 'dataIcon.classes'
-    //                     }
-    //                 })
-    //             ])
-    //         ]),
-    //         div({
-    //             style: {
-    //                 display: 'flex',
-    //                 flexDirection: 'column',
-    //                 justifyContent: 'center'
-    //             }
-    //         }, buildGenomeIdentification())
-    //     ]);
-    // }
-
-    // function buildOverview() {
-    //     return div({
-    //         style: {
-    //             display : 'flex',
-    //             flexDirection: 'row',
-    //             height: '100px'
-    //         }
-    //     }, [
-    //         div({
-    //             style: {
-    //                 flex: '2 1 0px',
-    //                 display: 'flex',
-    //                 flexDirection: 'column',
-    //                 border: '1px silver solid'
-    //             }
-    //         }, buildObjectIdentification()),
-    //         div({
-    //             style: {
-    //                 // flex: '1 1 0px'
-    //                 width: '150px'
-    //             }
-    //         }, [
-    //             gen.component({
-    //                 name: WikipediaImageComponent.name(),
-    //                 params: {
-    //                     scientificName: 'scientificName',
-    //                     height: '"100px"'
-    //                 }
-    //             })
-    //         ]),
-    //         div({
-    //             style: {
-    //                 flex: '1 1 0px',
-    //                 border: '1px silver solid',
-    //                 padding: '4px',
-    //                 marginRight: '10px'
-    //             }
-    //         }, buildContainerInfo())
-    //     ]);
-    // }
 
     function buildTabs() {
         return div({
@@ -431,7 +357,9 @@ define([
                     builders.buildHeader(buildGenomeIdentification(), 'scientificName'),
                     buildTabs()
                 ],
-                build.loading())));
+                build.loading()),
+            build.loading()
+        ));
     }
 
     function component() {

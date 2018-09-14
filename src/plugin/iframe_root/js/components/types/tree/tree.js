@@ -6,12 +6,11 @@ define([
     'kb_knockout/components/tabset',
     'kb_lib/html',
     'kb_lib/htmlBuilders',
-    '../wikipediaImage',
     './overview',
     '../container',
     '../containerTab',
-    '../provenance',
-    './metadata',
+    '../common/provenance',
+    '../common/metadata',
     './simpleTree',
     '../builders'
 ], function (
@@ -22,7 +21,6 @@ define([
     TabsetComponent,
     html,
     build,
-    WikipediaImageComponent,
     OverviewComponent,
     ContainerComponent,
     ContainerTabComponent,
@@ -35,7 +33,6 @@ define([
 
     const t = html.tag,
         div = t('div'),
-        span = t('span'),
         a = t('a');
 
     class Tree {

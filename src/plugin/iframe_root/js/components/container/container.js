@@ -21,6 +21,7 @@ define([
         constructor(params) {
             const {object} = params;
             this.object = ko.utils.unwrapObservable(object);
+            console.log('object?', object);
         }
     }
 

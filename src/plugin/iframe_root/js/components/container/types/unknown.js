@@ -11,16 +11,22 @@ define([
 ) {
     'use strict';
 
+    class ViewModel {
+        constructor({name, owner, lastModifiedAt, workspaceId, objectId}) {
+            this.name = name;
+            this.owner = owner;
+            this.lastModifiedAt = lastModifiedAt;
+            this.workspaceId = workspaceId;
+            this.objectId = objectId;
+        }
+    }
+
     const t = html.tag,
         div = t('div'),
         span = t('span'),
-        table = t('table'),
-        tbody = t('tbody'),
-        tr = t('tr'),
-        th = t('th'),
-        td = t('td');
+        a = t('a');
 
-    const styles = html.makeStyles({
+    const style = html.makeStyles({
         table: {
             css: {
 
@@ -44,80 +50,108 @@ define([
                 color: 'rgba(100,100,100,1)',
                 marginTop: '8px'
             }
+        },
+        title: {
+            css: {
+                fontWeight: 'bold',
+                color: 'rgba(100,100,100,1)',
+                textAlign: 'center'
+            }
+        },
+        component: {
+            css: {
+                // flex: '1 1 0px',
+                // display: 'flex',
+                // flexDirection: 'column'
+            }
+        },
+        cell: {
+            css: {
+                overflowX: 'hidden',
+                whiteSpace: 'nowrap',
+                textOverflow: 'ellipsis',
+                display: 'flex',
+                flexDirection: 'row'
+            }
+        },
+        cellElement: {
+            css: {
+                display: 'block',
+                flex: '1 1 0px'
+            }
+        },
+        label: {
+            css: {
+                fontWeight: 'bold',
+                color: 'rgba(200,200,200,1)',
+                // width: '10em',
+                marginRight: '4px'
+            }
         }
     });
 
-    class ViewModel {
-        constructor({name, owner, lastModifiedAt, workspaceId, objectId}) {
-            this.name = name;
-            this.owner = owner;
-            this.lastModifiedAt = lastModifiedAt;
-            this.workspaceId = workspaceId;
-            this.objectId = objectId;
-        }
-    }
 
-    function buildNarrativeInfo() {
-        return div([
+    function buildInfo() {
+        return div({
+            class: style.classes.component
+        }, [
+            div({
+                class: style.classes.title
+            }, 'In Unknown Workspace'),
+            div({
+                class: style.classes.cell
+            }, [
+                span({
+                    class: style.classes.label
+                }, 'name'),
+                div({
+                    class: style.classes.cellElement,
+                    dataBind: {
+                        text: 'name',
+                    }
+                })
+            ]),
             div([
                 span({
-                    class: styles.classes.sectionHeader
-                }, 'Unknown Workspace')
+                    class: style.classes.label
+                }, 'owner'),
+                a({
+                    target: '_blank',
+                    dataBind: {
+                        text: 'owner',
+                        attr: {
+                            href: '"#people/" + owner'
+                        }
+                    }
+                })
             ]),
-            table({
-                class: styles.classes.table
-            }, [
-                tbody([
-                    tr([
-                        th('Narrative'),
-                        td(span({
-                            dataBind: {
-                                text: 'name'
-                            }
-                        }))
-                    ]),
-                    tr([
-                        th('Owner'),
-                        td(span({
-                            dataBind: {
-                                text: 'owner'
-                            }
-                        }))
-                    ]),
-                    tr([
-                        th('Created'),
-                        td(span({
-                            // dataBind: {
-                            //     text: 'object().workspaceInfo.owner'
-                            // }
-                        }, 'tbd'))
-                    ]),
-                    tr([
-                        th('Last modified'),
-                        td(span({
-                            dataBind: {
-                                typedText: {
-                                    value: 'lastModifiedAt',
-                                    type: '"date"',
-                                    format: '"YYYY-MM-DD @ hh:mm a"'
-                                }
-                            }
-                        }))
-                    ])
-                ])
+            div([
+                span({
+                    class: style.classes.label
+                }, 'saved'),
+                span({
+                    dataBind: {
+                        typedText: {
+                            value: 'lastModifiedAt',
+                            type: '"date"',
+                            format: '"MMM D, YYYY"'
+                        }
+                    }
+                })
             ])
+
         ]);
     }
 
     function template() {
-        return buildNarrativeInfo();
+        return buildInfo();
     }
 
     function component() {
         return {
             viewModel: ViewModel,
             template: template(),
-            stylesheet: styles.sheet
+            stylesheet: style.sheet
         };
     }
 

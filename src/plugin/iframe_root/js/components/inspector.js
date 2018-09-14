@@ -163,6 +163,10 @@ define([
         });
     }
 
+    function buildLoading() {
+        return build.loading();
+    }
+
     // function build
 
     function template() {
@@ -173,24 +177,25 @@ define([
                 display: 'flex',
                 flexDirection: 'column'
             }
-        },
-        gen.if('ready',
-            ui.buildFullHeightDialog2({
-                body: buildBody(),
-                buttons: [
-                    {
-                        label: 'View',
-                        onClick: 'onView'
-                    },
-                    {
-                        label: 'Close',
-                        onClick: 'onClose'
-                    }
-                ]
-            }),
-            gen.if('error',
-                buildError(),
-                build.loading())));
+        },[
+            gen.if('ready()',
+                ui.buildFullHeightDialog2({
+                    body: buildBody(),
+                    buttons: [
+                        {
+                            label: 'View',
+                            onClick: 'onView'
+                        },
+                        {
+                            label: 'Close',
+                            onClick: 'onClose'
+                        }
+                    ]
+                }),
+                gen.if('error()',
+                    buildError(),
+                    buildLoading()))
+        ]);
     }
 
     function component() {

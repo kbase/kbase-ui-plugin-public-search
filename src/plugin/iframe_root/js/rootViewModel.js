@@ -85,14 +85,7 @@ define([
                 this.showFeedback();
             });
 
-            this.getMethodMap()
-                .then((methodMap) => {
-                    this.methodMap = methodMap;
-                    this.ready(true);
-                })
-                .catch((err) => {
-                    this.error(err);
-                });
+            
 
             this.columns = [
                 {
@@ -194,6 +187,16 @@ define([
                 acc[col.name] = col;
                 return acc;
             }, {});
+
+            // MAIN
+            this.getMethodMap()
+                .then((methodMap) => {
+                    this.methodMap = methodMap;
+                    this.ready(true);
+                })
+                .catch((err) => {
+                    this.error(err);
+                });
         }
 
         googleFormLink(arg) {

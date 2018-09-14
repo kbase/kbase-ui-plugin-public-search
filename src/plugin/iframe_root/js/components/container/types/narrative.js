@@ -11,8 +11,19 @@ define([
 ) {
     'use strict';
 
+    class ViewModel {
+        constructor({name, owner, lastModifiedAt, workspaceId, objectId}) {
+            this.name = name;
+            this.owner = owner;
+            this.lastModifiedAt = lastModifiedAt;
+            this.workspaceId = workspaceId;
+            this.objectId = objectId;
+        }
+    }
+
     const t = html.tag,
         div = t('div'),
+        span = t('span'),
         a = t('a');
 
     const style = html.makeStyles({
@@ -60,18 +71,16 @@ define([
                 display: 'block',
                 flex: '1 1 0px'
             }
+        },
+        label: {
+            css: {
+                fontWeight: 'bold',
+                color: 'rgba(200,200,200,1)',
+                // width: '10em',
+                marginRight: '4px'
+            }
         }
     });
-
-    class ViewModel {
-        constructor({name, owner, lastModifiedAt, workspaceId, objectId}) {
-            this.name = name;
-            this.owner = owner;
-            this.lastModifiedAt = lastModifiedAt;
-            this.workspaceId = workspaceId;
-            this.objectId = objectId;
-        }
-    }
 
     function buildNarrativeInfo() {
         return div({
@@ -79,37 +88,52 @@ define([
         }, [
             div({
                 class: style.classes.title
-            }, 'In narrative'),
+            }, 'In Narrative'),
             div({
                 class: style.classes.cell
-            }, a({
-                target: '_blank',
-                class: style.classes.cellElement,
-                dataBind: {
-                    text: 'name',
-                    attr: {
-                        href: '"/narrative/ws." + workspaceId + ".obj." + objectId'
+            }, [
+                span({
+                    class: style.classes.label
+                }, 'title'),
+                a({
+                    target: '_blank',
+                    // class: style.classes.cellElement,
+                    dataBind: {
+                        text: 'name',
+                        attr: {
+                            href: '"/narrative/ws." + workspaceId + ".obj." + objectId'
+                        }
                     }
-                }
-            })),
-            div(a({
-                target: '_blank',
-                dataBind: {
-                    text: 'owner',
-                    attr: {
-                        href: '"#people/" + owner'
+                })
+            ]),
+            div([
+                span({
+                    class: style.classes.label
+                }, 'owner'),
+                a({
+                    target: '_blank',
+                    dataBind: {
+                        text: 'owner',
+                        attr: {
+                            href: '"#people/" + owner'
+                        }
                     }
-                }
-            })),
-            div({
-                dataBind: {
-                    typedText: {
-                        value: 'lastModifiedAt',
-                        type: '"date"',
-                        format: '"MMM D, YYYY"'
+                })
+            ]),
+            div([
+                span({
+                    class: style.classes.label
+                }, 'saved'),
+                span({
+                    dataBind: {
+                        typedText: {
+                            value: 'lastModifiedAt',
+                            type: '"date"',
+                            format: '"MMM D, YYYY"'
+                        }
                     }
-                }
-            })
+                })
+            ])
         ]);
     }
 

@@ -14,4 +14,10 @@ body {
     display: flex;
     flex-direction: column;
     flex: 1 1 0px;
+    font-size: 100%;
+}
+
+/* bootstrap has an annoying habit setting the table font size too large */
+table {
+    font-size: 100%;
 }

@@ -6,9 +6,9 @@ define([
     'kb_knockout/components/tabset',
     'kb_lib/html',
     'kb_lib/htmlBuilders',
-    '../wikipediaImage',
+    '../common/wikipediaImage',
     './overview',
-    '../genome/publications',
+    '../common/publications',
     '../container',
     '../containerTab'
 ], function (

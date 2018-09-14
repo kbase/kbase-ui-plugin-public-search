@@ -22,23 +22,46 @@ define([
         td = t('td');
 
     class ViewModel {
-        constructor({ref}, context) {
-            this.ref = ref;
-
+        constructor({ref, scientificName, taxonomy}, context) {
             this.runtime = context.$root.runtime;
 
+            this.ref = ref;
             this.ready = ko.observable(false);
 
-            this.scientificName = null;
-            this.taxonomy = null;
+            if (scientificName && taxonomy) {
+                this.scientificName = scientificName;
+                this.taxonomy = this.parseTaxonomy(taxonomy);
+            } else {
+                this.scientificName = null;
+                this.taxonomy = null;
+                this.getOverviewInfo()
+                    .then(({scientificName, taxonomy}) => {
+                        this.scientificName = scientificName;
+                        this.taxonomy = taxonomy;
+                        this.ready(true);
+                    })
+                    .catch((err) => {
+                        console.error('ERROR', err);
+                    });
+            }
+        }
 
-            this.getOverviewInfo()
-                .then(() => {
-                    this.ready(true);
-                })
-                .catch((err) => {
-                    console.error('ERROR', err);
-                });
+        parseTaxonomy(taxonomyString) {
+            if (!taxonomyString) {
+                return [];
+            }
+
+            if (taxonomyString instanceof Array) {
+                return taxonomyString;
+            }
+        
+            let taxList;
+            if (taxonomyString.indexOf(';') !== -1) {
+                taxList = taxonomyString.split(';');
+            } else {
+                taxList = taxonomyString.split(',');
+            }
+            return taxList;
         }
 
         getOverviewInfo() {
@@ -55,17 +78,9 @@ define([
                 ]
             }]])
                 .spread(([objectData]) => {
-                    this.scientificName = objectData.data.scientific_name;
-                    const tax = objectData.data.taxonomy;
-                    if (tax) {
-                        let taxList;
-                        if (tax.indexOf(';') !== -1) {
-                            taxList = tax.split(';');
-                        } else {
-                            taxList = tax.split(',');
-                        }
-                        this.taxonomy = taxList;
-                    }
+                    const scientificName = objectData.data.scientific_name;
+                    const taxonomy = this.parseTaxonomy(objectData.data.taxonomy);
+                    return {scientificName, taxonomy};
                 });
         }
     }

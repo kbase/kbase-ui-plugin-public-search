@@ -23,6 +23,7 @@ define([
     }
 
     const t = html.tag,
+        span = t('span'),
         div = t('div');
 
     const style = html.makeStyles({
@@ -78,6 +79,14 @@ define([
                 display: 'block',
                 flex: '1 1 0px'
             }
+        },
+        label: {
+            css: {
+                fontWeight: 'bold',
+                color: 'rgba(200,200,200,1)',
+                // width: '10em',
+                marginRight: '4px'
+            }
         }
     });
 
@@ -87,23 +96,33 @@ define([
         }, [
             div({
                 class: style.classes.title
-            }, 'In reference data workspace'),
+            }, 'In Reference Data Workspace'),
             div({
                 class: style.classes.cell
-            }, div({
-                class: style.classes.cellElement,
-                dataBind: {
-                    text: 'source',
-                }
-            })),
+            }, [
+                span({
+                    class: style.classes.label
+                }, 'source'),
+                div({
+                    class: style.classes.cellElement,
+                    dataBind: {
+                        text: 'source',
+                    }
+                })
+            ]),
             div({
                 class: style.classes.cell
-            }, div({
-                class: style.classes.cellElement,
-                dataBind: {
-                    text: 'sourceID',
-                }
-            })),
+            }, [
+                span({
+                    class: style.classes.label
+                }, 'source id'),
+                div({
+                    class: style.classes.cellElement,
+                    dataBind: {
+                        text: 'sourceID',
+                    }
+                })
+            ]),
             // div(a({
             //     target: '_blank',
             //     dataBind: {
@@ -114,14 +133,21 @@ define([
             //     }
             // })),
             div({
-                dataBind: {
-                    typedText: {
-                        value: 'lastModifiedAt',
-                        type: '"date"',
-                        format: '"MMM D, YYYY"'
+                class: style.classes.cell
+            }, [
+                span({
+                    class: style.classes.label
+                }, 'source id'),
+                div({
+                    dataBind: {
+                        typedText: {
+                            value: 'lastModifiedAt',
+                            type: '"date"',
+                            format: '"MMM D, YYYY"'
+                        }
                     }
-                }
-            })
+                })
+            ])
         ]);
     }
 

@@ -5,7 +5,7 @@ define([
     'kb_knockout/lib/generators',
     'kb_lib/html',
     'kb_lib/htmlBuilders',
-    '../../lib/serviceUtils'
+    '../../../lib/serviceUtils'
 ], function (
     Promise,
     ko,

@@ -9,8 +9,8 @@ define([
     './overview',
     '../container',
     '../containerTab',
-    '../metadata',
-    '../provenance'
+    '../common/metadata',
+    '../common/provenance'
 ], function (
     ko,
     reg,

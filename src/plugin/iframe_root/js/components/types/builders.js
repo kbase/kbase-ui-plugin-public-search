@@ -3,7 +3,7 @@ define([
     'kb_lib/html',
     'kb_lib/htmlBuilders',
     '../container/container',
-    './wikipediaImage'
+    './common/wikipediaImage'
 ], function (
     gen,
     html,
@@ -76,10 +76,11 @@ define([
         }, [
             div({
                 style: {
-                    flex: '2 1 0px',
+                    flex: '3 1 0px',
                     display: 'flex',
                     flexDirection: 'column',
-                    border: '1px silver solid'
+                    border: '1px silver solid',
+                    paddingTop: '10px'
                 }
             }, buildObjectIdentification(objectIdentificationContent)),
             div({
@@ -108,7 +109,7 @@ define([
             ),
             div({
                 style: {
-                    flex: '1 1 0px',
+                    flex: '2 1 0px',
                     border: '1px silver solid',
                     padding: '4px',
                     marginRight: '10px'

@@ -3,13 +3,15 @@ define([
     'kb_knockout/registry',
     'kb_knockout/lib/generators',
     'kb_lib/html',
-    'kb_lib/htmlBuilders'
+    'kb_lib/htmlBuilders',
+    '../common/lineage'
 ], function (
     ko,
     reg,
     gen,
     html,
-    build
+    build,
+    LineageComponent
 ) {
     'use strict';
 
@@ -36,6 +38,7 @@ define([
             this.contigCount = null;
             this.featureCount = null;
             this.gcContent = null;
+            this.taxonomy = null;
 
             this.getOverviewInfo()
                 .then(() => {
@@ -61,7 +64,8 @@ define([
                     'domain',
                     'dna_size',
                     'num_contigs',
-                    'gc_content'
+                    'gc_content',
+                    'taxonomy'
                 ]
             }]])
                 .spread(([objectData]) => {
@@ -69,6 +73,7 @@ define([
                     this.domain = objectData.data.domain;
                     this.dnaSize = objectData.data.dna_size;
                     this.contigCount = objectData.data.num_contigs;
+                    this.taxonomy = objectData.data.taxonomy;
 
                     let gcContent;
                     // comment below from genome landing page widget kbaseGenomeOverview
@@ -98,7 +103,7 @@ define([
         }
     }
 
-    const styles = html.makeStyles({
+    const style = html.makeStyles({
         component: {
             css: {
                 flex: '1 1 0px',
@@ -113,13 +118,15 @@ define([
             },
             inner: {
                 td: {
-                    padding: '4px'
+                    padding: '4px',
+                    verticalAlign: 'top'
                 },
                 th: {
                     fontWeight: 'bold',
                     color: 'rgba(200,200,200,1)',
                     textAlign: 'left',
-                    padding: '4px'
+                    padding: '4px',
+                    verticalAlign: 'top'
                 },
                 'td:nth-child(1)': {
                     width: '10em'
@@ -137,12 +144,168 @@ define([
                 color: 'rgba(100,100,100,1)',
                 marginTop: '8px'
             }
+        },
+        column: {
+            css: {
+                display: 'inline-block',
+                width: '50%',
+                verticalAlign: 'top'
+            }
+        },
+        columnHeader: {
+            css: {
+                fontWeight: 'bold',
+                color: '#333',
+                margin: '10px 0 4px 0'
+            }
         }
     });
 
     function buildOverview() {
+        return div([
+            div({
+                class: style.classes.column
+            }, [
+                div([
+                    div({
+                        class: style.classes.columnHeader
+                    }, 'Taxonomy'),
+                    buildTaxonomy()
+                ]),
+                
+                // div([
+                //     div({
+                //         class: style.classes.columnHeader
+                //     }, 'Source'),
+                //     'TBD'
+                // ])
+            ]),
+            div({
+                class: style.classes.column
+            }, [
+                div([
+                    div({
+                        class: style.classes.columnHeader
+                    }, 'Stats'),
+                    buildStats()
+                ]),
+                // div([
+                //     div({
+                //         class: style.classes.columnHeader
+                //     }, 'Taxonomic Lineage'),
+                //     div({
+                //         dataBind: {
+                //             component: {
+                //                 name: LineageComponent.quotedName(),
+                //                 params: {
+                //                     taxonomy: 'taxonomy'
+                //                 }
+                //             }
+                //         }
+                //     })
+                // ])
+            ])
+        ]);
+    }
+
+    function buildTaxonomy() {
         return table({
-            class: styles.classes.table
+            class: style.classes.table
+        }, [
+            tr([
+                th('Scientific name'),
+                td({
+                    dataBind: {
+                        text: 'scientificName'
+                    }
+                })
+            ]),
+            tr([
+                th('Domain'),
+                td({
+                    dataBind: {
+                        text: 'domain'
+                    }
+                })
+            ]),
+            tr([
+                th('Lineage'),
+                td(div({
+                    dataBind: {
+                        component: {
+                            name: LineageComponent.quotedName(),
+                            params: {
+                                taxonomy: 'taxonomy'
+                            }
+                        }
+                    }
+                }))
+            ])
+        ]);
+    }
+   
+    function buildStats() {
+        return table({
+            class: style.classes.table
+        }, [
+            tr([
+                th('DNA Length'),
+                td({
+                    dataBind: {
+                        typedText: {
+                            value: 'dnaSize',
+                            type: '"number"',
+                            format: '"0,0"',
+                            missing: '"-"'
+                        }
+                    }
+                })
+            ]),
+            tr([
+                th('# Contigs'),
+                td({
+                    dataBind: {
+                        typedText: {
+                            value: 'contigCount',
+                            type: '"number"',
+                            format: '"0,0"',
+                            missing: '"-"'
+                        }
+                    }
+                })
+            ]),
+            tr([
+                th('GC Content'),
+                td({
+                    dataBind: {
+                        typedText: {
+                            value: 'gcContent',
+                            type: '"number"',
+                            format: '"0.0%"',
+                            missing: '"-"'
+                        }
+                    }
+                })
+            ]),
+            tr([
+                th('# Features'),
+                td({
+                    dataBind: {
+                        typedText: {
+                            value: 'featureCount',
+                            type: '"number"',
+                            format: '"0,0"',
+                            missing: '"-"'
+                        }
+                    }
+                })
+            ])
+        ]);
+    }
+
+    function buildOverviewx() {
+        return table({
+            class: style.classes.table
         }, [
             tr([
                 th('Domain'),
@@ -213,7 +376,7 @@ define([
 
     function template() {
         return div({
-            class: styles.classes.component
+            class: style.classes.component
         },
         gen.if('ready',
             buildOverview(),
@@ -225,7 +388,7 @@ define([
         return {
             viewModelWithContext: ViewModel,
             template: template(),
-            stylesheet: styles.sheet
+            stylesheet: style.sheet
         };
     }
 
