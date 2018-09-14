@@ -13,13 +13,13 @@ define([
         div = t('div');
 
     class ViewModel {
-        constructor(params) {
-            const {node, leaves, first, last, originRef, componentName} = params;
+        constructor({node, leaves, first, last, originRef, componentName, scalingFactor}) {
             this.node = node;
             this.leaves = leaves;
             this.first = first;
             this.last = last;
             this.originRef = originRef;
+            this.scalingFactor = scalingFactor;
 
             this.componentName = componentName;
 
@@ -95,7 +95,7 @@ define([
                         },
                         dataBind: {
                             style: {
-                                width: 'String(1000 * node.length) + "px"'
+                                width: 'String(node.length * $component.scalingFactor) + "px"'
                             }
                         }
                     }, div({
@@ -154,7 +154,7 @@ define([
                         },
                         dataBind: {
                             style: {
-                                width: 'String(1000 * node.length) + "px"'
+                                width: 'String(node.length * $component.scalingFactor) + "px"'
                             }
                         }
                     }, div({
@@ -207,7 +207,8 @@ define([
                                 leaves: '$component.leaves',
                                 first: '$index() === 0',
                                 last: '$index() === $parent.node.nodes.length - 1',
-                                originRef: '$component.originRef'
+                                originRef: '$component.originRef',
+                                scalingFactor: '$component.scalingFactor'
                             }
                         }
                     }

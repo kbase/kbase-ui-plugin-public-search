@@ -15,7 +15,9 @@ define([
     '../containerTab',
     '../provenance',
     '../wikipedia',
-    './trees'
+    './trees',
+    '../../container/container',
+    '../builders'
 ], function (
     Promise,
     ko,
@@ -33,7 +35,9 @@ define([
     ContainerTabComponent,
     ProvenanceComponent,
     WikipediaComponent,
-    TreesComponent
+    TreesComponent,
+    ContainerHeaderComponent,
+    builders
 ) {
     'use strict';
 
@@ -61,6 +65,16 @@ define([
             this.tabs = [
                 {
                     active: true,
+                    tab: {
+                        label: 'Genome',
+                        component: null
+                    },
+                    panel: {
+                        component: null,
+                        content: div('hi!')
+                    }
+                },
+                {
                     tab: {
                         label: 'Overview'
                     },
@@ -145,30 +159,20 @@ define([
                         }
                     }
                 },
-                {
-                    tab: {
-                        label: 'Trees',
-                        component: null
-                    },
-                    panel: {
-                        component: {
-                            name: TreesComponent.name(),
-                            params: {
-                                ref: 'object.objectInfo.ref'
-                            }
-                        }
-                    }
-                },
-                {
-                    tab: {
-                        label: 'Assembly & Annotation',
-                        component: null
-                    },
-                    panel: {
-                        component: null,
-                        content: div('hi!')
-                    }
-                }
+                // {
+                //     tab: {
+                //         label: 'Trees',
+                //         component: null
+                //     },
+                //     panel: {
+                //         component: {
+                //             name: TreesComponent.name(),
+                //             params: {
+                //                 ref: 'object.objectInfo.ref'
+                //             }
+                //         }
+                //     }
+                // }
             ];
 
 
@@ -195,11 +199,13 @@ define([
             return workspace.callFunc('get_object_subset', [[{
                 ref: this.object.objectInfo.ref,
                 included: [
-                    'scientific_name'
+                    'scientific_name',
+                    'domain'
                 ]
             }]])
                 .spread(([objectData]) => {
                     this.scientificName = objectData.data.scientific_name;
+                    this.domain = objectData.data.domain;
                     const tax = objectData.data.taxonomy;
                     if (tax) {
                         let taxList;
@@ -258,111 +264,138 @@ define([
         }
     });
 
-    function buildOverview() {
-        return div({
-            style: {
-                display : 'flex',
-                flexDirection: 'row',
-                height: '100px'
-            }
-        }, [
-            div({
-                style: {
-                    flex: '2 1 0px',
-                    display: 'flex',
-                    flexDirection: 'column'
-                }
-            }, [
-                div({
+    // function buildContainerInfo() {
+    //     return div({
+    //         dataBind: {
+    //             component: {
+    //                 name: ContainerHeaderComponent.quotedName(),
+    //                 params: {
+    //                     object: 'object'
+    //                 }
+    //             }
+    //         }
+    //     });
+    // }
+
+    function buildGenomeIdentification() {
+        return [
+            gen.if('scientificName',
+                a({
                     style: {
-                        display: 'flex',
-                        flexDirection: 'row'
-                    }
-                }, [
-                    div([
-                        span({ class: 'fa-stack fa-2x' }, [
-                            span({
-                                class: 'fa fa-circle fa-stack-2x',
-                                dataBind: {
-                                    style: {
-                                        color: 'dataIcon.color'
-                                    }
-                                }
-                            }),
-                            span({
-                                class: 'fa-inverse fa-stack-1x ',
-                                dataBind: {
-                                    class: 'dataIcon.classes'
-                                }
-                            })
-                        ])
-                    ]),
-                    div({
-                        style: {
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'center'
+                        fontSize: '120%',
+                        fontWeight: 'bold',
+                        fontStyle: 'italic'
+                    },
+                    dataBind: {
+                        text: 'scientificName',
+                        attr: {
+                            href: '"/#dataview/" + object.objectInfo.ref'
                         }
-                    }, [
-                        gen.if('scientificName',
-                            a({
-                                style: {
-                                    fontSize: '120%',
-                                    fontWeight: 'bold',
-                                    fontStyle: 'italic'
-                                },
-                                dataBind: {
-                                    text: 'scientificName',
-                                    attr: {
-                                        href: '"/#dataview/" + object.objectInfo.ref'
-                                    }
-                                },
-                                target: '_blank'
-                            }),
-                            div(build.loading())),
-                        div(a({
-                            dataBind: {
-                                text: 'object.objectInfo.typeName + " " + object.objectInfo.typeMajorVersion + "." + object.objectInfo.typeMinorVersion',
-                                attr: {
-                                    href: '"/#spec/type/" + object.objectInfo.type'
-                                }
-                            },
-                            target: '_blank'
-                        })),
-                        div({
-                            dataBind: {
-                                typedText: {
-                                    value: 'object.objectInfo.saveDate',
-                                    type: '"date"',
-                                    format: '"YYYY-MM-DD"'
-                                }
-                            }
-                        })
-                    ])
-                ])
-            ]),
+                    },
+                    target: '_blank'
+                }),
+                div(build.loading())),
+            div(a({
+                dataBind: {
+                    text: 'object.objectInfo.typeName + " " + object.objectInfo.typeMajorVersion + "." + object.objectInfo.typeMinorVersion',
+                    attr: {
+                        href: '"/#spec/type/" + object.objectInfo.type'
+                    }
+                },
+                target: '_blank'
+            })),
             div({
-                style: {
-                    flex: '1 1 0px'
+                dataBind: {
+                    text: 'domain'
                 }
-            }, [
-                div({
-                    style: {
-                        // border: '1px silver solid',
-                        // padding: '4px',
-                        // margin: '4px',
-                        float: 'right'
-                    }
-                }, gen.component({
-                    name: WikipediaImageComponent.name(),
-                    params: {
-                        scientificName: 'scientificName',
-                        height: '"100px"'
-                    }
-                }))
-            ])
-        ]);
+            })
+            // div({
+            //     dataBind: {
+            //         typedText: {
+            //             value: 'object.objectInfo.saveDate',
+            //             type: '"date"',
+            //             format: '"YYYY-MM-DD"'
+            //         }
+            //     }
+            // })
+        ];
     }
+
+    // function buildObjectIdentification() {
+    //     return div({
+    //         style: {
+    //             display: 'flex',
+    //             flexDirection: 'row'
+    //         }
+    //     }, [
+    //         div([
+    //             span({ class: 'fa-stack fa-2x' }, [
+    //                 span({
+    //                     class: 'fa fa-circle fa-stack-2x',
+    //                     dataBind: {
+    //                         style: {
+    //                             color: 'dataIcon.color'
+    //                         }
+    //                     }
+    //                 }),
+    //                 span({
+    //                     class: 'fa-inverse fa-stack-1x ',
+    //                     dataBind: {
+    //                         class: 'dataIcon.classes'
+    //                     }
+    //                 })
+    //             ])
+    //         ]),
+    //         div({
+    //             style: {
+    //                 display: 'flex',
+    //                 flexDirection: 'column',
+    //                 justifyContent: 'center'
+    //             }
+    //         }, buildGenomeIdentification())
+    //     ]);
+    // }
+
+    // function buildOverview() {
+    //     return div({
+    //         style: {
+    //             display : 'flex',
+    //             flexDirection: 'row',
+    //             height: '100px'
+    //         }
+    //     }, [
+    //         div({
+    //             style: {
+    //                 flex: '2 1 0px',
+    //                 display: 'flex',
+    //                 flexDirection: 'column',
+    //                 border: '1px silver solid'
+    //             }
+    //         }, buildObjectIdentification()),
+    //         div({
+    //             style: {
+    //                 // flex: '1 1 0px'
+    //                 width: '150px'
+    //             }
+    //         }, [
+    //             gen.component({
+    //                 name: WikipediaImageComponent.name(),
+    //                 params: {
+    //                     scientificName: 'scientificName',
+    //                     height: '"100px"'
+    //                 }
+    //             })
+    //         ]),
+    //         div({
+    //             style: {
+    //                 flex: '1 1 0px',
+    //                 border: '1px silver solid',
+    //                 padding: '4px',
+    //                 marginRight: '10px'
+    //             }
+    //         }, buildContainerInfo())
+    //     ]);
+    // }
 
     function buildTabs() {
         return div({
@@ -395,7 +428,7 @@ define([
         gen.if('ready()',
             gen.if('object',
                 [
-                    buildOverview(),
+                    builders.buildHeader(buildGenomeIdentification(), 'scientificName'),
                     buildTabs()
                 ],
                 build.loading())));

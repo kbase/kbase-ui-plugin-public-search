@@ -138,10 +138,6 @@ define([
         }
     }
 
-    function buildTitle() {
-        return 'Object Inspector';
-    }
-
     function buildBody() {
         return gen.if('component',
             gen.component2({
@@ -179,9 +175,7 @@ define([
             }
         },
         gen.if('ready',
-            ui.buildFullHeightDialog({
-                type: 'info',
-                title: buildTitle(),
+            ui.buildFullHeightDialog2({
                 body: buildBody(),
                 buttons: [
                     {

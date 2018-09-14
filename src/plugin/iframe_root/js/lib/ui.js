@@ -252,9 +252,60 @@ define([
         ]);
     }
 
-    return {
-        buildDialog: buildDialog,
-        buildFullHeightDialog: buildFullHeightDialog,
-        bootstrapTextColor: bootstrapTextColor
-    };
+    function buildFullHeightDialog2(arg) {
+        const buttons = arg.buttons || [{
+            label: 'Close',
+            onClick: 'onClose'
+        }];
+
+        const buttonsContent = buttons.map(function (btn) {
+            return button({
+                type: 'button',
+                class: 'btn btn-' + (btn.type || 'default'),
+                dataBind: {
+                    click: btn.onClick
+                }
+            }, btn.label);
+        }).join(' ');
+
+        return div({
+            style: {
+                flex: '1 1 0px',
+                display: 'flex',
+                flexDirection: 'column'
+            }
+        }, [
+            // body
+            div({
+                style: {
+                    padding: '15px',
+                    minHeight: '10em',
+                    // maxHeight: 'calc(100vh - 100px)',
+                    backgroundColor: 'rgba(255,255,255,1)',
+                    overflowY: 'auto',
+                    flex: '1 1 0px',
+                    display: 'flex',
+                    flexDirection: 'column'
+                }
+            }, arg.body),
+            // buttons
+            div({
+                class: 'clearfix',
+                style: {
+                    padding: '15px',
+                    textAlign: 'right',
+                    backgroundColor: 'rgba(255,255,255,1)',
+                    borderTop: '1px solid #e5e5e5'
+                }
+            }, div({
+                class: 'btn-toolbar pull-right',
+                style: {
+                    textAlign: 'right',
+                }
+            }, buttonsContent))
+        ]);
+    }
+
+    return {buildDialog, buildFullHeightDialog, buildFullHeightDialog2, bootstrapTextColor};
+
 });

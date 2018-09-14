@@ -7,7 +7,7 @@ define([
 
     function tryInaccessibleObject(runtime, guid, ref) {
         const workspace = new GenericClient({
-            runtime: runtime,
+            token: runtime.service('session').getAuthToken(),
             module: 'Workspace',
             url: runtime.config('services.workspace.url')
         });

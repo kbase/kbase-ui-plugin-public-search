@@ -19,7 +19,8 @@ define([
     './feedback',
     './copy/copyObjects',
     'kb_knockout/components/overlayPanel',
-    'kb_knockout/lib/nanoBus'
+    'kb_knockout/lib/nanoBus',
+    '../lib/debug'
 ], function (
     Promise,
     ko,
@@ -41,7 +42,8 @@ define([
     FeedbackComponent,
     CopyObjectsComponent,
     OverlayPanelComponent,
-    NanoBus
+    NanoBus,
+    debug
 ) {
     'use strict';
 
@@ -58,7 +60,7 @@ define([
             this.supportedDataTypes = context.$root.supportedDataTypes;
             this.columns = context.$root.columns;
 
-            this.authorized = params.authorized;
+            this.authorization = params.authorization;
 
             // Primary search inputs
             this.searchInput = ko.observable();
@@ -94,7 +96,7 @@ define([
 
             // Auth state
             // TODO: this should be set by an auth event.
-            // this.authorized = ko.observable(this.runtime.service('session').getAuthToken());
+            // this.authorization = ko.observable(this.runtime.service('session').getAuthToken());
 
             // And... search results.
             this.searchResults= ko.observableArray();
@@ -210,7 +212,8 @@ define([
                 return {
                     input: this.searchQueryInput(),
                     paging: this.searchPagingInput(),
-                    sorting: this.sortSpec()
+                    sorting: this.sortSpec(),
+                    authorization: this.authorization()
                 };
             });
 
@@ -452,8 +455,8 @@ define([
                         };
                         if (info == null) {
                             workspace.type = 'inaccessible';
-                        } else if (info.globalread === 'n' && info.user_permission === 'n') {
-                            workspace.type = 'inaccessible';
+                        // } else if (info.globalread === 'n' && info.user_permission === 'n') {
+                        //     workspace.type = 'inaccessible';
                         } else {
                             workspace.owner = info.owner;
                             if (result.access_group_narrative_info[id]) {
@@ -525,7 +528,7 @@ define([
                             owner = 'n/a';
                             name = 'n/a';
                             mode = 'inaccessible';
-                            // debug.tryInaccessibleObject(this.runtime, object.guid, [workspaceId, objectId, version].join('/'));
+                            debug.tryInaccessibleObject(this.runtime, object.guid, [workspaceId, objectId, version].join('/'));
                             break;
                         default:
                             owner = '** err';
@@ -694,7 +697,7 @@ define([
             class: style.classes.component,
             dataBind: {
                 let: {
-                    authorized: 'authorized'
+                    authorization: 'authorization'
                 }
             }
         }, [

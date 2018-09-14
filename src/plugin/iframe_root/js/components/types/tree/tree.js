@@ -12,7 +12,8 @@ define([
     '../containerTab',
     '../provenance',
     './metadata',
-    './simpleTree'
+    './simpleTree',
+    '../builders'
 ], function (
     ko,
     reg,
@@ -27,7 +28,8 @@ define([
     ContainerTabComponent,
     ProvenanceComponent,
     MetadataComponent,
-    SimpleTreeComponent
+    SimpleTreeComponent,
+    builders
 ) {
     'use strict';
 
@@ -330,95 +332,43 @@ define([
         }
     });
 
-    function buildOverview() {
-        return div({
-            style: {
-                display : 'flex',
-                flexDirection: 'row'
-            }
-        }, [
-            div({
-                style: {
-                    flex: '3 1 0px',
-                    display: 'flex',
-                    flexDirection: 'column'
-                }
-            }, [
-                div({
+    function buildTreeIdentification() {
+        return [
+            gen.if('objectName',
+                a({
                     style: {
-                        display: 'flex',
-                        flexDirection: 'row'
-                    }
-                }, [
-                    div(div([
-                        span({ class: 'fa-stack fa-2x' }, [
-                            span({
-                                class: 'fa fa-circle fa-stack-2x',
-                                dataBind: {
-                                    style: {
-                                        color: 'dataIcon.color'
-                                    }
-                                }
-                            }),
-                            span({
-                                class: 'fa-inverse fa-stack-1x ',
-                                dataBind: {
-                                    class: 'dataIcon.classes'
-                                }
-                            })
-                        ])
-                    ])),
-                    div({
-                        style: {
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'center'
+                        fontSize: '120%',
+                        fontWeight: 'bold',
+                        fontStyle: 'italic'
+                    },
+                    dataBind: {
+                        text: 'objectName',
+                        attr: {
+                            href: '"/#dataview/" + object.objectInfo.ref'
                         }
-                    }, [
-                        gen.if('objectName',
-                            a({
-                                style: {
-                                    fontSize: '120%',
-                                    fontWeight: 'bold',
-                                    fontStyle: 'italic'
-                                },
-                                dataBind: {
-                                    text: 'objectName',
-                                    attr: {
-                                        href: '"/#dataview/" + object.objectInfo.ref'
-                                    }
-                                },
-                                target: '_blank'
-                            }),
-                            div(build.loading())),
-                        div(a({
-                            dataBind: {
-                                text: 'object.objectInfo.typeName + " " + object.objectInfo.typeMajorVersion + "." + object.objectInfo.typeMinorVersion',
-                                attr: {
-                                    href: '"/#spec/type/" + object.objectInfo.type'
-                                }
-                            },
-                            target: '_blank'
-                        })),
-                        div({
-                            dataBind: {
-                                typedText: {
-                                    value: 'object.objectInfo.saveDate',
-                                    type: '"date"',
-                                    format: '"YYYY-MM-DD"'
-                                }
-                            }
-                        })
-                    ])
-                ])
-            ]),
-            div({
-                style: {
-                    flex: '1 1 0px',
-                }
-            }, [
-            ])
-        ]);
+                    },
+                    target: '_blank'
+                }),
+                div(build.loading())),
+            div(a({
+                dataBind: {
+                    text: 'object.objectInfo.typeName + " " + object.objectInfo.typeMajorVersion + "." + object.objectInfo.typeMinorVersion',
+                    attr: {
+                        href: '"/#spec/type/" + object.objectInfo.type'
+                    }
+                },
+                target: '_blank'
+            }))
+            // div({
+            //     dataBind: {
+            //         typedText: {
+            //             value: 'object.objectInfo.saveDate',
+            //             type: '"date"',
+            //             format: '"YYYY-MM-DD"'
+            //         }
+            //     }
+            // })
+        ];
     }
 
     function buildTabs() {
@@ -450,7 +400,7 @@ define([
         },
         gen.if('ready',
             [
-                buildOverview(),
+                builders.buildHeader(buildTreeIdentification(), null),
                 buildTabs()
             ],
             build.loading()));

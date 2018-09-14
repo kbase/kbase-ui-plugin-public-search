@@ -10,23 +10,6 @@ define([
     class Model {
         constructor({runtime}) {
             this.runtime = runtime;
-            this.searchAPI = this.runtime.service('rpc').makeClient({
-                module: 'KBaseSearchEngine',
-                timeout: 10000,
-                authenticated: true
-            });
-
-            this.workspace = this.runtime.service('rpc').makeClient({
-                module: 'Workspace',
-                timeout: 10000,
-                authenticated: true
-            });
-
-            this.userProfile = this.runtime.service('rpc').makeClient({
-                module: 'UserProfile',
-                timeout: 10000,
-                authenticated: true
-            });
         }
 
         searchSummary({query, withUserData, withReferenceData, types, withPrivate, withPublic}) {
@@ -74,7 +57,13 @@ define([
                 }
             }
 
-            return this.searchAPI.callFunc('search_types', [param])
+            const searchAPI = this.runtime.service('rpc').makeClient({
+                module: 'KBaseSearchEngine',
+                timeout: 10000,
+                authenticated: true
+            });
+
+            return searchAPI.callFunc('search_types', [param])
                 .spread((result) => {
                     return result;
                 });
@@ -142,7 +131,12 @@ define([
                 param.object_types = types;
             }
 
-            return this.searchAPI.callFunc('search_objects', [param])
+            const searchAPI = this.runtime.service('rpc').makeClient({
+                module: 'KBaseSearchEngine',
+                timeout: 10000,
+                authenticated: true
+            });
+            return searchAPI.callFunc('search_objects', [param])
                 .spread((result) => {
                     return result;
                 });
@@ -151,7 +145,13 @@ define([
         // TO PORT
 
         getNarrative(ref) {
-            return this.workspace.callFunc('get_object_info3', [{
+            const workspace = this.runtime.service('rpc').makeClient({
+                module: 'Workspace',
+                timeout: 10000,
+                authenticated: true
+            });
+
+            return workspace.callFunc('get_object_info3', [{
                 objects: [{
                     wsid: ref.workspaceId,
                     objid: ref.objectId
@@ -168,7 +168,7 @@ define([
                     const objectInfo = workspaceUtils.objectInfoToObject(result.infos[0]);
                     return Promise.all([
                         objectInfo,
-                        this.workspace.callFunc('get_workspace_info', [{
+                        workspace.callFunc('get_workspace_info', [{
                             id: objectInfo.wsid
                         }])
                             .spread((info) => {
@@ -185,7 +185,13 @@ define([
         }
 
         getObjectInfo(ref) {
-            return this.workspace.callFunc('get_object_info3', [{
+            const workspace = this.runtime.service('rpc').makeClient({
+                module: 'Workspace',
+                timeout: 10000,
+                authenticated: true
+            });
+
+            return workspace.callFunc('get_object_info3', [{
                 objects: [{
                     wsid: ref.workspaceId,
                     objid: ref.objectId,
@@ -203,7 +209,7 @@ define([
                     const objectInfo = workspaceUtils.objectInfoToObject(result.infos[0]);
                     return Promise.all([
                         objectInfo,
-                        this.workspace.callFunc('get_workspace_info', [{id: objectInfo.wsid}
+                        workspace.callFunc('get_workspace_info', [{id: objectInfo.wsid}
                         ])]);
                 })
                 .spread((objectInfo, wsInfo) => {
@@ -234,7 +240,13 @@ define([
         }
 
         getWritableNarratives() {
-            return this.workspace.callFunc('list_workspace_info', [{
+            const workspace = this.runtime.service('rpc').makeClient({
+                module: 'Workspace',
+                timeout: 10000,
+                authenticated: true
+            });
+
+            return workspace.callFunc('list_workspace_info', [{
                 perm: 'w'
             }])
                 .spread((data) => {
@@ -256,7 +268,12 @@ define([
                         owners[narrative.owner] = true;
                         return owners;
                     }, {}));
-                    return this.userProfile.callFunc('get_user_profile', [owners])
+                    const userProfile = this.runtime.service('rpc').makeClient({
+                        module: 'UserProfile',
+                        timeout: 10000,
+                        authenticated: true
+                    });
+                    return userProfile.callFunc('get_user_profile', [owners])
                         .spread((profiles) => {
                             const ownerProfiles = profiles.reduce((ownerProfiles, profile) => {
                                 ownerProfiles[profile.user.username] = profile;

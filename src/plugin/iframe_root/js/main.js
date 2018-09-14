@@ -125,7 +125,8 @@ require([
                 this.rootViewModel = new RootViewModel({
                     runtime: this.runtime,
                     hostChannel: this.hostChannel,
-                    authorized: this.authorized
+                    authorized: this.authorized,
+                    authorization: this.authorization
                 });
                 this.container.innerHTML = div({
                     style: {
@@ -139,7 +140,7 @@ require([
                             params: {
                                 runtime: 'runtime',
                                 bus: 'bus',
-                                authorized: 'authorized'
+                                authorization: 'authorization'
                             }
                         }
                     }
@@ -185,6 +186,11 @@ require([
 
                         this.channel.on('start', (payload) => {
                             const {token, username, config, realname, email} = payload;
+                            if (token) {
+                                this.authorization = {token, username, realname, email};
+                            } else {
+                                this.authorization = null;
+                            }
                             this.token = token;
                             this.username = username;
                             this.config = config;
@@ -205,12 +211,18 @@ require([
                                 this.showHelp();
                             });
 
-                            this.channel.on('loggedin', () => {
+                            this.channel.on('loggedin', ({token, username, realname, email}) => {
+                                this.runtime.auth({token, username, realname, email});
                                 this.rootViewModel.authorized(true);
+                                this.rootViewModel.authorization({token, username, realname, email});
+                                // really faked for now.
+                                // this.runtime.service('session').
                             });
 
                             this.channel.on('loggedout', () => {
+                                this.runtime.unauth();
                                 this.rootViewModel.authorized(false);
+                                this.rootViewModel.authorization(null);
                             });
 
                             // this.hostChannel.send('add-button', {

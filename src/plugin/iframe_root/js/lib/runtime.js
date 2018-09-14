@@ -109,6 +109,20 @@ define([
             }
         }
 
+        auth({token, username, realname, email}) {
+            this.services.session.token = token;
+            this.services.session.username = username;
+            this.services.session.realname = realname;
+            this.services.session.email = email;
+        }
+
+        unauth() {
+            this.services.session.token = null;
+            this.services.session.username = null;
+            this.services.session.realname = null;
+            this.services.session.email = null;
+        }
+
         config(propertyPath, defaultValue) {
             return props.getProp(this.configDB, propertyPath, defaultValue);
         }

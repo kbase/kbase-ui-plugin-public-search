@@ -26,10 +26,11 @@ define([
     class RootViewModel extends ViewModelBase {
         constructor(params) {
             super(params);
-            const {runtime, hostChannel, authorized} = params;
+            const {runtime, hostChannel, authorized, authorization} = params;
             this.runtime = runtime;
             this.hostChannel = hostChannel;
             this.authorized = ko.observable(authorized);
+            this.authorization = ko.observable(authorization);
 
             this.ready = ko.observable(false);
             this.error = ko.observable();

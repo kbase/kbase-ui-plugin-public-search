@@ -25,7 +25,13 @@ define([
         div = t('div'),
         img = t('img');
 
-    const styles = html.makeStyles({
+    const style = html.makeStyles({
+        component: {
+            css: {
+                width: '140px',
+                overflow: 'hidden'
+            }
+        },
         table: {
             css: {
 
@@ -65,7 +71,7 @@ define([
     class ViewModel extends ViewModelBase {
         constructor(params) {
             super(params);
-            const {scientificName, height} = params;
+            const {term, height} = params;
 
             this.height = height;
             this.size = ko.observable(500);
@@ -74,7 +80,7 @@ define([
             this.pageUrl = ko.observable();
             this.loaded = ko.observable(false);
 
-            this.scientificName = scientificName;
+            this.searchTerm = term;
             this.error = ko.observable();
             this.subscribe(this.error, (newValue) => {
                 if (newValue) {
@@ -88,10 +94,10 @@ define([
         }
 
         findImage() {
-            if (!this.scientificName) {
+            if (!this.searchTerm) {
                 return;
             }
-            this.getOrganismInfo(this.scientificName)
+            this.getWikipediaInfo(this.searchTerm)
                 .then(({imageUrl, url}) => {
                     this.imageUrl(imageUrl);
                     this.pageUrl(url);
@@ -104,8 +110,8 @@ define([
                 });
         }
 
-        getOrganismInfo(scientificName) {
-            return this.getPage(scientificName)
+        getWikipediaInfo(searchTerm) {
+            return this.getPage(searchTerm)
                 .then((wikiResponse) => {
                     this.imageCaption(wikiResponse.parse.title);
                     return Promise.all(
@@ -124,8 +130,8 @@ define([
 
         // see: https://www.mediawiki.org/wiki/API:Main_page
         // https://en.wikipedia.org/w/api.php?action=help&modules=parse
-        getPage(scientificName) {
-            const terms = JSON.parse(JSON.stringify(scientificName.split(/\s+/)));
+        getPage(searchTerm) {
+            const terms = JSON.parse(JSON.stringify(searchTerm.split(/\s+/)));
             return new Promise((resolve, reject) => {
                 const fetchPage = (terms) => {
                     if (terms.length === 0) {
@@ -265,7 +271,7 @@ define([
         return div([
             gen.if('imageUrl',
                 img({
-                    class: styles.classes.wikipediaImage,
+                    class: style.classes.wikipediaImage,
                     dataBind: {
                         attr: {
                             src: 'imageUrl'
@@ -300,7 +306,7 @@ define([
                 }
             }),
             div({
-                class: styles.classes.imageCaption
+                class: style.classes.imageCaption
             })
         ]);
     }
@@ -316,13 +322,15 @@ define([
                 }
             }, build.loading('Locating image at Wikipedia')),
             div({
-                class: styles.classes.imageCaption
+                class: style.classes.imageCaption
             })
         ]);
     }
 
     function template() {
-        return div(gen.switch('state', [
+        return div({
+            class: style.classes.component
+        }, gen.switch('state', [
             [
                 '"loading"', buildLoading()
             ],
@@ -339,7 +347,7 @@ define([
         return {
             viewModel: ViewModel,
             template: template(),
-            stylesheet: styles.sheet
+            stylesheet: style.sheet
         };
     }
 

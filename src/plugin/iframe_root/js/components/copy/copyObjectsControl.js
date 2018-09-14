@@ -16,10 +16,11 @@ define([
         span = t('span');
 
     class ViewModel extends ViewModelBase {
-        constructor(params) {
+        constructor(params, context) {
             super(params);
             const {selectedObjects} = params;
             this.selectedObjects = selectedObjects;
+            this.authorized = context.$root.authorized;
 
             // TODO: add isAuthorized, established at the root.
 
@@ -79,7 +80,7 @@ define([
 
     function component() {
         return {
-            viewModel: ViewModel,
+            viewModelWithContext: ViewModel,
             template: template()
         };
     }
