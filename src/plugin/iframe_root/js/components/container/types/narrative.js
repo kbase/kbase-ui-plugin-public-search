@@ -57,26 +57,31 @@ define([
                 // flexDirection: 'column'
             }
         },
-        cell: {
+        row: {
             css: {
-                overflowX: 'hidden',
-                whiteSpace: 'nowrap',
-                textOverflow: 'ellipsis',
                 display: 'flex',
                 flexDirection: 'row'
             }
         },
-        cellElement: {
+        cell: {
             css: {
-                display: 'block',
-                flex: '1 1 0px'
+                flex: '1 1 0px',
+                overflowX: 'hidden',
+                whiteSpace: 'nowrap',
+                textOverflow: 'ellipsis'
+            }
+        },
+        cellContent: {
+            css: {
+                overflowX: 'hidden',
+                whiteSpace: 'nowrap',
+                textOverflow: 'ellipsis'
             }
         },
         label: {
             css: {
                 fontWeight: 'bold',
                 color: 'rgba(200,200,200,1)',
-                // width: '10em',
                 marginRight: '4px'
             }
         }
@@ -90,41 +95,56 @@ define([
                 class: style.classes.title
             }, 'In Narrative'),
             div({
-                class: style.classes.cell
+                class: style.classes.row
             }, [
                 span({
                     class: style.classes.label
                 }, 'title'),
-                a({
+                div({
+                    class: style.classes.cell
+                }, div({
+                    class: style.classes.cellContent
+                }, a({
                     target: '_blank',
-                    // class: style.classes.cellElement,
                     dataBind: {
                         text: 'name',
                         attr: {
-                            href: '"/narrative/ws." + workspaceId + ".obj." + objectId'
+                            href: '"/narrative/ws." + workspaceId + ".obj." + objectId',
+                            title: 'name'
                         }
                     }
-                })
+                })))
             ]),
-            div([
+            div({
+                class: style.classes.row
+            }, [
                 span({
                     class: style.classes.label
                 }, 'owner'),
-                a({
+                div({
+                    class: style.classes.cell
+                }, a({
+                    class: style.classes.cellContent,
                     target: '_blank',
                     dataBind: {
                         text: 'owner',
                         attr: {
-                            href: '"#people/" + owner'
+                            href: '"#people/" + owner',
+                            title: 'owner'
                         }
                     }
-                })
+                }))
             ]),
-            div([
+            div({
+                class: style.classes.row
+            }, [
                 span({
                     class: style.classes.label
                 }, 'saved'),
-                span({
+                div({
+                    class: style.classes.cell
+                }, span({
+                    class: style.classes.cellContent,
                     dataBind: {
                         typedText: {
                             value: 'lastModifiedAt',
@@ -132,7 +152,7 @@ define([
                             format: '"MMM D, YYYY"'
                         }
                     }
-                })
+                }))
             ])
         ]);
     }

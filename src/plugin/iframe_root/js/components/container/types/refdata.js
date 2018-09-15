@@ -65,26 +65,31 @@ define([
                 // flexDirection: 'column'
             }
         },
-        cell: {
+        row: {
             css: {
-                overflowX: 'hidden',
-                whiteSpace: 'nowrap',
-                textOverflow: 'ellipsis',
                 display: 'flex',
                 flexDirection: 'row'
             }
         },
-        cellElement: {
+        cell: {
             css: {
-                display: 'block',
-                flex: '1 1 0px'
+                flex: '1 1 0px',
+                overflowX: 'hidden',
+                whiteSpace: 'nowrap',
+                textOverflow: 'ellipsis'
+            }
+        },
+        cellContent: {
+            css: {
+                overflowX: 'hidden',
+                whiteSpace: 'nowrap',
+                textOverflow: 'ellipsis'
             }
         },
         label: {
             css: {
                 fontWeight: 'bold',
                 color: 'rgba(200,200,200,1)',
-                // width: '10em',
                 marginRight: '4px'
             }
         }
@@ -98,30 +103,36 @@ define([
                 class: style.classes.title
             }, 'In Reference Data Workspace'),
             div({
-                class: style.classes.cell
+                class: style.classes.row
             }, [
                 span({
                     class: style.classes.label
                 }, 'source'),
                 div({
-                    class: style.classes.cellElement,
+                    class: style.classes.cell
+                }, div({
+                    class: style.classes.cellContent
+                }, span({
                     dataBind: {
                         text: 'source',
                     }
-                })
+                })))
             ]),
             div({
-                class: style.classes.cell
+                class: style.classes.row
             }, [
                 span({
                     class: style.classes.label
                 }, 'source id'),
                 div({
-                    class: style.classes.cellElement,
+                    class: style.classes.cell
+                }, div({
+                    class: style.classes.cellContent
+                }, span({
                     dataBind: {
                         text: 'sourceID',
                     }
-                })
+                })))
             ]),
             // div(a({
             //     target: '_blank',
@@ -133,12 +144,16 @@ define([
             //     }
             // })),
             div({
-                class: style.classes.cell
+                class: style.classes.row
             }, [
                 span({
                     class: style.classes.label
-                }, 'source id'),
+                }, 'last modified'),
                 div({
+                    class: style.classes.cell
+                }, div({
+                    class: style.classes.cellContent
+                }, span({
                     dataBind: {
                         typedText: {
                             value: 'lastModifiedAt',
@@ -146,7 +161,7 @@ define([
                             format: '"MMM D, YYYY"'
                         }
                     }
-                })
+                })))
             ])
         ]);
     }

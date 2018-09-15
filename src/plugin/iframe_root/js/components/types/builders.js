@@ -80,7 +80,8 @@ define([
                     display: 'flex',
                     flexDirection: 'column',
                     border: '1px silver solid',
-                    paddingTop: '10px'
+                    paddingTop: '10px',
+                    overflow: 'hidden'
                 }
             }, buildObjectIdentification(objectIdentificationContent)),
             div({
@@ -112,7 +113,8 @@ define([
                     flex: '2 1 0px',
                     border: '1px silver solid',
                     padding: '4px',
-                    marginRight: '10px'
+                    marginRight: '10px',
+                    overflow: 'hidden'
                 }
             }, buildContainerInfo())
         ]);

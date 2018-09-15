@@ -65,13 +65,28 @@ define([
                 // flexDirection: 'column'
             }
         },
+        row: {
+            css: {
+                // overflowX: 'hidden',
+                // whiteSpace: 'nowrap',
+                // textOverflow: 'ellipsis',
+                display: 'flex',
+                flexDirection: 'row'
+            }
+        },
         cell: {
+            css: {
+                flex: '1 1 0px',
+                overflowX: 'hidden',
+                whiteSpace: 'nowrap',
+                textOverflow: 'ellipsis'
+            }
+        },
+        cellContent: {
             css: {
                 overflowX: 'hidden',
                 whiteSpace: 'nowrap',
-                textOverflow: 'ellipsis',
-                display: 'flex',
-                flexDirection: 'row'
+                textOverflow: 'ellipsis'
             }
         },
         cellElement: {
@@ -99,23 +114,32 @@ define([
                 class: style.classes.title
             }, 'In Unknown Workspace'),
             div({
-                class: style.classes.cell
+                class: style.classes.row
             }, [
                 span({
                     class: style.classes.label
                 }, 'name'),
                 div({
-                    class: style.classes.cellElement,
+                    class: style.classes.cell
+                }, div({
+                    class: style.classes.cellContent
+                }, div({
                     dataBind: {
                         text: 'name',
                     }
-                })
+                })))
             ]),
-            div([
+            div({
+                class: style.classes.row
+            }, [
                 span({
                     class: style.classes.label
                 }, 'owner'),
-                a({
+                div({
+                    class: style.classes.cell
+                }, div({
+                    class: style.classes.cellContent
+                }, a({
                     target: '_blank',
                     dataBind: {
                         text: 'owner',
@@ -123,13 +147,19 @@ define([
                             href: '"#people/" + owner'
                         }
                     }
-                })
+                })))
             ]),
-            div([
+            div({
+                class: style.classes.row
+            }, [
                 span({
                     class: style.classes.label
                 }, 'saved'),
-                span({
+                div({
+                    class: style.classes.cell
+                }, div({
+                    class: style.classes.cellContent
+                }, span({
                     dataBind: {
                         typedText: {
                             value: 'lastModifiedAt',
@@ -137,7 +167,7 @@ define([
                             format: '"MMM D, YYYY"'
                         }
                     }
-                })
+                })))
             ])
 
         ]);
