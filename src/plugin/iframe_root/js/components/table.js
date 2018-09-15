@@ -109,8 +109,6 @@ define([
                     }
                 }, gen.with('row', span({
                     dataBind: {
-                        // text: '$component.stringify(column.component.params)'
-                        // text: 'console.log(row)'
                         component: {
                             name: 'column.component.name',
                             // hopefully params are relative to the row context...

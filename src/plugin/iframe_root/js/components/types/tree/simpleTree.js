@@ -56,14 +56,12 @@ define([
             if (depth) {
                 if (length) {
                     this.scalingFactor = this.width/length;
-                    // console.log('factor', element, this.width, length, this.scalingFactor);
                 } else {
                     // A tree with some depth but no length means that all
                     // branches and leaves are of length 0. It doesn't matter
                     // what the scaling factor is, so just use the width.
                     // TODO: the tree display should use some minimal value
                     // for showing length, so that 0 lengths don't collapse.
-                    // console.log('tree with length 0!');
                     this.scalingFactor = this.width;
                 }
             } else {
