@@ -68,6 +68,12 @@ define([
         }
     });
 
+    class NotFound extends Error {
+        constructor(message) {
+            super(message);
+        }
+    }
+
     class ViewModel extends ViewModelBase {
         constructor(params) {
             super(params);
@@ -104,6 +110,10 @@ define([
                     this.loaded(true);
                     this.state('loaded');
                 })
+                .catch(NotFound, (err) => {
+                    console.warn('not found', err);
+                    this.error(err.message);
+                })
                 .catch((err) => {
                     console.error('Error getting image', err);
                     this.error(err);
@@ -135,7 +145,8 @@ define([
             return new Promise((resolve, reject) => {
                 const fetchPage = (terms) => {
                     if (terms.length === 0) {
-                        reject(new Error('No Wikipedia page found'));
+                        reject(new NotFound('No Wikipedia page found'));
+                        // resolve(null);
                         return;
                     }
                     const http = new HttpClient.HttpClient();
