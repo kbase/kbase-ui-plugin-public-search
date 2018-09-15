@@ -1,6 +1,6 @@
 define([
     'module',
-    './lib/comm/iframer'
+    './iframer'
 ], function (
     module,
     Iframer

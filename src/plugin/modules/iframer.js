@@ -209,8 +209,6 @@ define([
             this.container.innerHTML = '';
             return this.channel.stop();
         }
-
-
     }
 
     return Iframer;
