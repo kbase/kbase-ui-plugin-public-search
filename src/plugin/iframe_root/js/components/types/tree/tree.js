@@ -163,19 +163,25 @@ define([
             }]])
                 .spread(([objectData]) => {
                     // TODO: get the scientific name for objectData.data.ws_refs.user1.g[0]
-                    return workspace.callFunc('get_object_subset', [[{
-                        ref: objectData.data.ws_refs.user1.g[0],
-                        included: [
-                            'scientific_name'
-                        ]
-                    }]])
+                    return workspace.callFunc('get_objects2', [{
+                        objects: [{
+                            ref: objectData.data.ws_refs.user1.g[0],
+                            included: [
+                                'scientific_name'
+                            ]
+                        }],
+                        ignoreErrors: 1,
+                        no_data: 0
+                    }])
                         .spread((result) => {
-                            // console.log('subject', result);
-                            const subjectScientificName = result[0].data.scientific_name;
+                            let subjectScientificName;
+                            if (result.data[0]) {
+                                subjectScientificName = result.data[0].data.scientific_name;
+                            }
 
                             const treeData = objectData.data.tree;
                             const tree = this.parseTree(treeData);
-                            // console.log('ws refs?', objectData.data);
+
                             const leaves = objectData.data.leaf_list.reduce((leaves, nodeID) => {
                                 const defaultLabel = objectData.data.default_node_labels[nodeID];
                                 const parsedDefaultLabel = /^(.+)\s\((.+)\)$/.exec(defaultLabel);
@@ -185,16 +191,18 @@ define([
                                     // we don't page attention to the part in parens, so we don't
                                     // bother with a special regex, we just use the object_name if
                                     // the scientific name is not available.
-                                    const [,objectName,] = parsedDefaultLabel;
+                                    let objectName;
+                                    if (parsedDefaultLabel) {
+                                        [,objectName,] = parsedDefaultLabel;
+                                    }
                                     leaves[nodeID] = {
                                         userGenome: true,
                                         nodeID: nodeID,
                                         label: subjectScientificName,
-                                        scientificName: subjectScientificName || objectName,
+                                        scientificName: subjectScientificName || objectName || 'User Genome',
                                         genomeID: null,
                                         ref: objectData.data.ws_refs[nodeID].g[0]
                                     };
-                                    // console.log('user1 ', defaultLabel);
                                 } else {
                                     // The label is typically "scientific name (genome id)"
 
@@ -227,9 +235,6 @@ define([
                                         };
                                     }
                                 }
-                                // if (!leaves[nodeID].ref) {
-                                //     console.log('leaf?', leaves[nodeID]);
-                                // }
                                 return leaves;
                             }, {});
                             this.tree = tree;
