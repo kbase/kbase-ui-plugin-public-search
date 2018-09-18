@@ -11,8 +11,8 @@ define([
     '../common/taxonomy',
     '../common/publications',
     './genes',
-    '../container',
-    '../containerTab',
+    '../common/container',
+    '../common/containerTab',
     '../common/provenance',
     '../common/wikipedia',
     './trees',
@@ -43,28 +43,18 @@ define([
         div = t('div'),
         a = t('a');
 
-    class ViewModel extends ViewModelBase {
+    class ViewModel extends builders.TypeViewModel {
         constructor(params, context) {
-            super(params);
-
-            const {object} = params;
-            this.object = object;
-            this.runtime = context.$root.runtime;
-
-            this.ready = ko.observable(false);
-            this.error = ko.observable();
+            super(params, context);
 
             this.summaryInfo = null;
             this.scientificName = null;
             this.taxonomy = null;
-            this.dataIcon = this.getDataIcon();
 
-            this.tabs = [
-                {
-                    active: true,
+            this.setTabs({
+                primary: {
                     tab: {
-                        label: 'Genome',
-                        component: null
+                        label: 'Genome'
                     },
                     panel: {
                         component: {
@@ -75,107 +65,53 @@ define([
                         }
                     }
                 },
-                {
-                    tab: {
-                        label: 'Overview'
-                    },
-                    panel: {
-                        component: {
-                            name: TabOverviewComponent.name(),
-                            params: {
-                                ref: 'object.objectInfo.ref'
-                            }
-                        }
-                    }
+                overview: {
+                    component: TabOverviewComponent.name()
                 },
-                {
-                    tab: {
-                        component: {
-                            name: ContainerTabComponent.name(),
-                            params: {
-                                object: 'object'
+                custom: [
+                    {
+                        tab: {
+                            label: 'Wikipedia'
+                        },
+                        panel: {
+                            component: {
+                                name: WikipediaComponent.name(),
+                                params: {
+                                    term: 'scientificName'
+                                }
                             }
                         }
                     },
-                    panel: {
-                        component: {
-                            name: ContainerComponent.name(),
-                            params: {
-                                object: 'object'
+                    {
+                        tab: {
+                            label: 'Taxonomy',
+                            component: null
+                        },
+                        panel: {
+                            component: {
+                                name: TaxonomyComponent.name(),
+                                params: {
+                                    ref: 'object.objectInfo.ref'
+                                }
                             }
                         }
-                    }
-                },
-                {
-                    tab: {
-                        label: 'Wikipedia'
                     },
-                    panel: {
-                        component: {
-                            name: WikipediaComponent.name(),
-                            params: {
-                                scientificName: 'scientificName'
+                    {
+                        tab: {
+                            label: 'Publications',
+                            component: null
+                        },
+                        panel: {
+                            component: {
+                                name: PublicationsComponent.name(),
+                                params: {
+                                    query: 'scientificName'
+                                }
                             }
                         }
                     }
-                },
-                {
-                    tab: {
-                        label: 'Provenance'
-                    },
-                    panel: {
-                        component: {
-                            name: ProvenanceComponent.name(),
-                            params: {
-                                ref: 'object.objectInfo.ref'
-                            }
-                        }
-                    }
-                },
-                {
-                    tab: {
-                        label: 'Taxonomy',
-                        component: null
-                    },
-                    panel: {
-                        component: {
-                            name: TaxonomyComponent.name(),
-                            params: {
-                                ref: 'object.objectInfo.ref'
-                            }
-                        }
-                    }
-                },
-                {
-                    tab: {
-                        label: 'Publications',
-                        component: null
-                    },
-                    panel: {
-                        component: {
-                            name: PublicationsComponent.name(),
-                            params: {
-                                query: 'scientificName'
-                            }
-                        }
-                    }
-                },
-                // {
-                //     tab: {
-                //         label: 'Trees',
-                //         component: null
-                //     },
-                //     panel: {
-                //         component: {
-                //             name: TreesComponent.name(),
-                //             params: {
-                //                 ref: 'object.objectInfo.ref'
-                //             }
-                //         }
-                //     }
-                // }
-            ];
-
+                ]
+            });
 
             Promise.all([
                 this.getSummaryInfo()
@@ -219,24 +155,6 @@ define([
                     }
                 });
         }
-
-        getDataIcon() {
-            try {
-                const typeId = this.object.objectInfo.type,
-                    type = this.runtime.service('type').parseTypeId(typeId),
-                    icon = this.runtime.service('type').getIcon({ type: type });
-                return {
-                    classes: icon.classes.join(' '),
-                    color: icon.color
-                };
-            } catch (err) {
-                console.error('When fetching icon config: ', err);
-                return {
-                    classes: 'fa-question',
-                    color: 'gray'
-                };
-            }
-        }
     }
 
     const styles = html.makeStyles({
@@ -264,19 +182,6 @@ define([
             }
         }
     });
-
-    // function buildContainerInfo() {
-    //     return div({
-    //         dataBind: {
-    //             component: {
-    //                 name: ContainerHeaderComponent.quotedName(),
-    //                 params: {
-    //                     object: 'object'
-    //                 }
-    //             }
-    //         }
-    //     });
-    // }
 
     function buildGenomeIdentification() {
         return [
@@ -310,16 +215,6 @@ define([
                 },
                 target: '_blank'
             }))
-
-            // div({
-            //     dataBind: {
-            //         typedText: {
-            //             value: 'object.objectInfo.saveDate',
-            //             type: '"date"',
-            //             format: '"YYYY-MM-DD"'
-            //         }
-            //     }
-            // })
         ];
     }
 

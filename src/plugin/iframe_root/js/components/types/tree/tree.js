@@ -2,30 +2,18 @@ define([
     'knockout',
     'kb_knockout/registry',
     'kb_knockout/lib/generators',
-    'kb_knockout/lib/viewModelBase',
-    'kb_knockout/components/tabset',
     'kb_lib/html',
     'kb_lib/htmlBuilders',
     './overview',
-    '../container',
-    '../containerTab',
-    '../common/provenance',
-    '../common/metadata',
     './simpleTree',
     '../builders'
 ], function (
     ko,
     reg,
     gen,
-    ViewModelBase,
-    TabsetComponent,
     html,
     build,
     OverviewComponent,
-    ContainerComponent,
-    ContainerTabComponent,
-    ProvenanceComponent,
-    MetadataComponent,
     SimpleTreeComponent,
     builders
 ) {
@@ -50,29 +38,17 @@ define([
         }
     }
 
-    class ViewModel extends ViewModelBase {
+    class ViewModel extends builders.TypeViewModel {
         constructor(params, context) {
-            super(params);
-
-            const {object} = params;
-
-            this.object = ko.utils.unwrapObservable(object);
-
-            this.runtime = context.$root.runtime;
-
-            this.ready = ko.observable(false);
+            super(params, context);
 
             this.tree = null;
             this.treeInfo = null;
-            // this.summaryInfo = ko.observable();
             this.objectName = this.object.objectInfo.name;
             this.objectRef = this.object.objectInfo.ref;
-            // this.taxonomy = ko.observableArray();
-            this.dataIcon = this.getDataIcon();
 
-            this.tabs = [
-                {
-                    active: true,
+            this.setTabs({
+                primary: {
                     tab: {
                         label: 'Simple Tree',
                         component: null
@@ -88,66 +64,9 @@ define([
                         }
                     }
                 },
-                {
-                    tab: {
-                        label: 'Overview'
-                    },
-                    panel: {
-                        component: {
-                            name: OverviewComponent.name(),
-                            params: {
-                                ref: 'object.objectInfo.ref'
-                            }
-                        }
-                    }
-                },
-                {
-                    tab: {
-                        component: {
-                            name: ContainerTabComponent.name(),
-                            params: {
-                                object: 'object'
-                            }
-                        }
-                    },
-                    panel: {
-                        component: {
-                            name: ContainerComponent.name(),
-                            params: {
-                                object: 'object'
-                            }
-                        }
-                    }
-                },
-                {
-                    tab: {
-                        label: 'Provenance'
-                    },
-                    panel: {
-                        component: {
-                            name: ProvenanceComponent.name(),
-                            params: {
-                                ref: 'object.objectInfo.ref'
-                            }
-                        }
-                    }
-                },
-
-                {
-                    tab: {
-                        label: 'Metadata',
-                        component: null
-                    },
-                    panel: {
-                        component: {
-                            name: MetadataComponent.name(),
-                            params: {
-                                metadata: 'object.objectInfo.metadata'
-                            }
-                        }
-                    }
-                }
-            ];
+                overview: OverviewComponent.name(),
+                custom: []
+            });
 
             this.getSummaryInfo()
                 .then(() => {
@@ -243,80 +162,93 @@ define([
                 ref: this.object.objectInfo.ref
             }]])
                 .spread(([objectData]) => {
-                    const treeData = objectData.data.tree;
-                    const tree = this.parseTree(treeData);
-                    const leaves = objectData.data.leaf_list.reduce((leaves, nodeID) => {
-                        const defaultLabel = objectData.data.default_node_labels[nodeID];
-                        const m = /^(.+)\s\((.+)\)$/.exec(defaultLabel);
-                        if (!m) {
-                            leaves[nodeID] = {
-                                nodeID: nodeID,
-                                label: defaultLabel,
-                                scientificName: defaultLabel,
-                                genomeID: null,
-                                // TODO: how to get type ("g" - genome), and
-                                // when are there more than one refs per node?
-                                // Maybe for the general case this is relevant, but for
-                                // the species tree implementation, these are fixed at g and length 1?
-                                ref: objectData.data.ws_refs[nodeID].g[0]
-                            };
-                        } else {
-                            const [,scientificName, genomeID] = m;
-                            leaves[nodeID] = {
-                                nodeID: nodeID,
-                                label: defaultLabel,
-                                scientificName: scientificName,
-                                genomeID: genomeID,
-                                // TODO: how to get type ("g" - genome), and
-                                // when are there more than one refs per node?
-                                // Maybe for the general case this is relevant, but for
-                                // the species tree implementation, these are fixed at g and length 1?
-                                ref: objectData.data.ws_refs[nodeID].g[0]
-                            };
-                        }
-                        return leaves;
-                    }, {});
-                    this.tree = tree;
-                    this.treeInfo = {
-                        leaves: leaves
-                    };
-                    // do something with the tree...
-                });
-        }
+                    // TODO: get the scientific name for objectData.data.ws_refs.user1.g[0]
+                    return workspace.callFunc('get_object_subset', [[{
+                        ref: objectData.data.ws_refs.user1.g[0],
+                        included: [
+                            'scientific_name'
+                        ]
+                    }]])
+                        .spread((result) => {
+                            // console.log('subject', result);
+                            const subjectScientificName = result[0].data.scientific_name;
 
-        getDataIcon() {
-            try {
-                const typeId = this.object.objectInfo.type,
-                    type = this.runtime.service('type').parseTypeId(typeId),
-                    icon = this.runtime.service('type').getIcon({ type: type });
-                return {
-                    classes: icon.classes.join(' '),
-                    color: icon.color
-                };
-            } catch (err) {
-                console.error('When fetching icon config: ', err);
-                return {
-                    classes: 'fa-question',
-                    color: 'gray'
-                };
-            }
+                            const treeData = objectData.data.tree;
+                            const tree = this.parseTree(treeData);
+                            // console.log('ws refs?', objectData.data);
+                            const leaves = objectData.data.leaf_list.reduce((leaves, nodeID) => {
+                                const defaultLabel = objectData.data.default_node_labels[nodeID];
+                                const parsedDefaultLabel = /^(.+)\s\((.+)\)$/.exec(defaultLabel);
+                                if (nodeID === 'user1') {
+                                    // for the user's genome, the format is a bit different
+                                    // "object_name (User Genome ref)"
+                                    // we don't page attention to the part in parens, so we don't
+                                    // bother with a special regex, we just use the object_name if
+                                    // the scientific name is not available.
+                                    const [,objectName,] = parsedDefaultLabel;
+                                    leaves[nodeID] = {
+                                        userGenome: true,
+                                        nodeID: nodeID,
+                                        label: subjectScientificName,
+                                        scientificName: subjectScientificName || objectName,
+                                        genomeID: null,
+                                        ref: objectData.data.ws_refs[nodeID].g[0]
+                                    };
+                                    // console.log('user1 ', defaultLabel);
+                                } else {
+                                    // The label is typically "scientific name (genome id)"
+
+                                    if (!parsedDefaultLabel) {
+                                        leaves[nodeID] = {
+                                            userGenome: false,
+                                            nodeID: nodeID,
+                                            label: defaultLabel,
+                                            scientificName: defaultLabel,
+                                            genomeID: null,
+                                            // TODO: how to get type ("g" - genome), and
+                                            // when are there more than one refs per node?
+                                            // Maybe for the general case this is relevant, but for
+                                            // the species tree implementation, these are fixed at g and length 1?
+                                            ref: objectData.data.ws_refs[nodeID].g[0]
+                                        };
+                                    } else {
+                                        const [,scientificName, genomeID] = parsedDefaultLabel;
+                                        leaves[nodeID] = {
+                                            userGenome: false,
+                                            nodeID: nodeID,
+                                            label: defaultLabel,
+                                            scientificName: scientificName,
+                                            genomeID: genomeID,
+                                            // TODO: how to get type ("g" - genome), and
+                                            // when are there more than one refs per node?
+                                            // Maybe for the general case this is relevant, but for
+                                            // the species tree implementation, these are fixed at g and length 1?
+                                            ref: objectData.data.ws_refs[nodeID].g[0]
+                                        };
+                                    }
+                                }
+                                // if (!leaves[nodeID].ref) {
+                                //     console.log('leaf?', leaves[nodeID]);
+                                // }
+                                return leaves;
+                            }, {});
+                            this.tree = tree;
+                            this.treeInfo = {
+                                leaves: leaves
+                            };
+                            // do something with the tree...
+
+                        });
+                });
         }
     }
 
-    const styles = html.makeStyles({
-        table: {
+    const style = html.makeStyles({
+        component: {
             css: {
-
-            },
-            inner: {
-                td: {
-                    padding: '4px'
-                },
-                th: {
-                    fontWeight: 'bold',
-                    textAlign: 'left',
-                    padding: '4px'
-                }
+                flex: '1 1 0px',
+                display: 'flex',
+                flexDirection: 'column'
             }
         },
         sectionHeader: {
@@ -355,59 +287,40 @@ define([
                     }
                 },
                 target: '_blank'
-            }))
-            // div({
-            //     dataBind: {
-            //         typedText: {
-            //             value: 'object.objectInfo.saveDate',
-            //             type: '"date"',
-            //             format: '"YYYY-MM-DD"'
-            //         }
-            //     }
-            // })
-        ];
-    }
-
-    function buildTabs() {
-        return div({
-            style: {
-                flex: '1 1 0px',
-                display: 'flex',
-                flexDirection: 'column'
-            }
-        }, [
-            gen.component({
-                name: TabsetComponent.name(),
-                params: {
-                    tabContext: '$component',
-                    tabs: 'tabs',
-                    bus: 'bus'
+            })),
+            div({
+                dataBind: {
+                    typedText: {
+                        value: 'object.objectInfo.saveDate',
+                        type: '"date"',
+                        format: '"MMM D, YYYY"'
+                    }
                 }
             })
-        ]);
+        ];
     }
 
     function template() {
         return div({
-            style: {
-                flex: '1 1 0px',
-                display: 'flex',
-                flexDirection: 'column'
-            }
+            class: style.classes.component
         },
         gen.if('ready',
-            [
-                builders.buildHeader(buildTreeIdentification(), null),
-                buildTabs()
-            ],
-            build.loading()));
+            gen.if('object',
+                [
+                    builders.buildHeader(buildTreeIdentification(), null),
+                    builders.buildTabs()
+                ],
+                build.loading()),
+            build.loading()
+        ));
     }
+
 
     function component() {
         return {
             viewModelWithContext: ViewModel,
             template: template(),
-            stylesheet: styles.sheet
+            stylesheet: style.sheet
         };
     }
 

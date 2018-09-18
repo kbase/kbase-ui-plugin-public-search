@@ -33,110 +33,135 @@ define([
                 return auth.token;
             });
 
-            this.searchTerm = ko.observable();
+            this.searchInput = ko.observable();
 
-            this.getGenes();
+            this.getGenes()
+                .then((genes) => {
+
+                });
         }
 
         getGenes() {
-            return false;
+            const searchAPI = this.runtime.service('rpc').makeClient({
+                module: 'KBaseSearchEngine',
+                timeout: 10000,
+                authenticated: true
+            });
+            // const searchApi = new DynamicServiceClient({
+            //     module: 'KBaseSearchEngine',
+            //     url: this.runtime.config('services.ServiceWizard.url'),
+            //     token: this.token()
+            // });
+            const query = this.searchInput();
+            const start = 0;
+            const count = 10;
+
+            const sortingRules = [{
+                property: 'id',
+                ascending: 1,
+                is_object_property: 1
+            }];
+            const assemblyGuid = '??';
+            const param = {
+                object_types: ['GenomeFeature'],
+                match_filter: {
+                    full_text_in_all: query,
+                    exclude_subobjects: 1,
+                    lookup_in_keys: {
+                        assembly_guid: {
+                            value: assemblyGuid
+                        }
+                    }
+                },
+                pagination: {
+                    start: start,
+                    count: count
+                },
+                post_processing: {
+                    ids_only: 0,
+                    skip_info: 0,
+                    skip_keys: 0,
+                    skip_data: 0,
+                    include_highlight: 1,
+                    add_narrative_info: 1,
+                    add_access_group_info: 1
+                },
+                access_filter: {
+                    with_private: 1,
+                    with_public: 1
+                },
+                sorting_rules: sortingRules
+            };
+            return searchAPI.callFunc('search_objects', [param])
+                .spread((result) => {
+                    console.log('got search result', result);
+                })
+                .catch((err) => {
+                    console.error('error', err);
+                });
         }
 
-        
+        doSearch() {
+            this.getGenes();
+            console.log('search');
+        }
     }
 
     const t = html.tag,
         div = t('div'),
+        input = t('input'),
+        button = t('button'),
         span = t('span');
 
     const style = html.makeStyles({
         component: {
-            css: {
-                display: 'flex',
-                flexDirection: 'row'
-            }
-        },
-        columnHeader: {
-            css: {
-                fontWeight: 'bold',
-                color: '#CCC',
-                margin: '10px 0 6px 0'
-            }
-        },
-        contigColumn: {
             css: {
                 flex: '1 1 0px',
                 display: 'flex',
                 flexDirection: 'column'
             }
         },
-        genesColumn: {
+        searchBar: {
             css: {
-                flex: '3 3 0px'
+                border: '1px silver solid'
             }
         },
-        contigsTable: {
+        searchResults: {
             css: {
-                // flex: '1 1 0px',
-                overflowY: 'auto',
-                border: '1px red solid'
-            }
-        },
-        contigsRow: {
-            css: {
+                flex: '1 1 0px',
                 display: 'flex',
-                flexDirection: 'row',
-                cursor: 'pointer'
-            },
-            pseudo: {
-                hover: {
-                    'background-color': 'rgba(200,200,200,1)'
-                }
-            },
-            inner: {
-                '.-col1': {
-                    flex: '2 1 0px'
-                },
-                '.-col2': {
-                    flex: '1 1 0px',
-                    'text-align': 'right'
-                }
+                flexDirection: 'column',
+                border: '1px silver solid'
             }
-        },
-        genesTable: {
-            css: {
-                // flex: '1 1 0px',
-                overflowY: 'auto',
-                border: '1px red solid'
-            }
-        },
-        genesRow: {
-            css: {
-                display: 'flex',
-                flexDirection: 'row',
-                cursor: 'pointer'
-            },
-            pseudo: {
-                hover: {
-                    'background-color': 'rgba(200,200,200,1)'
-                }
-            },
-            inner: {
-                '.-col1': {
-                    flex: '2 1 0px'
-                },
-                '.-col2': {
-                    flex: '1 1 0px',
-                    'text-align': 'right'
-                }
-            }
-        },
+        }
     });
 
-   
+    function buildSearchBar() {
+        return div({}, [
+            input({
+                dataBind: {
+                    textInput: 'searchInput'
+                }
+            }),
+            button({
+                dataBind: {
+                    click: 'function(){doSearch()}'
+                }
+            }, 'Search')
+        ]);
+    }
 
     function template() {
-        return div('this page will show a gene browser for this genome.');
+        return div({
+            class: style.classes.component
+        }, [
+            div({
+                class: style.classes.searchBar
+            }, buildSearchBar()),
+            div({
+                class: style.classes.searchResults
+            }, 'search results')
+        ]);
     }
 
     function component() {

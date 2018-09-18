@@ -2,145 +2,45 @@ define([
     'knockout',
     'kb_knockout/registry',
     'kb_knockout/lib/generators',
-    'kb_knockout/lib/viewModelBase',
-    'kb_knockout/components/tabset',
     'kb_lib/html',
     'kb_lib/htmlBuilders',
     './overview',
-    '../container',
-    '../containerTab',
-    '../common/provenance'
+    '../builders'
 ], function (
     ko,
     reg,
     gen,
-    ViewModelBase,
-    TabsetComponent,
     html,
     build,
     OverviewComponent,
-    ContainerComponent,
-    ContainerTabComponent,
-    ProvenanceComponent
+    builders
 ) {
     'use strict';
 
     const t = html.tag,
         div = t('div'),
-        span = t('span'),
         a = t('a');
 
-    class ViewModel extends ViewModelBase {
+    class ViewModel extends builders.TypeViewModel {
         constructor(params, context) {
-            super(params);
+            super(params, context);
 
-            const {object} = params;
-            this.object = object;
-            this.runtime = context.$root.runtime;
-
-            this.ready = ko.observable(false);
-            this.error = ko.observable();
-
-            this.dataIcon = this.getDataIcon();
-
-            this.tabs = [
-                {
-                    active: true,
-                    tab: {
-                        label: 'Overview'
-                    },
-                    panel: {
-                        component: {
-                            name: OverviewComponent.name(),
-                            params: {
-                                object: 'object'
-                            }
-                        }
-                    }
-                },
-                {
-                    tab: {
-                        component: {
-                            name: ContainerTabComponent.name(),
-                            params: {
-                                object: 'object'
-                            }
-                        }
-                    },
-                    panel: {
-                        component: {
-                            name: ContainerComponent.name(),
-                            params: {
-                                object: 'object'
-                            }
-                        }
-                    }
-                },
-                {
-                    tab: {
-                        label: 'Provenance'
-                    },
-                    panel: {
-                        component: {
-                            name: ProvenanceComponent.name(),
-                            params: {
-                                ref: 'object.objectInfo.ref'
-                            }
-                        }
-                    }
-                }
-                // {
-                //     tab: {
-                //         label: 'Metadata',
-                //         component: null
-                //     },
-                //     panel: {
-                //         component: {
-                //             name: MetadataComponent.name(),
-                //             params: {
-                //                 metadata: 'object().objectInfo.metadata'
-                //             }
-                //         }
-                //     }
-                // }
-            ];
+            this.setTabs({
+                primary: null,
+                overview: OverviewComponent.name(),
+                custom: []
+            });
 
             this.ready(true);
         }
-
-        getDataIcon() {
-            try {
-                const typeId = this.object.objectInfo.type,
-                    type = this.runtime.service('type').parseTypeId(typeId),
-                    icon = this.runtime.service('type').getIcon({ type: type });
-                return {
-                    classes: icon.classes.join(' '),
-                    color: icon.color
-                };
-            } catch (err) {
-                console.error('When fetching icon config: ', err);
-                return {
-                    classes: 'fa-question',
-                    color: 'gray'
-                };
-            }
-        }
     }
 
-    const styles = html.makeStyles({
-        table: {
+    const style = html.makeStyles({
+        component: {
             css: {
-
-            },
-            inner: {
-                td: {
-                    padding: '4px'
-                },
-                th: {
-                    fontWeight: 'bold',
-                    textAlign: 'left',
-                    padding: '4px'
-                }
+                flex: '1 1 0px',
+                display: 'flex',
+                flexDirection: 'column'
             }
         },
         sectionHeader: {
@@ -153,131 +53,67 @@ define([
         }
     });
 
-    function buildOverview() {
-        return div({
-            style: {
-                display : 'flex',
-                flexDirection: 'row'
-            }
-        }, [
-            div({
-                style: {
-                    flex: '3 1 0px',
-                    display: 'flex',
-                    flexDirection: 'column'
-                }
-            }, [
-                div({
+    function buildObjectIdentification() {
+        return [
+            // If we ever get a universal "name" or "description" or "title"
+            // field we would use that here rather than object name.
+            gen.if('object.objectInfo.name',
+                a({
                     style: {
-                        display: 'flex',
-                        flexDirection: 'row'
-                    }
-                }, [
-                    div(div([
-                        span({ class: 'fa-stack fa-2x' }, [
-                            span({
-                                class: 'fa fa-circle fa-stack-2x',
-                                dataBind: {
-                                    style: {
-                                        color: 'dataIcon.color'
-                                    }
-                                }
-                            }),
-                            span({
-                                class: 'fa-inverse fa-stack-1x ',
-                                dataBind: {
-                                    class: 'dataIcon.classes'
-                                }
-                            })
-                        ])
-                    ])),
-                    div({
-                        style: {
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'center'
+                        fontSize: '120%',
+                        fontWeight: 'bold',
+                        fontStyle: 'italic'
+                    },
+                    dataBind: {
+                        text: 'object.objectInfo.name',
+                        attr: {
+                            href: '"/#dataview/" + object.objectInfo.ref'
                         }
-                    }, [
-                        gen.if('object.objectInfo.name',
-                            a({
-                                style: {
-                                    fontSize: '120%',
-                                    fontWeight: 'bold',
-                                    fontStyle: 'italic'
-                                },
-                                dataBind: {
-                                    text: 'object.objectInfo.name',
-                                    attr: {
-                                        href: '"/#dataview/" + object.objectInfo.ref'
-                                    }
-                                },
-                                target: '_blank'
-                            }),
-                            div(build.loading())),
-                        div(a({
-                            dataBind: {
-                                text: 'object.objectInfo.typeName + " " + object.objectInfo.typeMajorVersion + "." + object.objectInfo.typeMinorVersion',
-                                attr: {
-                                    href: '"/#spec/type/" + object.objectInfo.type'
-                                }
-                            },
-                            target: '_blank'
-                        })),
-                        div({
-                            dataBind: {
-                                typedText: {
-                                    value: 'object.objectInfo.saveDate',
-                                    type: '"date"',
-                                    format: '"YYYY-MM-DD"'
-                                }
-                            }
-                        })
-                    ])
-                ])
-            ])
-        ]);
-    }
-
-    function buildTabs() {
-        return div({
-            style: {
-                flex: '1 1 0px',
-                display: 'flex',
-                flexDirection: 'column'
-            }
-        }, [
-            gen.component({
-                name: TabsetComponent.name(),
-                params: {
-                    tabContext: '$component',
-                    tabs: 'tabs',
-                    bus: 'bus'
+                    },
+                    target: '_blank'
+                }),
+                div(build.loading())),
+            div(a({
+                dataBind: {
+                    text: 'object.objectInfo.typeName + " " + object.objectInfo.typeMajorVersion + "." + object.objectInfo.typeMinorVersion',
+                    attr: {
+                        href: '"/#spec/type/" + object.objectInfo.type'
+                    }
+                },
+                target: '_blank'
+            })),
+            div({
+                dataBind: {
+                    typedText: {
+                        value: 'object.objectInfo.saveDate',
+                        type: '"date"',
+                        format: '"MMM D, YYYY"'
+                    }
                 }
             })
-        ]);
+        ];
     }
 
     function template() {
         return div({
-            style: {
-                flex: '1 1 0px',
-                display: 'flex',
-                flexDirection: 'column'
-            }
+            class: style.classes.component
         },
-        gen.if('ready()',
-            [
-                buildOverview(),
-                buildTabs()
-            ],
-            build.loading()));
+        gen.if('ready',
+            gen.if('object',
+                [
+                    builders.buildHeader(buildObjectIdentification(), null),
+                    builders.buildTabs()
+                ],
+                build.loading()),
+            build.loading()
+        ));
     }
 
     function component() {
         return {
             viewModelWithContext: ViewModel,
             template: template(),
-            stylesheet: styles.sheet
+            stylesheet: style.sheet
         };
     }
 

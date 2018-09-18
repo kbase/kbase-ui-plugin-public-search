@@ -21,8 +21,8 @@ define([
         td = t('td');
 
     class ViewModel {
-        constructor({ref}, context) {
-            this.ref = ref;
+        constructor({object}, context) {
+            this.ref = object.objectInfo.ref;
 
             this.runtime = context.$root.runtime;
 

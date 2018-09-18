@@ -13,7 +13,9 @@ define([
 
     class ViewModel {
         constructor(params) {
-            const {metadata} = params;
+            const {object} = params;
+
+            const metadata = object.objectInfo.metadata;
 
             // const metadata = object().objectInfo.metadata;
             this.metadata = Object.keys(metadata)

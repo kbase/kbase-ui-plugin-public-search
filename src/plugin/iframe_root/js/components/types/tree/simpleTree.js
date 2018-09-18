@@ -71,6 +71,7 @@ define([
         }
     }
 
+
     function buildTree() {
         return div({
             dataBind: {
@@ -105,7 +106,10 @@ define([
                 div({
                     style: {
                         display: 'inline-block',
-                        borderBottom: '1px blue solid'
+                        border: '1px blue solid',
+                        height: '10px',
+                        backgroundColor: 'rgba(0,0,255,0.3)',
+                        margin: '0 4px'
                     },
                     dataBind: {
                         style: {

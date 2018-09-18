@@ -9,8 +9,8 @@ define([
     '../common/wikipediaImage',
     './overview',
     '../common/publications',
-    '../container',
-    '../containerTab'
+    '../common/container',
+    '../common/containerTab'
 ], function (
     ko,
     reg,

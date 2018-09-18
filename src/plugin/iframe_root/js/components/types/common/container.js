@@ -3,9 +3,9 @@ define([
     'kb_knockout/registry',
     'kb_knockout/lib/generators',
     'kb_lib/html',
-    '../containerTypes/narrative',
-    '../containerTypes/refdata',
-    '../containerTypes/unknown'
+    './containerTypes/narrative',
+    './containerTypes/refdata',
+    './containerTypes/unknown'
 ], function (
     ko,
     reg,

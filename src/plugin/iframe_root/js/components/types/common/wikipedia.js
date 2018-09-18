@@ -21,85 +21,6 @@ define([
 ) {
     'use strict';
 
-    const t = html.tag,
-        a = t('a'),
-        span = t('span'),
-        div = t('div'),
-        img = t('img');
-
-    const style = html.makeStyles({
-        component: {
-            css: {
-                flex: '1 1 0px',
-                display: 'flex',
-                flexDirection: 'column',
-                margin: '10px'
-            }
-        },
-        table: {
-            css: {
-
-            },
-            inner: {
-                td: {
-                    padding: '4px'
-                },
-                th: {
-                    fontWeight: 'bold',
-                    color: 'rgba(200,200,200,1)',
-                    textAlign: 'left',
-                    padding: '4px'
-                }
-            }
-        },
-        sectionHeader: {
-            css: {
-                fontWeight: 'bold',
-                fontSize: '110%',
-                color: 'rgba(100,100,100,1)',
-                marginTop: '8px'
-            }
-        },
-        wikipediaImage: {
-            css: {
-                width: '100%'
-            }
-        },
-        imageCaption: {
-            css: {
-                height: '1em',
-                marginTop: '4px'
-            }
-        },
-        square: {
-            css: {
-                width: '100%',
-                height: 'auto',
-                position: 'relative'
-            },
-            pseudo: {
-                before: {
-                    content: '""',
-                    display: 'block',
-                    paddingTop: '100%'
-                }
-            },
-            inner: {
-                '> .-content': {
-                    position: 'absolute',
-                    top: '0',
-                    right: '0',
-                    bottom: '0',
-                    left: '0',
-                    border: '1px silver dashed',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                },
-
-            }
-        }
-    });
 
     class NotFound extends Error {
         constructor(message) {
@@ -110,7 +31,8 @@ define([
     class ViewModel extends ViewModelBase {
         constructor(params) {
             super(params);
-            const {scientificName} = params;
+            const {term} = params;
+            this.lookupTerm = term;
 
             this.imageWidth = '150px';
             this.defaultImageWidth = '150px';
@@ -119,8 +41,6 @@ define([
             this.imageCaption = ko.observable();
             this.pageUrl = ko.observable();
             this.loaded = ko.observable(false);
-
-            this.scientificName = scientificName;
 
             this.error = ko.observable();
             this.subscribe(this.error, (newValue) => {
@@ -135,10 +55,10 @@ define([
         }
 
         findImage() {
-            if (!this.scientificName) {
+            if (!this.lookupTerm) {
                 return;
             }
-            this.getOrganismInfo(this.scientificName)
+            this.getPageInfo(this.lookupTerm)
                 .then(({imageUrl, url, introText}) => {
                     this.imageUrl(imageUrl);
                     this.pageUrl(url);
@@ -160,8 +80,8 @@ define([
                 });
         }
 
-        getOrganismInfo(scientificName) {
-            return this.getPage(scientificName)
+        getPageInfo(term) {
+            return this.getPage(term)
                 .then((wikiResponse) => {
                     this.imageCaption(wikiResponse.parse.title);
                     return Promise.all(
@@ -181,8 +101,8 @@ define([
 
         // see: https://www.mediawiki.org/wiki/API:Main_page
         // https://en.wikipedia.org/w/api.php?action=help&modules=parse
-        getPage(scientificName) {
-            const terms = JSON.parse(JSON.stringify(scientificName.split(/\s+/)));
+        getPage(term) {
+            const terms = JSON.parse(JSON.stringify(term.split(/\s+/)));
             return new Promise((resolve, reject) => {
                 const fetchPage = (terms) => {
                     if (terms.length === 0) {
@@ -322,6 +242,87 @@ define([
                 });
         }
     }
+
+
+    const t = html.tag,
+        a = t('a'),
+        span = t('span'),
+        div = t('div'),
+        img = t('img');
+
+    const style = html.makeStyles({
+        component: {
+            css: {
+                flex: '1 1 0px',
+                display: 'flex',
+                flexDirection: 'column',
+                margin: '10px'
+            }
+        },
+        table: {
+            css: {
+
+            },
+            inner: {
+                td: {
+                    padding: '4px'
+                },
+                th: {
+                    fontWeight: 'bold',
+                    color: 'rgba(200,200,200,1)',
+                    textAlign: 'left',
+                    padding: '4px'
+                }
+            }
+        },
+        sectionHeader: {
+            css: {
+                fontWeight: 'bold',
+                fontSize: '110%',
+                color: 'rgba(100,100,100,1)',
+                marginTop: '8px'
+            }
+        },
+        wikipediaImage: {
+            css: {
+                width: '100%'
+            }
+        },
+        imageCaption: {
+            css: {
+                height: '1em',
+                marginTop: '4px'
+            }
+        },
+        square: {
+            css: {
+                width: '100%',
+                height: 'auto',
+                position: 'relative'
+            },
+            pseudo: {
+                before: {
+                    content: '""',
+                    display: 'block',
+                    paddingTop: '100%'
+                }
+            },
+            inner: {
+                '> .-content': {
+                    position: 'absolute',
+                    top: '0',
+                    right: '0',
+                    bottom: '0',
+                    left: '0',
+                    border: '1px silver dashed',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                },
+
+            }
+        }
+    });
 
     function buildSquareWrapper(content) {
         return div({

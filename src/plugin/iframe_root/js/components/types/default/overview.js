@@ -100,7 +100,7 @@ define([
                     component: {
                         name: MetadataComponent.quotedName(),
                         params: {
-                            metadata: 'object.objectInfo.metadata'
+                            object: 'object'
                         }
                     }
                 }

@@ -24,8 +24,8 @@ define([
 
     class ViewModel {
         constructor(params, context) {
-            const {ref} = params;
-            this.ref = ref;
+            const {object} = params;
+            this.ref = object.objectInfo.ref;
 
             this.ready = ko.observable(false);
             this.error = ko.observable();
@@ -172,7 +172,7 @@ define([
                     }, 'Taxonomy'),
                     buildTaxonomy()
                 ]),
-                
+
                 // div([
                 //     div({
                 //         class: style.classes.columnHeader
@@ -243,7 +243,7 @@ define([
             ])
         ]);
     }
-   
+
     function buildStats() {
         return table({
             class: style.classes.table

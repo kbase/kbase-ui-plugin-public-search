@@ -9,9 +9,6 @@ define([
 ) {
     'use strict';
 
-    const t = html.tag,
-        div = t('div');
-
     class ViewModel {
         constructor({node, leaves, first, last, originRef, componentName, scalingFactor}) {
             this.node = node;
@@ -34,6 +31,11 @@ define([
             }
         }
     }
+
+    const t = html.tag,
+        a = t('a'),
+        span = t('span'),
+        div = t('div');
 
     function buildTree() {
         return div({
@@ -181,12 +183,30 @@ define([
                             marginTop: '4px'
                         },
                         dataBind: {
-                            text: 'leaf.scientificName',
                             style: {
-                                'font-weight': 'leaf.nodeID === "user1" ? "bold" : "normal"'
+                                'background-color': 'leaf.userGenome ? "yellow" : "transparent"'
                             }
                         }
-                    })
+                    }, gen.if('leaf.ref', a({
+                        dataBind: {
+                            text: 'leaf.scientificName',
+                            style: {
+                                'font-weight': 'leaf.userGenome ? "bold" : "normal"'
+                            },
+                            attr: {
+                                href: '"/#dataview/" + leaf.ref'
+                            }
+                        },
+                        target: '_blank'
+                    }),
+                    span({
+                        dataBind: {
+                            text: 'leaf.scientificName',
+                            style: {
+                                'font-weight': 'leaf.userGenome ? "bold" : "normal"'
+                            }
+                        }
+                    })))
                 ])),
             // children, if this is a tree.
             gen.if('tree',

@@ -647,6 +647,9 @@ define([
         filterColumn: {
             css: {
                 width: '15em',
+                // the min-width prevents the column from shrinking.
+                // TODO: same thing with flex!
+                minWidth: '15em',
                 display: 'flex',
                 flexDirection: 'column',
                 paddingRight: '10px'
