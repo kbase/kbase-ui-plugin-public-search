@@ -3,17 +3,12 @@ define([
     'knockout',
     'kb_knockout/registry',
     'kb_knockout/lib/generators',
-    'kb_knockout/lib/viewModelBase',
-    'kb_knockout/components/tabset',
     'kb_lib/html',
     'kb_lib/htmlBuilders',
     './overview',
     '../common/taxonomy',
     '../common/publications',
     './genes',
-    '../common/container',
-    '../common/containerTab',
-    '../common/provenance',
     '../common/wikipedia',
     './trees',
     '../builders'
@@ -22,17 +17,12 @@ define([
     ko,
     reg,
     gen,
-    ViewModelBase,
-    TabsetComponent,
     html,
     build,
-    TabOverviewComponent,
+    OverviewComponent,
     TaxonomyComponent,
     PublicationsComponent,
     GenesComponent,
-    ContainerComponent,
-    ContainerTabComponent,
-    ProvenanceComponent,
     WikipediaComponent,
     TreesComponent,
     builders
@@ -65,9 +55,7 @@ define([
                         }
                     }
                 },
-                overview: {
-                    component: TabOverviewComponent.name()
-                },
+                overview: OverviewComponent.name(),
                 custom: [
                     {
                         tab: {
@@ -218,26 +206,6 @@ define([
         ];
     }
 
-    function buildTabs() {
-        return div({
-            style: {
-                flex: '1 1 0px',
-                display: 'flex',
-                flexDirection: 'column',
-                marginTop: '12px'
-            }
-        }, [
-            gen.component({
-                name: TabsetComponent.name(),
-                params: {
-                    tabs: 'tabs',
-                    tabContext: '$component',
-                    bus: 'bus'
-                }
-            })
-        ]);
-    }
-
     function template() {
         return div({
             style: {
@@ -250,7 +218,7 @@ define([
             gen.if('object',
                 [
                     builders.buildHeader(buildGenomeIdentification(), 'scientificName'),
-                    buildTabs()
+                    builders.buildTabs()
                 ],
                 build.loading()),
             build.loading()

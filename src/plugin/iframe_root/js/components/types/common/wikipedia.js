@@ -58,7 +58,7 @@ define([
             if (!this.lookupTerm) {
                 return;
             }
-            this.getPageInfo(this.lookupTerm)
+            this.getWikipediaInfo(this.lookupTerm)
                 .then(({imageUrl, url, introText}) => {
                     this.imageUrl(imageUrl);
                     this.pageUrl(url);
@@ -80,7 +80,7 @@ define([
                 });
         }
 
-        getPageInfo(term) {
+        getWikipediaInfo(term) {
             return this.getPage(term)
                 .then((wikiResponse) => {
                     this.imageCaption(wikiResponse.parse.title);
