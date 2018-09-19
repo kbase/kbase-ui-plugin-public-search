@@ -29,9 +29,7 @@ define([
 ) {
     'use strict';
 
-    const t = html.tag,
-        div = t('div'),
-        a = t('a');
+    // VIEW MODEL
 
     class ViewModel extends builders.TypeViewModel {
         constructor(params, context) {
@@ -145,6 +143,12 @@ define([
         }
     }
 
+    // VIEW
+
+    const t = html.tag,
+        div = t('div'),
+        a = t('a');
+
     const styles = html.makeStyles({
         table: {
             css: {
@@ -186,13 +190,15 @@ define([
                             href: '"/#dataview/" + object.objectInfo.ref'
                         }
                     },
-                    target: '_blank'
+                    target: '_blank',
+                    title: 'This is the scientific name assigned to this Genome object.'
                 }),
                 div(build.loading())),
             div({
                 dataBind: {
                     text: 'domain'
-                }
+                },
+                title: 'This is the taxonomic domain assigned to this Genome object.'
             }),
             div(a({
                 dataBind: {
@@ -201,7 +207,8 @@ define([
                         href: '"/#spec/type/" + object.objectInfo.type'
                     }
                 },
-                target: '_blank'
+                target: '_blank',
+                title: 'This is the type and type version of this Genome object. You may click on it to view more information about this type.'
             }))
         ];
     }
