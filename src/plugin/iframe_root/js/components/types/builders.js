@@ -10,7 +10,7 @@ define([
     './common/container',
     './common/containerTab',
     './common/metadata',
-    './common/provenance',
+    './common/provenance/main',
 
 ], function (
     ko,
@@ -229,7 +229,7 @@ define([
                     component: {
                         name: ProvenanceComponent.name(),
                         params: {
-                            ref: 'object.objectInfo.ref'
+                            object: 'object'
                         }
                     }
                 }

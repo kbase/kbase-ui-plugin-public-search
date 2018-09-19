@@ -13,16 +13,14 @@ define([
 ) {
     'use strict';
 
-    const t = html.tag,
-        div = t('div'),
-        span = t('span');
-
     class ViewModel extends ViewModelBase {
         constructor(params) {
             super(params);
 
             this.rows = params.rows;
             this.table = params.table;
+
+            // console.log('got rows...', this.rows());
 
             // this.rows = ko.pureComputed(() => {
             //     const rows = params.rows.sorted((a, b) => {
@@ -44,7 +42,6 @@ define([
         }
 
         doSort(data) {
-
             const currentSortColumn = this.table.sort.column();
             const currentSortDirection = this.table.sort.direction();
             if (currentSortColumn === data.name) {
@@ -80,6 +77,63 @@ define([
         }
     }
 
+    // VIEW
+
+    const t = html.tag,
+        div = t('div'),
+        span = t('span');
+
+    const style = html.makeStyles({
+        component: {
+            css: {
+
+            }
+        },
+        table: {
+            css: {
+                flex: '1 1 0px',
+                display: 'flex',
+                flexDirection: 'column'
+            }
+        },
+        tableHeader: {
+            css: {
+                '-moz-user-select': 'none',
+                '-webkit-user-select': 'none',
+                '-ms-user-select': 'none',
+                userSelect: 'none',
+                backgroundColor: 'rgba(200,200,200,0.5)'
+            }
+        },
+        tableHeaderColumn: {
+            css: {
+                display: 'inline-block',
+                fontStyle: 'italic',
+                // padding: '4px',
+                cursor: 'pointer',
+                userSelect: 'none'
+            }
+        },
+        tableBody: {
+            css: {
+                flex: '1 1 0px',
+                overflowY: 'auto'
+            }
+        },
+        row: {
+            css: {
+
+            }
+        },
+        cell: {
+            css: {
+                display: 'inline-block',
+                verticalAlign: 'top',
+                wordBreak: 'break-all'
+            }
+        }
+    });
+
     // TODO: seriously twisted withing and asing.
     // The issue is that the 'row' is lost in the with context without
     // setting it with as, and then unpacking again with with: 'row' below.
@@ -96,18 +150,15 @@ define([
             }
         }, gen.foreachAs('$component.table.columns', 'column',
             // make the implicit context the row again.
-            gen.if('column.component',
+            div({
+                class: style.classes.cell,
+                dataBind: {
+                    style: '$component.calcColumnStyle(column)'
+                }
+            }, gen.if('column.component',
                 // use the column specified for the column, using the
                 // specified params (relative to row) as input.
-                div({
-                    style: {
-                        display: 'inline-block',
-                        verticalAlign: 'top'
-                    },
-                    dataBind: {
-                        style: '$component.calcColumnStyle(column)'
-                    }
-                }, gen.with('row', span({
+                gen.with('row', span({
                     dataBind: {
                         component: {
                             name: 'column.component.name',
@@ -115,59 +166,37 @@ define([
                             params: 'eval("(" + $component.stringify(column.component.params) + ")")'
                         }
                     }
-                }))),
+                })),
                 // else use the row's column value directly
-                div({
-                    style: {
-                        display: 'inline-block',
-                        verticalAlign: 'top'
-                    },
-                    dataBind: {
-                        style: '$component.calcColumnStyle(column)'
-                    }
-                }, [
-                    gen.if('column.format',
+                gen.if('column.format',
+                    span({
+                        dataBind: {
+                            typedText: {
+                                value: 'row[column.name]',
+                                type: 'column.format.type',
+                                format: 'column.format.format'
+                            }
+                        }
+                    }),
+                    gen.if('column.html',
                         span({
                             dataBind: {
-                                typedText: {
-                                    value: 'row[column.name]',
-                                    type: 'column.format.type',
-                                    format: 'column.format.format'
-                                }
+                                html: 'row[column.name]'
                             }
                         }),
-                        gen.if('column.html',
-                            span({
-                                dataBind: {
-                                    html: 'row[column.name]'
-                                }
-                            }),
-                            span({
-                                dataBind: {
-                                    text: 'row[column.name]'
-                                }
-                            })))
-                ]
-                ))));
+                        span({
+                            dataBind: {
+                                text: 'row[column.name]'
+                            }
+                        })))))));
     }
 
-    function buildTable() {
-        const header = div({
-            style: {
-                '-moz-user-select': 'none',
-                '-webkit-user-select': 'none',
-                '-ms-user-select': 'none',
-                userSelect: 'none'
-            }
+    function buildHeader() {
+        return div({
+            class: style.classes.tableHeader
         }, gen.foreach('table.columns',
             div({
-                style: {
-                    display: 'inline-block',
-                    fontStyle: 'italic',
-                    // padding: '4px',
-                    cursor: 'pointer',
-                    userSelect: 'none'
-                },
+                class: style.classes.tableHeaderColumn,
                 dataBind: {
                     style: '$component.calcColumnStyle($data)',
                     // style:  {
@@ -200,29 +229,21 @@ define([
                 })
             ])
         ));
-        // we loop across all the columns; remember, this is invoked
-        // within the row, so we need to reach back up to get the
-        // row context.
-        const rowTemplate = buildRow();
+    }
 
+    function buildTable() {
+        const rowTemplate = buildRow();
         return div({
+            class: style.classes.table,
             dataBind: {
                 style: {
                     'background-color': 'table.style.backgroundColor'
                 }
-            },
-            style: {
-                flex: '1 1 0px',
-                display: 'flex',
-                flexDirection: 'column'
             }
         }, [
-            header,
+            buildHeader(),
             div({
-                style: {
-                    flex: '1 1 0px',
-                    overflowY: 'auto'
-                }
+                class: style.classes.tableBody
             }, gen.foreachAs(
                 'rows.sorted((a,b) => {return $component.sortTable.call($component,a,b)})',
                 'row',
@@ -237,7 +258,8 @@ define([
     function component() {
         return {
             viewModel: ViewModel,
-            template: template()
+            template: template(),
+            stylesheet: style.sheet
         };
     }
 
