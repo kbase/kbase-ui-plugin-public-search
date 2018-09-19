@@ -128,7 +128,6 @@ define([], function () {
     }
 
     class Props {
-
         constructor({data}) {
             this.obj = data;
         }
@@ -152,6 +151,10 @@ define([], function () {
 
         deleteItem(path) {
             return deleteProp(this.obj, path);
+        }
+
+        getRaw() {
+            return this.obj;
         }
     }
 
