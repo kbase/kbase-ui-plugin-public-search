@@ -31,7 +31,7 @@ define([
         constructor(params, context) {
             super(params);
 
-            const {searchInput, forceSearch, searching, selectedObjects} = params;
+            const {searchInput, forceSearch, searching, selectedObjects, searchHistory} = params;
 
             this.selectedObjects = selectedObjects;
 
@@ -60,7 +60,7 @@ define([
 
             // HISTORY
             this.showHistory = ko.observable();
-            this.searchHistory = ko.observableArray();
+            this.searchHistory = searchHistory;
 
             // hack to ensure that clicking in side the history control does not close it!
             this.historyContainerId = html.genId();

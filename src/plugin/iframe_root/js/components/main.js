@@ -5,6 +5,7 @@ define([
     'kb_knockout/lib/generators',
     'kb_knockout/lib/viewModelBase',
     'kb_lib/html',
+    'kb_common_ts/Cookie',
     '../lib/serviceUtils',
     '../lib/model',
     './searchBar',
@@ -20,7 +21,8 @@ define([
     './copy/copyObjects',
     'kb_knockout/components/overlayPanel',
     'kb_knockout/lib/nanoBus',
-    '../lib/debug'
+    '../lib/debug',
+    '../lib/history'
 ], function (
     Promise,
     ko,
@@ -28,6 +30,7 @@ define([
     gen,
     ViewModelBase,
     html,
+    Cookie,
     serviceUtils,
     model,
     SearchBarComponent,
@@ -43,12 +46,10 @@ define([
     CopyObjectsComponent,
     OverlayPanelComponent,
     NanoBus,
-    debug
+    debug,
+    history
 ) {
     'use strict';
-
-    const t = html.tag,
-        div = t('div');
 
     class ViewModel extends ViewModelBase {
         constructor(params, context) {
@@ -59,6 +60,7 @@ define([
             this.runtime = context.$root.runtime;
             this.supportedDataTypes = context.$root.supportedDataTypes;
             this.columns = context.$root.columns;
+            this.maxHistoryLength = 10;
 
             this.authorization = params.authorization;
 
@@ -68,6 +70,7 @@ define([
             this.page = ko.observable();
             this.pageSize = ko.observable();
             this.totalPages = ko.observable();
+            this.searchHistory = ko.observableArray();
 
             // Filters
             this.dataTypes = ko.observableArray();
@@ -277,6 +280,40 @@ define([
             this.bus.on('show-tooltip', (tooltip) => {
                 this.tooltipChannel.send('add-tooltip', tooltip);
             });
+
+            this.subscribe(this.authorization, () => {
+                this.setupHistory();
+            });
+
+            // MAIN
+
+            this.setupHistory();
+        }
+
+        setupHistory() {
+            if (this.authorization()) {
+                this.history = new history.ProfileHistory({
+                    maxSize: 10,
+                    name: 'kbase.plugins.public-search',
+                    maxAge: 60*60,
+                    token: this.authorization().token,
+                    username: this.authorization().username,
+                    url: this.runtime.config('services.UserProfile.url')
+                });
+            } else {
+                this.history = new history.CookieHistory({
+                    maxSize: 10,
+                    name: 'kbase.plugins.public-search',
+                    maxAge: 60*60
+                });
+            }
+            this.history.getHistory()
+                .then((history) => {
+                    this.searchHistory(history);
+                })
+                .catch((err) => {
+                    console.error('Error fetching search history', err);
+                });
         }
 
         showError() {
@@ -349,6 +386,16 @@ define([
                 this.page(1);
                 return;
             }
+
+            // NB this is async, so the history will not be updated right away here.
+            this.history.updateHistory(query.input.searchInput)
+                .then((newHistory) => {
+                    this.searchHistory(newHistory);
+                })
+                .catch((err) => {
+                    console.error('Error updating search history', err);
+                    this.searchHistory([]);
+                });
 
             let start;
             if (query.paging.page) {
@@ -602,7 +649,12 @@ define([
                 summary.count(null);
             });
         }
+
+
     }
+
+    const t = html.tag,
+        div = t('div');
 
     const style = html.makeStyles({
         component: {
@@ -712,7 +764,7 @@ define([
                 }, [
                     gen.component({
                         name: SearchBarComponent.name(),
-                        params: ['bus', 'searchInput', 'forceSearch', 'searching', 'selectedObjects']
+                        params: ['bus', 'searchInput', 'forceSearch', 'searching', 'selectedObjects', 'searchHistory']
                     }),
                 ]),
             ]),
