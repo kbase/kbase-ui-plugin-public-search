@@ -276,5 +276,35 @@ define([
         }
     }
 
-    return {buildHeader, buildTabs, TypeViewModel};
+    function buildError() {
+        return div({
+            style: {
+                width: '30em',
+                border: '1px red solid',
+                backgroundColor: 'rgba(255,0,0,0.3)',
+                margin: '10px auto',
+                padding: '10px'
+            }
+        }, [
+            div({
+                style: {
+                    backgroundColor: 'red',
+                    color: 'white',
+                    padding: '4px',
+                    textAlign: 'center',
+                    marginBottom: '10px'
+                },
+                dataBind: {
+                    text: '"Error: " + name'
+                }
+            }),
+            div({
+                dataBind: {
+                    text: 'message'
+                }
+            })
+        ]);
+    }
+
+    return {buildHeader, buildTabs, TypeViewModel, buildError};
 });

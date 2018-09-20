@@ -7,7 +7,8 @@ define([
     'kb_lib/html',
     'kb_lib/htmlBuilders',
     'kb_common_ts/HttpClient',
-    'kb_lib/props'
+    'kb_lib/props',
+    '../builders'
 ], function (
     Promise,
     ko,
@@ -17,14 +18,16 @@ define([
     html,
     build,
     HttpClient,
-    props
+    props,
+    builders
 ) {
     'use strict';
-
 
     class NotFound extends Error {
         constructor(message) {
             super(message);
+
+            this.name = 'NotFound';
         }
     }
 
@@ -40,16 +43,9 @@ define([
             this.imageUrl = ko.observable();
             this.imageCaption = ko.observable();
             this.pageUrl = ko.observable();
-            this.loaded = ko.observable(false);
 
             this.error = ko.observable();
-            this.subscribe(this.error, (newValue) => {
-                if (newValue) {
-                    this.state('error');
-                }
-            });
-
-            this.state = ko.observable('loading');
+            this.ready = ko.observable(false);
 
             this.findImage();
         }
@@ -67,12 +63,10 @@ define([
                         .replace(/===/g, '###')
                         .replace(/==/g, '##')
                         .replace(/\n/g, '  \n');
-                    this.loaded(true);
-                    this.state('loaded');
+                    this.ready(true);
                 })
                 .catch(NotFound, (err) => {
-                    console.warn('not found', err);
-                    this.error(err.message);
+                    this.error(err);
                 })
                 .catch((err) => {
                     console.error('Error getting image', err);
@@ -106,7 +100,7 @@ define([
             return new Promise((resolve, reject) => {
                 const fetchPage = (terms) => {
                     if (terms.length === 0) {
-                        reject(new NotFound('No Wikipedia page found'));
+                        reject(new NotFound('No Wikipedia page found matching "' + term + '"'));
                         // resolve(null);
                     }
                     const http = new HttpClient.HttpClient();
@@ -411,12 +405,17 @@ define([
     }
 
     function buildError() {
-        return div({
-            dataBind: {
-                text: 'error().message'
-            }
-        });
+        return gen.with('error()', builders.buildError());
     }
+
+    // function buildError() {
+    //     return div({
+    //         class: commonStyle.classes.errorBox,
+    //         dataBind: {
+    //             text: 'error()'
+    //         }
+    //     });
+    // }
 
     function buildLoading() {
         return div(build.loading('Finding page at Wikipedia'));
@@ -425,17 +424,23 @@ define([
     function template() {
         return div({
             class: style.classes.component
-        }, gen.switch('state', [
-            [
-                '"loading"', buildLoading()
-            ],
-            [
-                '"loaded"', buildDisplay()
-            ],
-            [
-                '"error"', buildError()
-            ]
-        ]));
+        }, gen.if('ready',
+            buildDisplay(),
+            gen.if('error',
+                buildError(),
+                buildLoading())));
+
+        // gen.switch('state', [
+        //     [
+        //         '"loading"', buildLoading()
+        //     ],
+        //     [
+        //         '"loaded"', buildDisplay()
+        //     ],
+        //     [
+        //         '"error"', buildError()
+        //     ]
+        // ]));
     }
 
     function component() {

@@ -237,7 +237,7 @@ define([
             class: style.classes.table,
             dataBind: {
                 style: {
-                    'background-color': 'table.style.backgroundColor'
+                    'background-color': 'table.style && table.style.backgroundColor ? table.style.backgroundColor : "transparent"'
                 }
             }
         }, [

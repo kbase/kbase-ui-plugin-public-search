@@ -21,53 +21,6 @@ define([
 ) {
     'use strict';
 
-    const t = html.tag,
-        div = t('div'),
-        img = t('img');
-
-    const style = html.makeStyles({
-        component: {
-            css: {
-                width: '140px',
-                overflow: 'hidden'
-            }
-        },
-        table: {
-            css: {
-
-            },
-            inner: {
-                td: {
-                    padding: '4px'
-                },
-                th: {
-                    fontWeight: 'bold',
-                    color: 'rgba(200,200,200,1)',
-                    textAlign: 'left',
-                    padding: '4px'
-                }
-            }
-        },
-        sectionHeader: {
-            css: {
-                fontWeight: 'bold',
-                fontSize: '110%',
-                color: 'rgba(100,100,100,1)',
-                marginTop: '8px'
-            }
-        },
-        wikipediaImage: {
-            css: {
-                // width: '100%'
-            }
-        },
-        imageCaption: {
-            css: {
-                height: '1em'
-            }
-        }
-    });
-
     class NotFound extends Error {
         constructor(message) {
             super(message);
@@ -88,13 +41,15 @@ define([
 
             this.searchTerm = term;
             this.error = ko.observable();
-            this.subscribe(this.error, (newValue) => {
-                if (newValue) {
-                    this.state('error');
-                }
-            });
+            this.ready = ko.observable(false);
 
-            this.state = ko.observable('loading');
+            // this.subscribe(this.error, (newValue) => {
+            //     if (newValue) {
+            //         this.state('error');
+            //     }
+            // });
+
+            // this.state = ko.observable('loading');
 
             this.findImage();
         }
@@ -107,12 +62,11 @@ define([
                 .then(({imageUrl, url}) => {
                     this.imageUrl(imageUrl);
                     this.pageUrl(url);
-                    this.loaded(true);
-                    this.state('loaded');
+                    this.ready(true);
                 })
                 .catch(NotFound, (err) => {
-                    console.warn('not found', err);
-                    this.error(err.message);
+                    // console.warn('not found', err);
+                    this.error(err);
                 })
                 .catch((err) => {
                     console.error('Error getting image', err);
@@ -145,7 +99,7 @@ define([
             return new Promise((resolve, reject) => {
                 const fetchPage = (terms) => {
                     if (terms.length === 0) {
-                        reject(new NotFound('No Wikipedia page found'));
+                        reject(new NotFound('No image found at Wikipedia'));
                         // resolve(null);
                         return;
                     }
@@ -278,6 +232,53 @@ define([
         }
     }
 
+    const t = html.tag,
+        div = t('div'),
+        img = t('img');
+
+    const style = html.makeStyles({
+        component: {
+            css: {
+                width: '140px',
+                overflow: 'hidden'
+            }
+        },
+        table: {
+            css: {
+
+            },
+            inner: {
+                td: {
+                    padding: '4px'
+                },
+                th: {
+                    fontWeight: 'bold',
+                    color: 'rgba(200,200,200,1)',
+                    textAlign: 'left',
+                    padding: '4px'
+                }
+            }
+        },
+        sectionHeader: {
+            css: {
+                fontWeight: 'bold',
+                fontSize: '110%',
+                color: 'rgba(100,100,100,1)',
+                marginTop: '8px'
+            }
+        },
+        wikipediaImage: {
+            css: {
+            // width: '100%'
+            }
+        },
+        imageCaption: {
+            css: {
+                height: '1em'
+            }
+        }
+    });
+
     function buildImage() {
         return div([
             gen.if('imageUrl',
@@ -306,52 +307,96 @@ define([
     }
 
     function buildError() {
-        return div([
+        return div({
+            style: {
+                display: 'flex',
+                flexDirection: 'column'
+            }
+        }, [
             div({
+                style: {
+                    textAlign: 'center',
+                    display: 'flex',
+                    alignItems: 'center',
+                    border: '1px silver dashed'
+                },
                 dataBind: {
                     style: {
-                        width: 'height',
+                        // width: 'height',
                         height: 'height',
                     },
                     text: 'error().message'
                 }
-            }),
-            div({
-                class: style.classes.imageCaption
             })
         ]);
     }
 
     function buildLoading() {
-        return div([
+        return div({
+            style: {
+                display: 'flex',
+                flexDirection: 'column'
+            }
+        }, [
             div({
+                style: {
+                    textAlign: 'center',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    border: '1px silver dashed'
+                },
                 dataBind: {
                     style: {
-                        width: 'height',
-                        height: 'height'
+                        // width: 'height',
+                        height: 'height',
                     }
                 }
-            }, build.loading('Locating image at Wikipedia')),
-            div({
-                class: style.classes.imageCaption
-            })
+            }, [
+                div('Locating image at Wikipedia'),
+                div({
+                    fontSize: '80%'
+                }, build.loading())
+            ])
         ]);
     }
+
+    // function buildLoading() {
+    //     return div([
+    //         div({
+    //             dataBind: {
+    //                 style: {
+    //                     width: 'height',
+    //                     height: 'height'
+    //                 }
+    //             }
+    //         }, build.loading('Locating image at Wikipedia')),
+    //         div({
+    //             class: style.classes.imageCaption
+    //         })
+    //     ]);
+    // }
 
     function template() {
         return div({
             class: style.classes.component
-        }, gen.switch('state', [
-            [
-                '"loading"', buildLoading()
-            ],
-            [
-                '"loaded"', buildImage()
-            ],
-            [
-                '"error"', buildError()
-            ]
-        ]));
+        }, gen.if('ready',
+            buildImage(),
+            gen.if('error',
+                buildError(),
+                buildLoading())));
+
+        // gen.switch('state', [
+        //     [
+        //         '"loading"', buildLoading()
+        //     ],
+        //     [
+        //         '"loaded"', buildDisplay()
+        //     ],
+        //     [
+        //         '"error"', buildError()
+        //     ]
+        // ]));
     }
 
     function component() {
