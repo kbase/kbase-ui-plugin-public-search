@@ -12,7 +12,7 @@ define([
     './resultsArea',
     './navBar',
     './searchError',
-    './summary',
+    './dataTypes',
     './help',
     './tooltipManager',
     './dataSource',
@@ -22,7 +22,9 @@ define([
     'kb_knockout/components/overlayPanel',
     'kb_knockout/lib/nanoBus',
     '../lib/debug',
-    '../lib/history'
+    '../lib/history',
+    '../lib/style',
+    '../lib/text'
 ], function (
     Promise,
     ko,
@@ -37,7 +39,7 @@ define([
     ResultsAreaComponent,
     NavBarComponent,
     SearchErrorComponent,
-    SummaryComponent,
+    DataTypesComponent,
     HelpComponent,
     TooltipComponent,
     DataSourceComponent,
@@ -47,7 +49,9 @@ define([
     OverlayPanelComponent,
     NanoBus,
     debug,
-    history
+    history,
+    commonStyle,
+    text
 ) {
     'use strict';
 
@@ -237,14 +241,14 @@ define([
             });
 
             // Help.
-            this.parentBus.on('help', () => {
-                this.showOverlay({
-                    name: HelpComponent.name(),
-                    viewModel: {
-                        bus: this.bus
-                    }
-                });
-            });
+            // this.parentBus.on('help', () => {
+            //     this.showOverlay({
+            //         name: HelpComponent.name(),
+            //         viewModel: {
+            //             bus: this.bus
+            //         }
+            //     });
+            // });
 
             this.bus.on('showError', () => {
                 this.showError();
@@ -261,7 +265,7 @@ define([
                 this.showOverlay({
                     name: HelpComponent.name(),
                     viewModel: {
-                        bus: this.bus
+                        // bus: this.bus
                     }
                 });
             });
@@ -654,6 +658,7 @@ define([
     }
 
     const t = html.tag,
+        span = t('span'),
         div = t('div');
 
     const style = html.makeStyles({
@@ -775,14 +780,20 @@ define([
                     class: style.classes.filterColumn
                 }, [
                     div({
-                        class: style.classes.columnHeader
-                    }, 'Filters'),
+                        class: style.classes.columnHeader,
+                        title: text.getTooltip('FILTERS_HEADER')
+                    }, span({
+                        class: commonStyle.classes.tooltipLight
+                    }, 'Filters')),
                     div({
                         class: style.classes.columnGroup
                     }, [
                         div({
                             class: style.classes.fieldGroupLabel
-                        }, 'Data Privacy'),
+                        }, span({
+                            class: commonStyle.classes.tooltipDark,
+                            title: text.getTooltip('DATA_PRIVACY_HEADER')
+                        }, 'Data Privacy')),
                         gen.component({
                             name: DataPrivacyComponent.name(),
                             params: {
@@ -796,7 +807,10 @@ define([
                     }, [
                         div({
                             class: style.classes.fieldGroupLabel
-                        }, 'Data Containers'),
+                        }, span({
+                            class: commonStyle.classes.tooltipDark,
+                            title: text.getTooltip('WORKSPACE_TYPE_HEADER')
+                        }, 'Workspace Type')),
                         gen.component({
                             name: DataSourceComponent.name(),
                             params: {
@@ -810,9 +824,12 @@ define([
                     }, [
                         div({
                             class: style.classes.fieldGroupLabel
-                        }, 'Data Types'),
+                        }, span({
+                            class: commonStyle.classes.tooltipDark,
+                            title: text.getTooltip('DATA_TYPES_HEADER')
+                        }, 'Data Types')),
                         gen.component({
-                            name: SummaryComponent.name(),
+                            name: DataTypesComponent.name(),
                             params: ['searchSummary', 'searchState', 'totalCount', 'realTotalCount', 'omittedDataTypes']
                         })
                     ])
@@ -854,7 +871,7 @@ define([
         return {
             viewModelWithContext: ViewModel,
             template: template(),
-            stylesheet: style.sheet
+            stylesheets: [style.sheet, commonStyle.sheet]
         };
     }
 

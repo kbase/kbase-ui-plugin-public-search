@@ -207,7 +207,6 @@ define([
 
         doClose() {
             // TODO.
-            // params.onClose();
             this.send('close');
         }
 

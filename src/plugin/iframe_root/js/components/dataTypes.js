@@ -2,12 +2,16 @@ define([
     'knockout',
     'kb_knockout/registry',
     'kb_knockout/lib/generators',
-    'kb_lib/html'
+    'kb_lib/html',
+    '../lib/style',
+    '../lib/text'
 ], function (
     ko,
     reg,
     gen,
-    html
+    html,
+    commonStyle,
+    text
 ) {
     'use strict';
 
@@ -260,10 +264,16 @@ define([
                 }),
                 div({
                     class: '-cell'
-                }, 'Data Type'),
+                }, span({
+                    class: commonStyle.classes.tooltipDark,
+                    title: text.getTooltip('DATA_TYPES_DATA_TYPE_COLUMN')
+                }, 'Data Type')),
                 div({
                     class: '-cell'
-                }, 'Count')
+                }, span({
+                    class: commonStyle.classes.tooltipDark,
+                    title: text.getTooltip('DATA_TYPES_COUNT_COLUMN')
+                }, 'Count'))
             ]),
             div({
                 class: '-body-container'
@@ -289,13 +299,14 @@ define([
                         class: '-cell'
                     },
                     span({
-                        class: 'fa',
+                        class: ['fa', commonStyle.classes.tooltipDark],
                         dataBind: {
                             css: {
                                 'fa-check-square-o': 'selected()',
                                 'fa-square-o': '!selected()'
                             }
-                        }
+                        },
+                        title: text.getTooltip('DATA_TYPES_CHECKBOX')
                     })),
 
                     div({
@@ -420,7 +431,10 @@ define([
             buildSummaryTable(),
             div({
                 class: style.classes.columnSubHeader
-            }, 'Search Results'),
+            }, span({
+                class: commonStyle.classes.tooltipDark,
+                title: text.getTooltip('DATA_TYPES_SEARCH_RESULTS_HEADER')
+            }, 'Search Results')),
             buildTotalsTable()
         ]);
     }

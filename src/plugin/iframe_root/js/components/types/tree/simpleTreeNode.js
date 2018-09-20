@@ -50,7 +50,7 @@ define([
             }
         }, [
             // the main display for this node
-            gen.if('tree',
+            gen.templateIf('tree',
                 div({
                     style: {
                         display: 'flex',
@@ -187,7 +187,7 @@ define([
                                 'background-color': 'leaf.userGenome ? "yellow" : "transparent"'
                             }
                         }
-                    }, gen.if('leaf.ref', a({
+                    }, gen.templateIf('leaf.ref', a({
                         dataBind: {
                             text: 'leaf.scientificName',
                             style: {
@@ -209,7 +209,8 @@ define([
                     })))
                 ])),
             // children, if this is a tree.
-            gen.if('tree',
+            gen.templateIf('tree',
+            // gen.if('tree',
                 div({
                     style: {
                         flex: '1 1 0px'

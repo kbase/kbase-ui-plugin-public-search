@@ -2,12 +2,14 @@ define([
     'knockout',
     'kb_knockout/registry',
     'kb_knockout/lib/viewModelBase',
-    'kb_lib/html'
+    'kb_lib/html',
+    '../../lib/text'
 ], function (
     ko,
     reg,
     ViewModelBase,
-    html
+    html,
+    text
 ) {
     'use strict';
 
@@ -55,6 +57,7 @@ define([
     function buildCopyButton() {
         return button({
             class: 'btn',
+            title: text.getTooltip('COPY_OBJECTS_BUTTON'),
             dataBind: {
                 click: 'doCopyObjects',
                 enable: 'selectedObjects().length > 0 && authorized()',

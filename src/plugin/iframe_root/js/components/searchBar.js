@@ -6,7 +6,9 @@ define([
     'kb_knockout/lib/viewModelBase',
     'kb_lib/html',
     'kb_lib/httpUtils',
-    './copy/copyObjectsControl'
+    './copy/copyObjectsControl',
+    '../lib/text',
+    '../lib/style'
 ], function (
     Uuid,
     ko,
@@ -15,7 +17,9 @@ define([
     ViewModelBase,
     html,
     httpUtils,
-    CopyObjectsControlComponent
+    CopyObjectsControlComponent,
+    text,
+    commonStyle
 ) {
     'use strict';
 
@@ -296,7 +300,7 @@ define([
                 }
             }, [
                 input({
-                    class: 'form-control',
+                    class: ['form-control'],
                     dataBind: {
                         textInput: 'searchControlValue',
                         hasFocus: true,
@@ -305,7 +309,8 @@ define([
                             keyup: 'doKeyUp'
                         }
                     },
-                    placeholder: 'Search KBase Data'
+                    placeholder: 'Search KBase Data',
+                    title: text.getTooltip('SEARCH_INPUT')
                 }),
                 gen.if('showHistory',
                     div({
@@ -334,16 +339,16 @@ define([
                         }, 'no items in history yet - it will be populated as you conduct searches!')))),
             ]),
             div({
-                class: 'input-group-addon ' + styles.classes.addonButton,
+                class: ['input-group-addon ', styles.classes.addonButton, commonStyle.classes.tooltipDark],
                 dataBind: {
                     click: 'doSearch'
-                }
+                },
+                title: text.getTooltip('SEARCH_BUTTON'),
             }, span({
                 class: 'fa',
                 style: {
                     fontSize: '100%',
                 },
-                title: 'Click me to start or refresh a search for public data',
                 dataBind: {
                     css: {
                         'fa-search': '!$component.searching()',
@@ -352,9 +357,9 @@ define([
                 }
             })),
             div({
-                class: 'input-group-addon ' + styles.classes.addonButton,
+                class: ['input-group-addon', styles.classes.addonButton, commonStyle.classes.tooltipDark],
                 dataType: 'history-toggle-button',
-                title: 'Click me to see a list of up to 10 of your most recently used searches',
+                title: text.getTooltip('SEARCH_HISTORY_BUTTON'),
                 dataBind: {
                     click: 'doToggleHistory',
                     style: {
@@ -366,14 +371,14 @@ define([
                 class: 'fa fa-history'
             })),
             div({
-                class: 'input-group-addon ' + styles.classes.addonButton,
-                title: 'Click me to clear the search box with one easy action',
+                class: ['input-group-addon', styles.classes.addonButton, commonStyle.classes.tooltipDark],
+                title: text.getTooltip('SEARCH_CLEAR_BUTTON'),
                 dataBind: {
                     click: 'searchControlValue() ? doClearInput : null',
                     css: 'searchControlValue() ? "' + styles.classes.addonButton + '" : "' + styles.classes.addonButtonDisabled + '"'
                 }
             }, span({
-                class: 'fa fa-times'
+                class: 'fa fa-trash-o'
             }))
         ]));
     }
@@ -388,6 +393,7 @@ define([
             }),
             button({
                 class: 'btn btn-default',
+                title: text.getTooltip('FEEDBACK_BUTTON'),
                 dataBind: {
                     click: 'function(d,e){$component.showFeedback.call($component,d,e);}'
                 }
@@ -399,6 +405,7 @@ define([
             ]),
             button({
                 class: 'btn btn-default',
+                title: text.getTooltip('HELP_BUTTON'),
                 dataBind: {
                     click: 'function(d,e){$component.showHelp.call($component,d,e);}'
                 }
