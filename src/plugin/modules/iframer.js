@@ -241,6 +241,12 @@ define([
 
         stop() {
             this.container.innerHTML = '';
+
+            const currentLocation = window.location.toString();
+            const currentURL = new URL(currentLocation);
+            currentURL.search = '';
+            history.pushState(null, '', currentURL.toString());
+
             return this.channel.stop();
         }
     }
