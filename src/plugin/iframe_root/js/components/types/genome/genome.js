@@ -48,7 +48,7 @@ define([
                         component: {
                             name: GenesComponent.name(),
                             params: {
-                                ref: 'object.objectInfo.ref'
+                                object: 'object'
                             }
                         }
                     }
