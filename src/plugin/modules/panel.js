@@ -27,11 +27,12 @@ define([
             this.container.style['flex-direction'] = 'column';
         }
 
-        start() {
+        start(params) {
             this.iframer = new Iframer({
                 runtime: this.runtime,
                 node: this.container,
-                pluginPath: pluginPath
+                pluginPath: pluginPath,
+                params: params
             });
 
             this.runtime.send('ui', 'setTitle', 'KBase Search');

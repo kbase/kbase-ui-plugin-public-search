@@ -5,7 +5,6 @@ define([
     'kb_knockout/lib/generators',
     'kb_knockout/lib/viewModelBase',
     'kb_lib/html',
-    'kb_common_ts/Cookie',
     '../lib/serviceUtils',
     '../lib/model',
     './searchBar',
@@ -32,7 +31,6 @@ define([
     gen,
     ViewModelBase,
     html,
-    Cookie,
     serviceUtils,
     model,
     SearchBarComponent,
@@ -67,9 +65,10 @@ define([
             this.maxHistoryLength = 10;
 
             this.authorization = params.authorization;
+            this.pluginParams = this.parsePluginParams(params.pluginParams);
 
             // Primary search inputs
-            this.searchInput = ko.observable();
+            this.searchInput = ko.observable(this.pluginParams.query);
             this.forceSearch = ko.observable();
             this.page = ko.observable();
             this.pageSize = ko.observable();
@@ -77,13 +76,60 @@ define([
             this.searchHistory = ko.observableArray();
 
             // Filters
+
+
+            // For data types, we take the params, if any, and set the
+            // omitted data types to include all of the supported data types
+            // not in the list of supplied data types.
+            let defaultOmittedDataTypes = [];
+            if (this.pluginParams.dataTypes) {
+                defaultOmittedDataTypes = this.supportedDataTypes
+                    .filter(({value}) => {
+                        return !this.pluginParams.dataTypes.includes(value.toLowerCase());
+                    })
+                    .map((type) => {
+                        return type.value;
+                    });
+            }
+
             this.dataTypes = ko.observableArray();
-            this.omittedDataTypes = ko.observableArray();
+            this.omittedDataTypes = ko.observableArray(defaultOmittedDataTypes);
+
             this.dataSources = ko.observableArray();
-            this.withPrivateData = ko.observable(true);
-            this.withPublicData = ko.observable(true);
-            this.withUserData = ko.observable(true);
-            this.withReferenceData = ko.observable(true);
+
+            let defaultWithPrivateData = true;
+            let defaultWithPublicData = true;
+            if (this.pluginParams.dataPrivacy) {
+                if (!this.pluginParams.dataPrivacy.includes('private')) {
+                    defaultWithPrivateData = false;
+                }
+                if (!this.pluginParams.dataPrivacy.includes('public')) {
+                    defaultWithPublicData = false;
+                }
+                if (!defaultWithPrivateData && !defaultWithPublicData) {
+                    defaultWithPrivateData = true;
+                    defaultWithPublicData = true;
+                }
+            }
+            this.withPrivateData = ko.observable(defaultWithPrivateData);
+            this.withPublicData = ko.observable(defaultWithPublicData);
+
+            let defaultWithUserData = true;
+            let defaultWithReferenceData = true;
+            if (this.pluginParams.workspaceTypes) {
+                if (!this.pluginParams.workspaceTypes.includes('narrative')) {
+                    defaultWithUserData = false;
+                }
+                if (!this.pluginParams.workspaceTypes.includes('refdata')) {
+                    defaultWithReferenceData = false;
+                }
+                if (!defaultWithUserData && !defaultWithReferenceData) {
+                    defaultWithUserData = true;
+                    defaultWithReferenceData = true;
+                }
+            }
+            this.withUserData = ko.observable(defaultWithUserData);
+            this.withReferenceData = ko.observable(defaultWithReferenceData);
 
             // data model
             this.model = new model.Model({
@@ -379,7 +425,66 @@ define([
             }
         }
 
+        parsePluginParams(pluginParams) {
+            return {
+                query: pluginParams.query,
+                dataPrivacy: pluginParams.dataPrivacy ? pluginParams.dataPrivacy.split(',') : null,
+                workspaceTypes: pluginParams.workspaceTypes ? pluginParams.workspaceTypes.split(',') : null,
+                dataTypes: pluginParams.dataTypes ? pluginParams.dataTypes.split(',').map((type) => {return type.toLowerCase();}) : null
+            };
+        }
+
+        updatePluginParams(query) {
+            // const pluginParams = {
+            //     query: null,
+            //     dataPrivacy: [],
+            //     workspaceTypes: [],
+            //     dataTypes: []
+            // };
+
+            const pluginParams = {};
+
+            if (query.input.searchInput) {
+                pluginParams.query = query.input.searchInput.trim();
+            }
+
+            if (query.input.withPrivateData || query.input.withPublicData) {
+                const dataPrivacy = [];
+                if (query.input.withPrivateData) {
+                    dataPrivacy.push('private');
+                }
+                if (query.input.withPublicData) {
+                    dataPrivacy.push('public');
+                }
+                if (dataPrivacy.length !== 2) {
+                    pluginParams.dataPrivacy = dataPrivacy;
+                }
+            }
+
+            if (query.input.withUserData || query.input.withReferenceData) {
+                const workspaceTypes = [];
+                if (query.input.withUserData) {
+                    workspaceTypes.push('narrative');
+                }
+                if (query.input.withReferenceData) {
+                    workspaceTypes.push('refdata');
+                }
+                if (workspaceTypes.length !== 2) {
+                    pluginParams.workspaceTypes = workspaceTypes;
+                }
+            }
+
+            if (query.input.dataTypes &&
+                query.input.dataTypes.length !== this.supportedDataTypes.length) {
+                pluginParams.dataTypes = query.input.dataTypes;
+            }
+
+            this.parentBus.send('set-plugin-params', {pluginParams});
+        }
+
         doSearch(query) {
+            this.updatePluginParams(query);
+
             // translate query to model call
             if (!query.input.searchInput || query.input.searchInput.trim().length === 0) {
                 this.searchState('none');
@@ -390,6 +495,8 @@ define([
                 this.page(1);
                 return;
             }
+
+            // Set the query params
 
             // NB this is async, so the history will not be updated right away here.
             this.history.updateHistory(query.input.searchInput)
@@ -421,12 +528,13 @@ define([
                 count = query.paging.pageSize;
             }
 
-            let dataTypes;
-            if (query.input.dataTypes.length === 0) {
-                dataTypes = null;
-            } else {
-                dataTypes = query.input.dataTypes;
-            }
+            const dataTypes = query.input.dataTypes;
+            console.log('data types???', dataTypes);
+            // if (query.input.dataTypes.length === 0) {
+            //     dataTypes = null;
+            // } else {
+            //     dataTypes = query.input.dataTypes;
+            // }
 
             this.searching(true);
             this.searchState('searching');
@@ -462,7 +570,6 @@ define([
                         //     summary.count(summaryResult.type_to_count[summary.type] || 0);
                         // }
                     });
-
 
                     const len = result.objects.length;
                     if (len === 0) {
@@ -625,9 +732,6 @@ define([
                             }
                         };
                         return row;
-
-                        // quick hack
-                        // this.searchResults.push(row);
                     });
                     this.searchResults(searchResults);
                     this.searchState('success');
@@ -653,8 +757,6 @@ define([
                 summary.count(null);
             });
         }
-
-
     }
 
     const t = html.tag,

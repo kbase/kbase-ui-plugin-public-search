@@ -15,6 +15,97 @@ define([
 ) {
     'use strict';
 
+    class ViewModel {
+        constructor({searchSummary, searchState, totalCount, realTotalCount, omittedDataTypes}) {
+            this.searchSummary = searchSummary;
+            this.searchState = searchState;
+            this.totalCount = totalCount;
+            this.realTotalCount = realTotalCount;
+            this.omittedDataTypes = omittedDataTypes;
+
+            this.includedTotal = ko.pureComputed(() => {
+                if (['none', 'error', 'searching'].includes(this.searchState())) {
+                    return null;
+                }
+                return this.searchSummary().reduce((total, typeSummary) => {
+                    if (typeSummary.selected()) {
+                        return total + typeSummary.count();
+                    }
+                    return total;
+                }, 0);
+            });
+
+            this.excludedTotal = ko.pureComputed(() => {
+                if (['none', 'error', 'searching'].includes(this.searchState())) {
+                    return null;
+                }
+                return this.searchSummary().reduce((total, typeSummary) => {
+                    if (!typeSummary.selected()) {
+                        return total + typeSummary.count();
+                    }
+                    return total;
+                }, 0);
+            });
+
+            this.canUncheck = ko.pureComputed(() => {
+                return (this.searchSummary().length - this.omittedDataTypes().length > 1);
+            });
+        }
+
+        doSelectDataType(data, event) {
+            // note - knockout should return the same type of event no matter
+            // how it is being listened for...
+            // const event = jqueryEvent.originalEvent;
+            if (!this.canUncheck() && data.selected()) {
+                return;
+            }
+
+            if (event.altKey) {
+                // Alt key means to toggle this checkbox, and to toggle all others to
+                // the opposite state.
+
+                // toggle this one
+                if (this.omittedDataTypes().includes(data.type)) {
+                    this.omittedDataTypes.remove(data.type);
+                } else {
+                    this.omittedDataTypes.push(data.type);
+                }
+
+                // then the rest
+                const omitted = this.omittedDataTypes().includes(data.type);
+                this.searchSummary().forEach((type) => {
+                    if (type.type !== data.type) {
+                        if (omitted) {
+                            this.omittedDataTypes.remove(type.type);
+                        } else {
+                            this.omittedDataTypes.push(type.type);
+                        }
+                    }
+                });
+            } else if (event.metaKey) {
+                // Control key means to keep ensure this checkbox is on, and all others
+                // are off.
+                if (this.omittedDataTypes().includes(data.type)) {
+                    this.omittedDataTypes.remove(data.type);
+                }
+                this.searchSummary().forEach((type) => {
+                    if (type.type !== data.type) {
+                        if (!this.omittedDataTypes().includes(type.type)) {
+                            this.omittedDataTypes.push(type.type);
+                        }
+                    }
+                });
+            } else {
+                // just toggle this one
+                if (this.omittedDataTypes().includes(data.type)) {
+                    this.omittedDataTypes.remove(data.type);
+                } else {
+                    this.omittedDataTypes.push(data.type);
+                }
+            }
+        }
+    }
+
     const t = html.tag,
         span = t('span'),
         div = t('div');
@@ -94,7 +185,6 @@ define([
                 width: '100%',
                 backgroundColor: '#FFF',
                 fontSize: '100%',
-                // marginTop: '10px'
             },
             inner: {
                 '.-header': {
@@ -106,9 +196,6 @@ define([
                 '.-header > .-cell': {
                     display: 'inline-block'
                 },
-                // '.-header > .-cell:nth-child(1)': {
-                //     width: '10%'
-                // },
                 '.-header > .-cell:nth-child(1)': {
                     width: '65%'
                 },
@@ -127,9 +214,6 @@ define([
                 '.-body > .-row > .-cell': {
                     display: 'inline-block'
                 },
-                // '.-body > .-row > .-cell:nth-child(1)': {
-                //     width: '10%'
-                // },
                 '.-body > .-row > .-cell:nth-child(1)': {
                     width: '65%'
                 },
@@ -152,105 +236,17 @@ define([
         },
         statusRow: {
             css: {
-                // height: '3em'
             }
         },
         columnSubHeader: {
             fontWeight: 'bold',
             color: 'gray',
-            // marginTop: '8px',
-            // marginRight: '4px'
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            // height: '1.5em',
             marginTop: '10px'
         },
     });
-
-    class ViewModel {
-        constructor({searchSummary, searchState, totalCount, realTotalCount, omittedDataTypes}) {
-            this.searchSummary = searchSummary;
-            this.searchState = searchState;
-            this.totalCount = totalCount;
-            this.realTotalCount = realTotalCount;
-            this.omittedDataTypes = omittedDataTypes;
-
-            this.includedTotal = ko.pureComputed(() => {
-                if (['none', 'error', 'searching'].includes(this.searchState())) {
-                    return null;
-                }
-                return this.searchSummary().reduce((total, typeSummary) => {
-                    if (typeSummary.selected()) {
-                        return total + typeSummary.count();
-                    }
-                    return total;
-                }, 0);
-            });
-
-            this.excludedTotal = ko.pureComputed(() => {
-                if (['none', 'error', 'searching'].includes(this.searchState())) {
-                    return null;
-                }
-                return this.searchSummary().reduce((total, typeSummary) => {
-                    if (!typeSummary.selected()) {
-                        return total + typeSummary.count();
-                    }
-                    return total;
-                }, 0);
-            });
-        }
-
-        doSelectDataType(data, event) {
-            // note - knockout should return the same type of event no matter
-            // how it is being listened for...
-            // const event = jqueryEvent.originalEvent;
-
-            if (event.altKey) {
-                // Alt key means to toggle this checkbox, and to toggle all others to
-                // the opposite state.
-
-                // toggle this one
-                if (this.omittedDataTypes().includes(data.type)) {
-                    this.omittedDataTypes.remove(data.type);
-                } else {
-                    this.omittedDataTypes.push(data.type);
-                }
-
-                // then the rest
-                const omitted = this.omittedDataTypes().includes(data.type);
-                this.searchSummary().forEach((type) => {
-                    if (type.type !== data.type) {
-                        if (omitted) {
-                            this.omittedDataTypes.remove(type.type);
-                        } else {
-                            this.omittedDataTypes.push(type.type);
-                        }
-                    }
-                });
-            } else if (event.metaKey) {
-                // Control key means to keep ensure this checkbox is on, and all others
-                // are off.
-                if (this.omittedDataTypes().includes(data.type)) {
-                    this.omittedDataTypes.remove(data.type);
-                }
-                this.searchSummary().forEach((type) => {
-                    if (type.type !== data.type) {
-                        if (!this.omittedDataTypes().includes(type.type)) {
-                            this.omittedDataTypes.push(type.type);
-                        }
-                    }
-                });
-            } else {
-                // just toggle this one
-                if (this.omittedDataTypes().includes(data.type)) {
-                    this.omittedDataTypes.remove(data.type);
-                } else {
-                    this.omittedDataTypes.push(data.type);
-                }
-            }
-        }
-    }
 
     function buildSummaryTable() {
         return div({
@@ -289,10 +285,10 @@ define([
                         css: {
                             [style.classes.activeFilterInput]: 'selected()'
                         },
-                        click: 'function(d,e){$component.doSelectDataType.call($component,d,e);}'
-                    },
-                    style: {
-                        cursor: 'pointer'
+                        click: 'function(d,e){$component.doSelectDataType.call($component,d,e);}',
+                        style: {
+                            cursor: '$component.canUncheck() || !selected() ? "pointer" : "auto"'
+                        }
                     }
                 }, [
                     div({
@@ -316,7 +312,7 @@ define([
                             style: {
                                 'font-weight': 'count() ? "bold" : "normal"',
                                 'font-style': 'count() ? "normal" : "italic"',
-                                'color': 'selected() ? "#000" : "#CCC"'
+                                'color': '$component.canUncheck() && selected() ? "#000" : "#CCC"'
                             }
                         }
                     }),
@@ -332,7 +328,7 @@ define([
                             style: {
                                 'font-weight': 'count() ? "bold" : "normal"',
                                 'font-style': 'count() ? "normal" : "italic"',
-                                'color': 'selected() ? "#000" : "#CCC"'
+                                'color': '$component.canUncheck() && selected() ? "#000" : "#CCC"'
                             }
                         }
                     })
@@ -356,10 +352,6 @@ define([
                         height: '1.5em'
                     }
                 }, [
-                    // div({
-                    //     class: '-cell'
-                    // }),
-
                     div({
                         class: '-cell',
                         dataBind: {
@@ -391,10 +383,6 @@ define([
                         height: '1.5em'
                     }
                 }, [
-                    // div({
-                    //     class: '-cell'
-                    // }),
-
                     div({
                         class: '-cell',
                         dataBind: {

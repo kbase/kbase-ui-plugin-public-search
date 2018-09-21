@@ -16,7 +16,10 @@
             -
                 path: [public-search]
                 queryParams:
-                    q: {}
+                    query: true,
+                    dataPrivacy: true,
+                    workspaceTypes: true,
+                    dataTypes: true
                 widget: public-search_panel
                 authorization: false
         menu:

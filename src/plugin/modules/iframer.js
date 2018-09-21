@@ -1,9 +1,11 @@
 define([
     'kb_lib/html',
-    'kb_lib/windowChannel'
+    'kb_lib/windowChannel',
+    'kb_lib/httpUtils'
 ], function (
     html,
-    WindowChannel
+    WindowChannel,
+    httpUtils
 ) {
     'use strict';
 
@@ -82,6 +84,7 @@ define([
             this.container = config.node;
             this.pluginPath = config.pluginPath;
             this.runtime = config.runtime;
+            this.params = config.params;
 
             this.id = 'host_' + html.genId();
 
@@ -104,7 +107,8 @@ define([
                 pathRoot: this.pluginPath,
                 params: {
                     channelId: this.channel.id,
-                    hostId: this.id
+                    hostId: this.id,
+                    params: this.params
                 }
             });
 
@@ -168,6 +172,36 @@ define([
                     this.channel.on('open-window', ({url}) => {
                         window.location.href = url;
                         // window.open(url, name);
+                    });
+
+                    this.channel.on('set-plugin-params', ({pluginParams}) => {
+                        if (Object.keys(pluginParams) === 0) {
+                            window.location.search = '';
+                            return;
+                        }
+                        const query = {};
+                        if (pluginParams.query) {
+                            query.query = pluginParams.query;
+                        }
+                        if (pluginParams.dataPrivacy && pluginParams.dataPrivacy.length > 0) {
+                            query.dataPrivacy = pluginParams.dataPrivacy.join(',');
+                        }
+                        if (pluginParams.workspaceTypes && pluginParams.workspaceTypes.length > 0) {
+                            query.workspaceTypes = pluginParams.workspaceTypes.join(',');
+                        }
+                        if (pluginParams.dataTypes) {
+                            query.dataTypes = pluginParams.dataTypes.join(',');
+                        }
+
+                        // prepare the params.
+                        const queryString = httpUtils.encodeQuery(query);
+
+                        const currentLocation = window.location.toString();
+                        const currentURL = new URL(currentLocation);
+                        currentURL.search = queryString;
+                        history.pushState(null, '', currentURL.toString());
+
+                        // window.location.search = queryString;
                     });
 
                     this.channel.on('ready', (message) => {

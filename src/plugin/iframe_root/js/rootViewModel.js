@@ -26,9 +26,10 @@ define([
     class RootViewModel extends ViewModelBase {
         constructor(params) {
             super(params);
-            const {runtime, hostChannel, authorized, authorization} = params;
+            const {runtime, hostChannel, authorized, authorization, pluginParams} = params;
             this.runtime = runtime;
             this.hostChannel = hostChannel;
+            this.pluginParams = pluginParams;
             this.authorized = ko.observable(authorized);
             this.authorization = ko.observable(authorization);
 
@@ -85,7 +86,7 @@ define([
                 this.showFeedback();
             });
 
-            
+
 
             this.columns = [
                 {

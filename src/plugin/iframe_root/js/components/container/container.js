@@ -49,7 +49,7 @@ define([
                         owner: 'object.workspaceInfo.owner',
                         lastModifiedAt: 'object.workspaceInfo.modDate',
                         workspaceId: 'object.workspaceInfo.id',
-                        objectId: 'object.objectInfo.id'
+                        objectId: 'parseInt(object.workspaceInfo.metadata.narrative)'
                     }
                 })],
             ['"refdata"',

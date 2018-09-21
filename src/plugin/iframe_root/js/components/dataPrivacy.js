@@ -9,6 +9,38 @@ define([
 ) {
     'use strict';
 
+    class ViewModel {
+        constructor({withPrivateData, withPublicData}, context) {
+            this._withPrivateData = withPrivateData;
+            this._withPublicData = withPublicData;
+            this.authorized = context.$root.authorized;
+
+            this.withPrivateData = ko.pureComputed(() => {
+                if (!this.authorized()) {
+                    return false;
+                }
+                return this._withPrivateData();
+            });
+
+            this.withPublicData = ko.pureComputed(() => {
+                if (!this.authorized()) {
+                    return true;
+                }
+                return this._withPublicData;
+            });
+        }
+        togglePrivateData() {
+            if (this._withPublicData()) {
+                this._withPrivateData(!this._withPrivateData());
+            }
+        }
+        togglePublicData() {
+            if (this._withPrivateData()) {
+                this._withPublicData(!this._withPublicData());
+            }
+        }
+    }
+
     const t = html.tag,
         div = t('div'),
         span = t('span');
@@ -108,38 +140,6 @@ define([
             }
         },
     });
-
-    class ViewModel {
-        constructor({withPrivateData, withPublicData}, context) {
-            this._withPrivateData = withPrivateData;
-            this._withPublicData = withPublicData;
-            this.authorized = context.$root.authorized;
-
-            this.withPrivateData = ko.pureComputed(() => {
-                if (!this.authorized()) {
-                    return false;
-                }
-                return this._withPrivateData();
-            });
-
-            this.withPublicData = ko.pureComputed(() => {
-                if (!this.authorized()) {
-                    return true;
-                }
-                return this._withPublicData;
-            });
-        }
-        togglePrivateData() {
-            if (this._withPublicData()) {
-                this._withPrivateData(!this._withPrivateData());
-            }
-        }
-        togglePublicData() {
-            if (this._withPrivateData()) {
-                this._withPublicData(!this._withPublicData());
-            }
-        }
-    }
 
     function buildPrivacyTable() {
         return div({

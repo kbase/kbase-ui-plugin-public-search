@@ -96,6 +96,9 @@ require([
                 // channelId, frameId, hostId, parentHost
                 this.hostParams = this.getParamsFromIFrame();
 
+                // The original params from the plugin (taken from the url)
+                this.pluginParams = this.hostParams.params;
+
                 this.authorized = null;
 
                 // this is the channel for this window.
@@ -127,7 +130,8 @@ require([
                     runtime: this.runtime,
                     hostChannel: this.hostChannel,
                     authorized: this.authorized,
-                    authorization: this.authorization
+                    authorization: this.authorization,
+                    pluginParams: this.pluginParams
                 });
                 this.container.innerHTML = div({
                     style: {
@@ -141,7 +145,8 @@ require([
                             params: {
                                 runtime: 'runtime',
                                 bus: 'bus',
-                                authorization: 'authorization'
+                                authorization: 'authorization',
+                                pluginParams: 'pluginParams'
                             }
                         }
                     }
@@ -199,6 +204,10 @@ require([
 
                             this.runtime = new runtime.Runtime({config, token, username, realname, email});
                             this.render(ko);
+
+                            this.rootViewModel.bus.on('set-plugin-params', ({pluginParams}) => {
+                                this.hostChannel.send('set-plugin-params', {pluginParams});
+                            });
 
                             this.channel.on('show-feedback', () => {
                                 // this.showFeedback();

@@ -9,6 +9,23 @@ define([
 ) {
     'use strict';
 
+    class ViewModel {
+        constructor({withUserData, withReferenceData}) {
+            this.withUserData = withUserData;
+            this.withReferenceData = withReferenceData;
+        }
+        toggleUserData() {
+            if (this.withReferenceData()) {
+                this.withUserData(!this.withUserData());
+            }
+        }
+        toggleReferenceData() {
+            if (this.withUserData()) {
+                this.withReferenceData(!this.withReferenceData());
+            }
+        }
+    }
+
     const t = html.tag,
         div = t('div'),
         span = t('span');
@@ -127,23 +144,6 @@ define([
             }
         },
     });
-
-    class ViewModel {
-        constructor({withUserData, withReferenceData}) {
-            this.withUserData = withUserData;
-            this.withReferenceData = withReferenceData;
-        }
-        toggleUserData() {
-            if (this.withReferenceData()) {
-                this.withUserData(!this.withUserData());
-            }
-        }
-        toggleReferenceData() {
-            if (this.withUserData()) {
-                this.withReferenceData(!this.withReferenceData());
-            }
-        }
-    }
 
     function buildDataSourceTable() {
         return div({
