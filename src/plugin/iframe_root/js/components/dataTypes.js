@@ -300,6 +300,9 @@ define([
                             css: {
                                 'fa-check-square-o': 'selected()',
                                 'fa-square-o': '!selected()'
+                            },
+                            style: {
+                                'color': '$component.canUncheck() || !selected() ? "#000" : "#AAA"'
                             }
                         },
                         title: text.getTooltip('DATA_TYPES_CHECKBOX')
@@ -312,7 +315,7 @@ define([
                             style: {
                                 'font-weight': 'count() ? "bold" : "normal"',
                                 'font-style': 'count() ? "normal" : "italic"',
-                                'color': '$component.canUncheck() && selected() ? "#000" : "#CCC"'
+                                'color': 'selected() ? "#000" : "#AAA"'
                             }
                         }
                     }),
@@ -328,7 +331,7 @@ define([
                             style: {
                                 'font-weight': 'count() ? "bold" : "normal"',
                                 'font-style': 'count() ? "normal" : "italic"',
-                                'color': '$component.canUncheck() && selected() ? "#000" : "#CCC"'
+                                'color': 'selected() ? "#000" : "#AAA"'
                             }
                         }
                     })
