@@ -529,7 +529,6 @@ define([
             }
 
             const dataTypes = query.input.dataTypes;
-            console.log('data types???', dataTypes);
             // if (query.input.dataTypes.length === 0) {
             //     dataTypes = null;
             // } else {
