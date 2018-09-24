@@ -112,7 +112,6 @@ define([
             super(params);
             const {object} = params;
             this.object = object;
-            console.log('object...', object);
             // for now reconstruct the guid...
             this.genomeGuid = 'WS:' + [object.objectInfo.wsid, object.objectInfo.id, object.objectInfo.version].map(String).join('/');
             // this.genomeGuid = object.guid;
@@ -130,9 +129,9 @@ define([
 
             this.table = new Table();
 
-            this.subscribe(this.table.pageSize, (newValue) => {
-                console.log('new page size', newValue);
-            });
+            // this.subscribe(this.table.pageSize, (newValue) => {
+            //     console.log('new page size', newValue);
+            // });
 
             this.searchQuery = ko.pureComputed(() => {
                 const searchInput = this.searchInput();
@@ -156,7 +155,7 @@ define([
             });
 
             this.subscribe(this.searchQuery, (newValue) => {
-                console.log('hmm', newValue);
+                // console.log('hmm', newValue);
                 if (!newValue) {
                     return;
                 }
@@ -204,10 +203,8 @@ define([
         }
 
         doSearch(query) {
-            console.log('do search', query);
             this.getGenes(query)
                 .then((genes) => {
-                    console.log('GENES', genes);
                     const rows = genes.map(({id, type, aliases, functions, location}) => {
                         return new Row({
                             data: {
@@ -229,7 +226,6 @@ define([
                             }
                         });
                     });
-                    console.log('rows', rows);
                     this.table.rows(rows);
                 })
                 .catch((err) => {
@@ -238,7 +234,6 @@ define([
         }
 
         getGenes(query) {
-            console.log('get genes with', query);
             const searchAPI = this.runtime.service('rpc').makeClient({
                 module: 'KBaseSearchEngine',
                 timeout: 10000,
@@ -295,7 +290,6 @@ define([
             };
             return searchAPI.callFunc('search_objects', [param])
                 .spread((result) => {
-                    console.log('got search result', param, result);
                     return result.objects.map(({data}) => {
                         const {id, type, location, aliases, functions} = data;
                         return {
@@ -303,7 +297,7 @@ define([
                             location: location.map(([id, start, strand, length]) => {
                                 return {id, start, strand, length};
                             }),
-                            aliases: aliases.map((alias) => {
+                            aliases: aliases ? aliases.map((alias) => {
                                 if (typeof alias === 'string') {
                                     return {
                                         type: null,
@@ -313,7 +307,7 @@ define([
                                     const [type, name] = alias;
                                     return {type, name};
                                 }
-                            }),
+                            }) : [],
                             functions: functions || []
                         };
                     });

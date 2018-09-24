@@ -243,7 +243,13 @@ define([
         }, [
             buildHeader(),
             div({
-                class: style.classes.tableBody
+                class: style.classes.tableBody,
+                dataBind: {
+                    style: {
+                        maxHeight: 'table.style.maxHeight || null',
+                        overflowY: 'table.style.maxHeight ? "scroll" : null'
+                    }
+                }
             }, gen.foreachAs(
                 'rows.sorted((a,b) => {return $component.sortTable.call($component,a,b)})',
                 'row',

@@ -27,113 +27,126 @@ define([
         div = t('div'),
         button = t('button');
 
+    function buildButton() {
+        return div({
+            style: {
+                flex: '0 0 2em'
+            }
+        }, button({
+            dataBind: {
+                click: 'function(){$component.doToggleAlias.call($component)}'
+            }
+        }, [
+            div({
+                style: {
+                    display: 'inline-block',
+                    width: '1em',
+                    textAlign: 'right',
+                    marginRight: '4px'
+                },
+                dataBind: {
+                    text: 'aliases.length'
+                }
+            }),
+            div({
+                style: {
+                    display: 'inline-block',
+                    width: '1em'
+                },
+                dataBind: {
+                    text: 'open() ? "↓" : "→"'
+                }
+            })
+        ]));
+    }
+
     function template() {
         return div({
             style: {
                 display: 'flex',
                 flexDirection: 'row'
             }
-        }, [
+        }, gen.if('aliases.length === 0',
             div({
                 style: {
                     flex: '1 1 0px',
-                    border: '1px silver dotted',
+                    textAlign: 'center'
+                }
+            }, '-'),[
+                div({
+                    style: {
+                        flex: '1 1 0px',
+                        border: '1px silver dotted',
                     // position: 'relative',
                     // zIndex: '100'
-                },
-                // dataBind: {
-                //     style: {
-                //         'z-index': 'open() ? 10000 : "auto"'
-                //     }
-                // }
-            }, div({
-                style: {
-                    position: 'relative'
-                },
-                dataBind: {
-                    style: {
-                        'z-index': 'open() ? 10000 : "auto"'
-                    }
-                }
-            }, div({
-                style: {
-                    position: 'absolute',
-                    left: '0',
-                    top: '0',
-                    right: '0',
-                    backgroundColor: '#FFF',
-                    border: '1px silver solid'
-                },
-                // dataBind: {
-                //     style: {
-                //         'z-index': 'open() ? 10000 : "auto"'
-                //     }
-                // }
-            }, div({
-                style: {
-                    display: 'flex',
-                    flexDirection: 'column'
-                }
-            }, gen.foreach('aliases',
-                // gen.if('$index() === 0',
-                div({
-                    dataBind: {
-                        visible: '$index() === 0 || $component.open()'
                     },
+                // dataBind: {
+                //     style: {
+                //         'z-index': 'open() ? 10000 : "auto"'
+                //     }
+                // }
+                }, div({
                     style: {
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        // flex: '1 1 0px'
+                        position: 'relative'
+                    },
+                    dataBind: {
+                        style: {
+                            'z-index': 'open() ? 10000 : "auto"'
+                        }
                     }
-                }, [
-                    gen.if('type',
+                }, div({
+                    style: {
+                        position: 'absolute',
+                        left: '0',
+                        top: '0',
+                        right: '0',
+                        backgroundColor: '#FFF',
+                        border: '1px silver solid'
+                    },
+                // dataBind: {
+                //     style: {
+                //         'z-index': 'open() ? 10000 : "auto"'
+                //     }
+                // }
+                }, div({
+                    style: {
+                        display: 'flex',
+                        flexDirection: 'column'
+                    }
+                }, gen.foreach('aliases',
+                // gen.if('$index() === 0',
+                    div({
+                        dataBind: {
+                            visible: '$index() === 0 || $component.open()'
+                        },
+                        style: {
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                        // flex: '1 1 0px'
+                        }
+                    }, [
+                        gen.if('type',
+                            span({
+                                style: {
+                                    color: 'gray'
+                                },
+                                dataBind: {
+                                    text: 'type + ": "'
+                                }
+                            })),
                         span({
                             style: {
-                                color: 'gray'
                             },
                             dataBind: {
-                                text: 'type + ": "'
+                                text: 'name'
                             }
-                        })),
-                    span({
-                        style: {
-                        },
-                        dataBind: {
-                            text: 'name'
-                        }
-                    })
-                ])))))),
-            div({
-                style: {
-                    flex: '0 0 2em'
-                }
-            }, button({
-                dataBind: {
-                    click: 'function(){$component.doToggleAlias.call($component)}'
-                }
-            }, [
-                div({
+                        })
+                    ])))))), gen.if('aliases.length > 1', div({
                     style: {
-                        display: 'inline-block',
-                        width: '1em',
-                        textAlign: 'right',
-                        marginRight: '4px'
-                    },
-                    dataBind: {
-                        text: 'aliases.length'
+                        flex: '0 0 2em'
                     }
-                }),
-                div({
-                    style: {
-                        display: 'inline-block',
-                        width: '1em'
-                    },
-                    dataBind: {
-                        text: 'open() ? "↓" : "→"'
-                    }
-                })
-            ]))
-        ]);
+                }, buildButton()))
+            ]));
     }
 
     function component() {
