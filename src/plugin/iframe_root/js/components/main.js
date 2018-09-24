@@ -5,6 +5,7 @@ define([
     'kb_knockout/lib/generators',
     'kb_knockout/lib/viewModelBase',
     'kb_lib/html',
+    'kb_lib/lang',
     '../lib/serviceUtils',
     '../lib/model',
     './searchBar',
@@ -31,6 +32,7 @@ define([
     gen,
     ViewModelBase,
     html,
+    lang,
     serviceUtils,
     model,
     SearchBarComponent,
@@ -70,13 +72,12 @@ define([
             // Primary search inputs
             this.searchInput = ko.observable(this.pluginParams.query);
             this.forceSearch = ko.observable();
-            this.page = ko.observable();
+            this.page = ko.observable(1);
             this.pageSize = ko.observable();
             this.totalPages = ko.observable();
             this.searchHistory = ko.observableArray();
 
             // Filters
-
 
             // For data types, we take the params, if any, and set the
             // omitted data types to include all of the supported data types
@@ -210,7 +211,7 @@ define([
 
             this.searchPagingInput = ko.pureComputed(() => {
                 return {
-                    page: this.page(),
+                    page: this.page() || 1,
                     pageSize: this.pageSize()
                 };
             });
@@ -225,9 +226,13 @@ define([
 
             this.subscribe(this.pageSize, () => {
                 // if the new page size puts the current page beyond the end, set it to the end.
+                // console.log('ah 1', this.page(), this.totalPages(), newValue);
                 if (this.page() > this.totalPages()) {
                     this.page(this.totalPages());
+                // } else if (!this.page() && this.totalPages() > 0) {
+                //     this.page(1);
                 }
+                // console.log('ah 2', this.page(), this.totalPages(), newValue);
             });
 
             // sorting interface
@@ -271,11 +276,33 @@ define([
             });
 
             // subscriptions
+            this.lastSearch = {
+                query: null,
+            };
             this.subscribe(this.searchQuery, (newValue) => {
                 // don't run search until page size is set.
                 if (!newValue.paging.pageSize) {
                     return;
                 }
+
+                // Don't search if we have spammed some dependency.
+                if (lang.isEqual(newValue, this.lastSearch.query)) {
+                    return;
+                }
+
+                // If the query terms have changed, reset the page --
+                // otherwise, leave it alone.
+                // It may still be adjusted after the search completes.
+                if (this.lastSearch.query) {
+                    if (this.lastSearch.query.input.searchInput !== newValue.input.searchInput) {
+                        if (this.page() && this.page() > 1) {
+                            this.page(null);
+                            return;
+                        }
+                    }
+                }
+
+                this.lastSearch.query = newValue;
                 this.doSearch(newValue);
             });
 
@@ -535,6 +562,8 @@ define([
             //     dataTypes = query.input.dataTypes;
             // }
 
+
+            // console.log('dosearch');
             this.searching(true);
             this.searchState('searching');
             Promise.all([
@@ -577,6 +606,9 @@ define([
                         this.realTotalCount(0);
                         this.page(1);
                         return;
+                    }
+                    if (!this.page()) {
+                        this.page(1);
                     }
 
                     if (result.total > this.maxResultCount) {
@@ -737,7 +769,6 @@ define([
                 })
                 .catch((error) => {
                     this.searchResults.removeAll();
-                    // this.searchSummary.removeAll();
                     this.resetSearchSummary();
                     this.totalCount(0);
                     this.realTotalCount(0);
