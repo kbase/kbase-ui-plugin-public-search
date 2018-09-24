@@ -158,29 +158,6 @@ require([
                 this.rootViewModel.bus.send('help');
             }
 
-            googleFormLink(arg) {
-                const baseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLScfZEQlO2Zq1ZgYQkn0pEIlXJapEOxrdeZmHY4PqvIyy7sugw/viewform';
-                const query = {
-                    usp: 'pp_url',
-                    'entry.45112532': arg.username,
-                    'entry.1257375807': arg.realname,
-                    'entry.1670959681': arg.email,
-                    'entry.250050267': arg.subject
-                };
-                return baseUrl + '?' + httpUtils.encodeQuery(query);
-            }
-
-            getFeedbackLink() {
-                const fields = {
-                    username: this.runtime.service('session').getUsername() || '',
-                    realname: this.runtime.service('session').getRealname() || '',
-                    email: this.runtime.service('session').getEmail() || '',
-                    subject: 'Public Search'
-                };
-                return this.googleFormLink(fields);
-                // window.open(this.googleFormLink(fields), '_blank');
-            }
-
             start() {
                 return knockoutLoader.load()
                     .then((ko) => {
@@ -207,14 +184,6 @@ require([
 
                             this.rootViewModel.bus.on('set-plugin-params', ({pluginParams}) => {
                                 this.hostChannel.send('set-plugin-params', {pluginParams});
-                            });
-
-                            this.channel.on('show-feedback', () => {
-                                // this.showFeedback();
-                                this.hostChannel.send('open-window', {
-                                    url: this.getFeedbackLink(),
-                                    name: '_blank'
-                                });
                             });
 
                             this.channel.on('show-help', () => {

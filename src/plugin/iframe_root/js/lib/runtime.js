@@ -36,7 +36,7 @@ define([
         constructor({token, username, realname, email}) {
             this.token = token;
             this.username = username;
-            this.realName = realname;
+            this.realname = realname;
             this.email = email;
         }
 

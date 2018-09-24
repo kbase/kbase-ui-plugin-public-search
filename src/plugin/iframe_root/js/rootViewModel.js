@@ -82,12 +82,6 @@ define([
                 }
             ];
 
-            this.bus.on('show-feedback', () => {
-                this.showFeedback();
-            });
-
-
-
             this.columns = [
                 {
                     name: 'selected',
@@ -198,32 +192,6 @@ define([
                 .catch((err) => {
                     this.error(err);
                 });
-        }
-
-        googleFormLink(arg) {
-            const baseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLScfZEQlO2Zq1ZgYQkn0pEIlXJapEOxrdeZmHY4PqvIyy7sugw/viewform';
-            const query = {
-                usp: 'pp_url',
-                'entry.45112532': arg.username,
-                'entry.1257375807': arg.realname,
-                'entry.1670959681': arg.email,
-                'entry.250050267': arg.subject
-            };
-            return baseUrl + '?' + httpUtils.encodeQuery(query);
-        }
-
-        showFeedback() {
-            const fields = {
-                username: this.runtime.service('session').getUsername() || '',
-                realname: this.runtime.service('session').getRealname() || '',
-                email: this.runtime.service('session').getEmail() || '',
-                subject: 'Public Search'
-            };
-            // window.open(this.googleFormLink(fields), '_blank');
-            this.hostChannel.send('open-window', {
-                url: this.googleFormLink(fields),
-                name: '_blank'
-            });
         }
 
         getMethodMap() {

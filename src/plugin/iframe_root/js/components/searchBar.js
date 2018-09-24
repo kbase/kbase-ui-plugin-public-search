@@ -147,8 +147,11 @@ define([
             this.parentBus.send('show-help');
         }
 
+        // https://docs.google.com/forms/d/e/1FAIpQLSf1STAE0g3wcg5z4NGUJPB05PZq_38Nzw8yesDff0kf6U0W0A/viewform?usp=pp_url&entry.45112532=a&entry.1257375807=b&entry.250050267=c
+        // https://docs.google.com/forms/d/e/1FAIpQLSf1STAE0g3wcg5z4NGUJPB05PZq_38Nzw8yesDff0kf6U0W0A/viewform?usp=pp_url&entry.45112532=a&entry.1257375807=b&entry.250050267=c
+
         googleFormLink(arg) {
-            const baseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLScfZEQlO2Zq1ZgYQkn0pEIlXJapEOxrdeZmHY4PqvIyy7sugw/viewform';
+            const baseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSf1STAE0g3wcg5z4NGUJPB05PZq_38Nzw8yesDff0kf6U0W0A/viewform';
             const query = {
                 usp: 'pp_url',
                 'entry.45112532': arg.username,
