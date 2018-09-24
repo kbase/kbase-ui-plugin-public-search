@@ -289,7 +289,8 @@ define([
                         style: {
                             cursor: '$component.canUncheck() || !selected() ? "pointer" : "auto"'
                         }
-                    }
+                    },
+                    title: text.getTooltip('DATA_TYPES_CHECKBOX')
                 }, [
                     div({
                         class: '-cell'
@@ -304,8 +305,7 @@ define([
                             style: {
                                 'color': '$component.canUncheck() || !selected() ? "#000" : "#AAA"'
                             }
-                        },
-                        title: text.getTooltip('DATA_TYPES_CHECKBOX')
+                        }
                     })),
 
                     div({
