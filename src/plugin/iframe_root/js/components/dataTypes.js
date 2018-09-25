@@ -295,18 +295,26 @@ define([
                     div({
                         class: '-cell'
                     },
-                    span({
-                        class: ['fa', commonStyle.classes.tooltipDark],
-                        dataBind: {
-                            css: {
-                                'fa-check-square-o': 'selected()',
-                                'fa-square-o': '!selected()'
-                            },
-                            style: {
-                                'color': '$component.canUncheck() || !selected() ? "#000" : "#AAA"'
+                    gen.if('indexAvailable',
+                        span({
+                            class: ['fa', commonStyle.classes.tooltipDark],
+                            dataBind: {
+                                css: {
+                                    'fa-check-square-o': 'selected()',
+                                    'fa-square-o': '!selected()'
+                                },
+                                style: {
+                                    'color': '$component.canUncheck() || !selected() ? "#000" : "#AAA"'
+                                }
                             }
-                        }
-                    })),
+                        }),
+                        span({
+                            class: ['fa', 'fa-ban', commonStyle.classes.tooltipDark],
+                            style: {
+                                color: '#AAA'
+                            }
+                        }))
+                    ),
 
                     div({
                         class: '-cell',

@@ -68,6 +68,7 @@ require([
     require([
         'kb_knockout/load',
         'kb_knockout/registry',
+        'kb_knockout/lib/generators',
         'kb_lib/html',
         'kb_lib/httpUtils',
         'kb_lib/windowChannel',
@@ -82,6 +83,7 @@ require([
     ], function (
         knockoutLoader,
         reg,
+        gen,
         html,
         httpUtils,
         WindowChannel,
@@ -142,18 +144,27 @@ require([
                         display: 'flex',
                         flexDirection: 'column'
                     },
-                    dataBind: {
-                        component: {
-                            name: MainComponent.quotedName(),
-                            params: {
-                                runtime: 'runtime',
-                                bus: 'bus',
-                                authorization: 'authorization',
-                                pluginParams: 'pluginParams'
-                            }
+                    // dataBind: {
+                    //     component: {
+                    //         name: MainComponent.quotedName(),
+                    //         params: {
+                    //             runtime: 'runtime',
+                    //             bus: 'bus',
+                    //             authorization: 'authorization',
+                    //             pluginParams: 'pluginParams'
+                    //         }
+                    //     }
+                    // }
+                }, gen.if('ready',
+                    gen.component({
+                        name: MainComponent.name(),
+                        params: {
+                            runtime: 'runtime',
+                            bus: 'bus',
+                            authorization: 'authorization',
+                            pluginParams: 'pluginParams'
                         }
-                    }
-                });
+                    })));
                 ko.applyBindings(this.rootViewModel, this.container);
             }
 

@@ -42,31 +42,38 @@ define([
             this.supportedDataTypes = [
                 {
                     value: 'Assembly',
-                    label: 'Assembly'
+                    label: 'Assembly',
+                    indexAvailable: true
                 },
                 {
                     value: 'FBAModel',
                     label: 'FBA Model',
+                    indexAvailable: true
                 },
                 {
                     value: 'Genome',
                     label: 'Genome',
+                    indexAvailable: true
                 },
                 {
                     value: 'PairedEndLibrary',
-                    label: 'Paired-End Library'
+                    label: 'Paired-End Library',
+                    indexAvailable: true
                 },
                 {
                     value: 'Pangenome',
                     label: 'Pangenome',
+                    indexAvailable: true
                 },
                 {
                     value: 'RNASeqSampleSet',
-                    label: 'RNA-Seq Sample Set'
+                    label: 'RNA-Seq Sample Set',
+                    indexAvailable: true
                 },
                 {
                     value: 'SingleEndLibrary',
-                    label: 'Single-End Library'
+                    label: 'Single-End Library',
+                    indexAvailable: true
                 },
                 // {
                 //     value: 'taxon',
@@ -75,12 +82,18 @@ define([
                 {
                     value: 'Tree',
                     label: 'Species Tree',
+                    indexAvailable: true
                 },
                 {
                     value: 'Media',
-                    label: 'Media'
+                    label: 'Media',
+                    indexAvailable: true
                 }
             ];
+            this.supportedDataTypesMap = this.supportedDataTypes.reduce((map, type) => {
+                map[type.value] = type;
+                return map;
+            }, {});
 
             this.columns = [
                 {
@@ -187,6 +200,17 @@ define([
             this.getMethodMap()
                 .then((methodMap) => {
                     this.methodMap = methodMap;
+                    return this.getAllTypes();
+                })
+                .then((types) => {
+                    this.supportedDataTypes.forEach((supportedType) => {
+                        if (types.includes(supportedType.value)) {
+                            supportedType.indexAvailable = true;
+                            return;
+                        }
+                        console.warn('omitting unindexed type: ' + supportedType.value);
+                        return supportedType.indexAvailable = false;
+                    });
                     this.ready(true);
                 })
                 .catch((err) => {
@@ -236,6 +260,28 @@ define([
                 .catch((err) => {
                     console.error('ERROR', err.message);
                     return null;
+                });
+        }
+
+        getAllTypes() {
+            const search = this.runtime.service('rpc').makeClient({
+                module: 'KBaseSearchEngine',
+                timeout: 10000,
+                authorization: true
+            });
+            var param = {
+                match_filter: {
+                    full_text_in_all: null,
+                    exclude_subobjects: 1
+                },
+                access_filter: {
+                    with_private: 1,
+                    with_public: 1
+                }
+            };
+            return search.callFunc('search_types', [param])
+                .spread((result) => {
+                    return Object.keys(result.type_to_count);
                 });
         }
     }

@@ -161,6 +161,7 @@ define([
                 this.supportedDataTypes.map((type) => {
                     return {
                         selected: ko.pureComputed(() => {return !this.omittedDataTypes().includes(type.value);}),
+                        indexAvailable: type.indexAvailable,
                         type: type.value,
                         count: ko.observable(null)
                     };
@@ -187,7 +188,7 @@ define([
                 const omitted = this.omittedDataTypes();
                 const dataTypes = [];
                 for (const type of this.supportedDataTypes) {
-                    if (!omitted.includes(type.value)) {
+                    if (!omitted.includes(type.value) && type.indexAvailable) {
                         dataTypes.push(type.value);
                     }
                 }
