@@ -135,7 +135,7 @@ define([
                                       this.methodMap.beta[id] ||
                                       this.methodMap.dev[id];
                 if (!cachedAppSpec) {
-                    throw new Error('App not found in nms cache with id: ' + id);
+                    throw new Error('App not found in Narrative Method Store with id: ' + id);
                 }
 
                 const [module, method] = cachedAppSpec.info.id.split('/');

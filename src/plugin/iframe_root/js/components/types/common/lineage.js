@@ -24,6 +24,8 @@ define([
             this.ref = ref;
             this.ready = ko.observable(false);
 
+            console.log('lineage...', ref, taxonomy);
+
             if (taxonomy) {
                 this.taxonomy = this.parseTaxonomy(taxonomy);
                 this.ready(true);
@@ -48,7 +50,7 @@ define([
             if (taxonomyString instanceof Array) {
                 return taxonomyString;
             }
-        
+
             let taxList;
             if (taxonomyString.indexOf(';') !== -1) {
                 taxList = taxonomyString.split(';');

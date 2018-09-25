@@ -48,7 +48,7 @@ define([
                     component: {
                         name: LinksOutComponent.name(),
                         params: {
-                            ref: 'object.objectInfo.ref'
+                            object: 'object'
                         }
                     }
                 }

@@ -153,7 +153,6 @@ define([
                 .then((referencingObjects) => {
                     this.ready(true);
                     this.referencingObjects(referencingObjects);
-                    console.log('got...', this.referencingObjects());
                 })
                 .catch((err) => {
                     console.error('ERROR!', err);

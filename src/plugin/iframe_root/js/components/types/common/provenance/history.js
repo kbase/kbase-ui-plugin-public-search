@@ -6,7 +6,7 @@ define([
     'kb_knockout/lib/viewModelBase',
     'kb_lib/html',
     'kb_lib/htmlBuilders',
-    '../../../../lib/serviceUtils'
+    'kb_lib/workspaceUtils'
 ], function (
     Promise,
     ko,
@@ -15,19 +15,9 @@ define([
     ViewModelBase,
     html,
     build,
-    serviceUtils
+    workspaceUtils
 ) {
     'use strict';
-
-    const t = html.tag,
-        p = t('p'),
-        div = t('div'),
-        span = t('span'),
-        table = t('table'),
-        tbody = t('tbody'),
-        tr = t('tr'),
-        th = t('th'),
-        td = t('td');
 
     class ViewModel extends ViewModelBase {
         constructor(params, context, element, componentInfo, name) {
@@ -69,6 +59,10 @@ define([
             this.getProvenance()
                 .then(() => {
                     this.ready(true);
+                })
+                .catch((err) => {
+                    console.error('ERRORx', err);
+                    this.error(err);
                 });
         }
 
@@ -84,7 +78,7 @@ define([
                 }
             ])
                 .spread((workspaceInfo) => {
-                    return serviceUtils.workspaceInfoToObject(workspaceInfo);
+                    return workspaceUtils.workspaceInfoToObject(workspaceInfo);
                 });
         }
 
@@ -122,10 +116,6 @@ define([
             ])
                 .spread((moduleInfo) => {
                     return this.moduleInfo = moduleInfo;
-                })
-                .catch((err) => {
-                    console.error('ERROR', err.message);
-                    return null;
                 });
         }
 
@@ -138,7 +128,8 @@ define([
                                       this.methodMap.beta[id] ||
                                       this.methodMap.dev[id];
                 if (!cachedAppSpec) {
-                    throw new Error('App not found in nms cache with id: ' + id);
+                    // throw new Error('App not found in Narrative Method Store with id: ' + id);
+                    return null;
                 }
 
                 const [module, method] = cachedAppSpec.info.id.split('/');
@@ -206,7 +197,7 @@ define([
                         this.workspaceName = workspaceInfo.name;
                     }
 
-                    this.objectInfo = serviceUtils.objectInfoToObject(objectInfo.info);
+                    this.objectInfo = workspaceUtils.objectInfoToObject(objectInfo.info);
 
                     this.inputObjectRefs = provenanceAction.resolved_ws_objects;
 
@@ -238,12 +229,21 @@ define([
                             version: provenanceAction.script_ver
                         };
                     }
-                })
-                .catch((error) => {
-                    console.error('ERROR', error);
                 });
         }
     }
+
+    // VIEW
+
+    const t = html.tag,
+        p = t('p'),
+        div = t('div'),
+        span = t('span'),
+        table = t('table'),
+        tbody = t('tbody'),
+        tr = t('tr'),
+        th = t('th'),
+        td = t('td');
 
     const styles = html.makeStyles({
         objectInfoBox: {
@@ -519,6 +519,170 @@ define([
     //         })
     //     ]);
     // }
+
+    // function buildAppNotFound() {
+    //     return div({
+    //         class: styles.classes.infoBox
+    //     }, 'Sorry, app not found');
+    // }
+
+    function buildAppNotFound() {
+        return div({
+            class: styles.classes.infoBox
+        }, [
+            div({
+                style: {
+                    display: 'flex',
+                    flexDirection: 'row',
+                    // borderLeft: '2px green solid'
+                }
+            },  [
+                div({
+                    style: {
+                        display: 'flex',
+                        flexDirection: 'column',
+                        color: 'green',
+                        width: '15px'
+                    }
+                }, [
+                    div({
+                        style: {
+                            // marginLeft: '1px',
+                            marginBottom: '-10px',
+                            textAlign: 'center'
+                        }
+                    }, span({
+                        class: 'fa fa-caret-up fa-lg'
+                    })),
+                    div({
+                        style: {
+                            borderLeft: '2px green solid',
+                            margin: '0 50%',
+                            flex: '1 1 0px'
+                        }
+                    })
+                ]),
+                div({
+                    class: styles.classes.connector,
+                    style: {
+                        color: 'green'
+                    }
+                }, [
+                    buildIcon('gear', 'green'),
+                    span('Which was created by an App')
+                ]),
+                div({
+                    class: styles.classes.appInfoBox
+                }, [
+                    div(span({
+                        class: styles.classes.row,
+                        style: {
+                            cursor: 'pointer'
+                        },
+                        dataBind: {
+                            click: 'function(){showConnectionDetail(!showConnectionDetail());}'
+                        }
+                    }, [
+                        span({
+                            class: 'fa',
+                            style: {
+                                width: '1em'
+                            },
+                            dataBind: {
+                                css: {
+                                    'fa-caret-right': '!showConnectionDetail()',
+                                    'fa-caret-down': 'showConnectionDetail()'
+                                }
+                            }
+                        }),
+                        div({
+                            style: {
+                                flex: '1 1 0px'
+                            }
+                        }, [
+                            span('App not found: '),
+                            span({
+                                dataBind: {
+                                    text: '$component.appInfo.module + "/" + $component.appInfo.method'
+                                }
+                            })
+                            // span({
+                            //     fontWeight: 'bold'
+                            // }, 'App'),
+                            // ' named "' +
+                            // span({
+                            //     style: {
+                            //         fontWeight: 'bold'
+                            //     },
+                            //     dataBind: {
+                            //         text: 'app.spec.info.name'
+                            //     }
+                            // }),
+                            // '"'
+                        ])
+                        // span(gen.if('showConnectionDetail()', 'hide detail', 'show detail'))
+                    ])),
+                    gen.if('showConnectionDetail()', div({
+                    }, [
+                        p([
+                            'This app was not found. This probably indicates that it was only available ',
+                            'in a development mode, and was later removed from the app catalog.'
+                        ])
+                    ]))
+
+                    // gen.if('showConnectionDetail()', gen.with('app', table({
+                    //     class: styles.classes.infoTable
+                    // }, [
+                    //     tr([
+                    //         th('module'),
+                    //         td({
+                    //             dataBind: {
+                    //                 text: 'module'
+                    //             }
+                    //         })
+                    //     ]),
+                    //     tr([
+                    //         th('method'),
+                    //         td({
+                    //             class: '-bare'
+                    //         }, table({
+                    //             class: styles.classes.infoTable
+                    //         }, [
+                    //             tr([
+                    //                 th('title'),
+                    //                 td({
+                    //                     dataBind: {
+                    //                         text: 'spec.info.name'
+                    //                     }
+                    //                 })
+                    //             ]),
+                    //             tr([
+                    //                 th('method'),
+                    //                 td({
+                    //                     dataBind: {
+                    //                         text: 'method'
+                    //                     }
+                    //                 })
+                    //             ])
+                    //         ]))
+                    //     ]),
+                    //     tr([
+                    //         th('version'),
+                    //         td({
+                    //             dataBind: {
+                    //                 text: 'spec.info.ver'
+                    //             }
+                    //         })
+                    //     ])
+                    // ])))
+                ])
+            ]),
+            div({
+            }, [
+                gen.if('inputObjectRefs', buildInputObjects())
+            ])
+        ]);
+    }
 
     function buildAppInfo() {
         return div({
@@ -1133,19 +1297,55 @@ define([
         ]);
     }
 
-    function template() {
+    function buildError() {
         return div({
-            dataBind: {
-                if: 'ready'
+            style: {
+                margin: '10px',
+                border: '1px red solid',
+                width: '25em'
             }
-        }, gen.if('provenanceMissing',
-            buildMissing(),
-            [
-                buildObjectInfo(),
-                gen.if('copyInfo', buildCopyInfo()),
-                gen.if('scriptInfo', buildScriptInfo()),
-                gen.if('appInfo', buildAppInfo())
-            ]), build.loading());
+        }, [
+            div({
+                style: {
+                    backgroundColor: 'red',
+                    color: 'white',
+                    fontWeight: 'bold',
+                    padding: '10px'
+                }
+            }, 'Error'),
+            div({
+                style: {
+                    padding: '10px'
+                }
+            }, [
+                p({
+                    style: {
+                        textAlign: 'left',
+                        // fontStyle: 'italic'
+                    },
+                    dataBind: {
+                        text: 'error().message'
+                    }
+                })
+            ])
+        ]);
+    }
+
+    function template() {
+        return div(
+            gen.if('ready',
+                gen.if('provenanceMissing',
+                    buildMissing(),
+                    gen.if('error()',
+                        buildError(),
+                        [
+                            buildObjectInfo(),
+                            gen.if('copyInfo', buildCopyInfo()),
+                            gen.if('scriptInfo', buildScriptInfo()),
+                            gen.if('appInfo',
+                                gen.if('app', buildAppInfo(), buildAppNotFound()))
+                        ])),
+                gen.if('error', buildError(), build.loading())));
     }
 
     function component() {
