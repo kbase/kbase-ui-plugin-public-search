@@ -17,6 +17,9 @@
   },
   "homepage": "https://github.com/eapearson/kbase-ui-plugin-public-search#readme",
   "dependencies": {
+    "d3": "5.7.0",
+    "dagre": "0.8.2",
+    "dagre-d3": "0.6.1",
     "vega-lib": "4.2.0"
   },
   "devDependencies": {
