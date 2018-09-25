@@ -52,11 +52,32 @@ define([
             });
         }
 
+        getTooltip(id) {
+            return text.getTooltip(id);
+        }
+
+        getTypeTooltip(type) {
+            if (type.indexAvailable) {
+                if (!this.canUncheck() || type.selected()) {
+                    return 'Cannot toggle the last data type; at least one must be selected';
+                } else {
+                    return this.getTooltip('DATA_TYPES_CHECKBOX');
+                }
+            } else {
+                return 'Index not available';
+            }
+            // title: 'indexAvailable ? $component.getTooltip("DATA_TYPES_CHECKBOX") : "Index not available"'
+        }
+
         doSelectDataType(data, event) {
             // note - knockout should return the same type of event no matter
             // how it is being listened for...
             // const event = jqueryEvent.originalEvent;
             if (!this.canUncheck() && data.selected()) {
+                return;
+            }
+
+            if (!data.indexAvailable) {
                 return;
             }
 
@@ -287,10 +308,13 @@ define([
                         },
                         click: 'function(d,e){$component.doSelectDataType.call($component,d,e);}',
                         style: {
-                            cursor: '$component.canUncheck() || !selected() ? "pointer" : "auto"'
+                            cursor: 'indexAvailable && ($component.canUncheck() || !selected()) ? "pointer" : "auto"'
+                        },
+                        attr: {
+                            title: '$component.getTypeTooltip($data)'
                         }
                     },
-                    title: text.getTooltip('DATA_TYPES_CHECKBOX')
+                    // title: text.getTooltip('DATA_TYPES_CHECKBOX')
                 }, [
                     div({
                         class: '-cell'
