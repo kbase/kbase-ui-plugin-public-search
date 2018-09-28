@@ -35,7 +35,7 @@ define([
         constructor(params) {
             super(params);
             const {term} = params;
-            this.lookupTerm = term;
+            this.lookupTerm = this.scrubTerm(term);
 
             this.imageWidth = '150px';
             this.defaultImageWidth = '150px';
@@ -48,6 +48,19 @@ define([
             this.ready = ko.observable(false);
 
             this.findImage();
+        }
+
+        scrubTerm(proposedTerm) {
+            // convervatively, remove all non-alpha characters
+            const chars = proposedTerm.split('');
+            const validChar = /[\w \s]/;
+            const newChars = chars.filter((char) => {
+                if (validChar.exec(char)) {
+                    return true;
+                }
+                return false;
+            });
+            return newChars.join('');
         }
 
         findImage() {

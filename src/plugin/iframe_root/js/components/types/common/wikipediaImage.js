@@ -39,7 +39,7 @@ define([
             this.pageUrl = ko.observable();
             this.loaded = ko.observable(false);
 
-            this.searchTerm = term;
+            this.searchTerm = this.scrubTerm(term);
             this.error = ko.observable();
             this.ready = ko.observable(false);
 
@@ -52,6 +52,19 @@ define([
             // this.state = ko.observable('loading');
 
             this.findImage();
+        }
+
+        scrubTerm(proposedTerm) {
+            // convervatively, remove all non-alpha characters
+            const chars = proposedTerm.split('');
+            const validChar = /[\w \s]/;
+            const newChars = chars.filter((char) => {
+                if (validChar.exec(char)) {
+                    return true;
+                }
+                return false;
+            });
+            return newChars.join('');
         }
 
         findImage() {
