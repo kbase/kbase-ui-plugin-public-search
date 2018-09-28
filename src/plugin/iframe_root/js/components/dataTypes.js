@@ -58,7 +58,7 @@ define([
 
         getTypeTooltip(type) {
             if (type.indexAvailable) {
-                if (!this.canUncheck() || type.selected()) {
+                if (!this.canUncheck() && type.selected()) {
                     return 'Cannot toggle the last data type; at least one must be selected';
                 } else {
                     return this.getTooltip('DATA_TYPES_CHECKBOX');

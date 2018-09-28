@@ -93,7 +93,28 @@ define([
                 }];
                 break;
             case 'ConditionSet':
-                fieldsToInclude = [],
+                fieldsToInclude = ['ontology_mapping_method'],
+                displayMapping = [{
+                    from: 'info.1',
+                    to: 'title'
+                }];
+                break;
+            case 'ContigSet':
+                fieldsToInclude = ['name', 'id'];
+                displayMapping = [{
+                    from: 'info.1',
+                    to: 'title'
+                }];
+                break;
+            case 'Media':
+                fieldsToInclude = ['name', 'id'];
+                displayMapping = [{
+                    from: 'info.1',
+                    to: 'title'
+                }];
+                break;
+            case 'FBAModel':
+                fieldsToInclude = ['name', 'id'];
                 displayMapping = [{
                     from: 'info.1',
                     to: 'title'
@@ -129,6 +150,7 @@ define([
                     if (result.data[0] === null) {
                         return {
                             ref: ref,
+                            accessible: false,
                             workspaceId: null,
                             objectId: null,
                             objectVersion: null,
@@ -143,6 +165,7 @@ define([
                     return Promise.props(
                         {
                             ref: ref,
+                            accessible: true,
                             workspaceId: objectInfo.wsid,
                             objectId: objectInfo.id,
                             objectVersion: objectInfo.version,
@@ -275,6 +298,7 @@ define([
     }
 
     const t = html.tag,
+        p = t('p'),
         div = t('div');
 
     function buildRefTree() {
@@ -286,10 +310,32 @@ define([
         });
     }
 
+    function buildIntro() {
+        return div([
+            p([
+                'The "Object Composition" view shows all objects which are linked ',
+                'from this object. In this sense, the entire data set encompassed by ',
+                'this object is composed of this object plus all other objects it ',
+                'references.'
+            ]),
+            p([
+                'This chart reads like an outline, in which indentation level indicates ',
+                'that the indented objects are linked to the object directly above.'
+            ])
+        ]);
+    }
+
     function template() {
-        return div(gen.if('ready',
-            buildRefTree(),
-            builders.loading()));
+        return div({
+            style: {
+                marginTop: '10px'
+            }
+        }, [
+            buildIntro(),
+            gen.if('ready',
+                buildRefTree(),
+                builders.loading())
+        ]);
     }
 
     function component() {

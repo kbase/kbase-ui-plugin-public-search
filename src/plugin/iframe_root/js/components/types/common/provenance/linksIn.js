@@ -4,16 +4,20 @@ define([
     'kb_knockout/lib/generators',
     'kb_knockout/lib/viewModelBase',
     'kb_lib/html',
-    '../../../../lib/serviceUtils',
-    '../../../table'
+    'kb_lib/htmlBuilders',
+    'kb_lib/workspaceUtils',
+    '../../../table',
+    './objectLink'
 ], function (
     ko,
     reg,
     gen,
     ViewModelBase,
     html,
-    serviceUtils,
-    TableComponent
+    builders,
+    workspaceUtils,
+    TableComponent,
+    ObjectLinkComponent
 ) {
     'use strict';
 
@@ -51,57 +55,30 @@ define([
                         label: 'Name',
                         width: 30,
                         html: false,
-                        sort: {
-                            comparator: (a, b) => {
-                                if (a < b) {
-                                    return -1;
-                                } else if (a > b) {
-                                    return 1;
-                                }
-                                return 0;
+                        sort: true,
+                        component: {
+                            name: ObjectLinkComponent.name(),
+                            params: {
+                                name: 'name',
+                                ref: 'ref'
                             }
-                        },
-                        // component: {
-                        //     name: PubMedLinkComponent.name(),
-                        //     params: {
-                        //         text: 'title',
-                        //         id: 'id'
-                        //     }
-                        // }
+                        }
                     },
                     {
                         name: 'type',
                         label: 'Type',
                         width: 15,
-                        sort: {
-                            comparator: (a, b) => {
-                                if (a < b) {
-                                    return -1;
-                                } else if (a > b) {
-                                    return 1;
-                                }
-                                return 0;
-                            }
-                        }
+                        sort: true
                     },
                     {
                         name: 'saved',
                         label: 'Saved',
-                        width: 10,
+                        width: 15,
                         format: {
                             type: 'date',
-                            format: 'MM/DD/YYY'
+                            format: 'MMM D, YYYY'
                         },
-                        sort: {
-                            comparator: (a, b) => {
-                                if (a < b) {
-                                    return -1;
-                                } else if (a > b) {
-                                    return 1;
-                                }
-                                return 0;
-                            }
-                        }
+                        sort: true
                     },
                     {
                         name: 'savedBy',
@@ -111,35 +88,17 @@ define([
                         //     name: AuthorsComponent.name(),
                         //     params: {authors: 'authors'}
                         // },
-                        sort: {
-                            comparator: (a, b) => {
-                                if (a < b) {
-                                    return -1;
-                                } else if (a > b) {
-                                    return 1;
-                                }
-                                return 0;
-                            }
-                        }
+                        sort: true
                     },
                     {
                         name: 'container',
-                        label: 'Container',
-                        width: 30,
+                        label: 'Narrative',
+                        width: 25,
                         // component: {
                         //     name: AuthorsComponent.name(),
                         //     params: {authors: 'authors'}
                         // },
-                        sort: {
-                            comparator: (a, b) => {
-                                if (a < b) {
-                                    return -1;
-                                } else if (a > b) {
-                                    return 1;
-                                }
-                                return 0;
-                            }
-                        }
+                        sort: true
                     }
 
                 ]
@@ -151,6 +110,7 @@ define([
 
             this.getReferencingObjects()
                 .then((referencingObjects) => {
+                    // console.log('got referencing objects', referencingObjects);
                     this.ready(true);
                     this.referencingObjects(referencingObjects);
                 })
@@ -169,21 +129,49 @@ define([
                 ref: this.ref
             }]])
                 .spread((result) => {
-                    return result[0].map((info) => {
-                        const objectInfo = serviceUtils.objectInfoToObject(info);
-                        return {
-                            name: objectInfo.name,
-                            type: objectInfo.typeName,
-                            saved: objectInfo.saveDate,
-                            savedBy: objectInfo.saved_by,
-                            container: String(objectInfo.wsid)
-                        };
+                    const objectsInfo = result[0].map((info) => {
+                        return workspaceUtils.objectInfoToObject(info);
                     });
+
+                    return Promise.all(objectsInfo.map((info) => {
+                        return workspace.callFunc('get_workspace_info', [{
+                            id: info.wsid
+                        }])
+                            .spread((info) => {
+                                return workspaceUtils.workspaceInfoToObject(info);
+                            });
+                    }))
+                        .then((workspaces) => {
+                            return objectsInfo.map((objectInfo, index) => {
+                                const workspace = workspaces[index];
+                                let containerTitle;
+                                if (workspace.metadata && workspace.metadata.narrative_nice_name) {
+                                    containerTitle = workspace.metadata.narrative_nice_name;
+                                } else {
+                                    containerTitle = workspace.name;
+                                }
+                                return {
+                                    name: objectInfo.name,
+                                    ref: objectInfo.ref,
+                                    type: objectInfo.typeName,
+                                    saved: objectInfo.saveDate,
+                                    savedBy: objectInfo.saved_by,
+                                    container: containerTitle
+                                    // container: {
+                                    //     workspaceId: workspace.wsid,
+                                    //     title: workspace.workspace
+                                    // }
+                                };
+                            });
+                        });
                 });
         }
     }
 
+    // VIEW
+
     const t = html.tag,
+        p = t('p'),
         div = t('div');
 
     const style = html.makeStyles({
@@ -191,8 +179,15 @@ define([
             css: {
                 flex: '1 1 0px',
                 display: 'flex',
-                flexDirection: 'row',
+                flexDirection: 'column',
                 marginTop: '10px'
+            }
+        },
+        col0: {
+            css: {
+                flex: '1 1 0px',
+                display: 'flex',
+                flexDirection: 'column'
             }
         },
         col1: {
@@ -233,19 +228,43 @@ define([
         });
     }
 
+    function buildIntro() {
+        return div([
+            p([
+                'The "Objects Referencing" view shows all objects which ',
+                'are linked to, or use, this one.'
+            ]),
+        ]);
+    }
+    // function template() {
+    //     // TODO: some layout here...
+    //     return div({
+    //         class: style.classes.component
+    //     }, [
+    //         div({
+    //             class: style.classes.col0
+    //         }, gen.if('referencingObjects().length > 0',
+    //             buildReferences(),
+    //             div('No referencing objects found')))
+    //     ]);
+    // }
+
+    function buildNotFound() {
+        return div({
+            class: 'alert alert-warning'
+        }, 'No other objects reference this one.');
+    }
+
     function template() {
-        // TODO: some layout here...
         return div({
             class: style.classes.component
         }, [
-            div({
-                class: style.classes.col1
-            }, 'selector here'),
-            div({
-                class: style.classes.col2
-            }, gen.if('referencingObjects().length > 0',
-                buildReferences(),
-                div('No referencing objects found')))
+            buildIntro(),
+            gen.if('ready',
+                gen.if('referencingObjects().length > 0',
+                    buildReferences(),
+                    buildNotFound()),
+                builders.loading())
         ]);
     }
 

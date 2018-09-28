@@ -111,16 +111,7 @@ define([
                         label: 'Title',
                         width: 40,
                         html: true,
-                        sort: {
-                            comparator: (a, b) => {
-                                if (a < b) {
-                                    return -1;
-                                } else if (a > b) {
-                                    return 1;
-                                }
-                                return 0;
-                            }
-                        },
+                        sort: true,
                         component: {
                             name: PubMedLinkComponent.name(),
                             params: {
@@ -133,31 +124,13 @@ define([
                         name: 'source',
                         label: 'Source',
                         width: 15,
-                        sort: {
-                            comparator: (a, b) => {
-                                if (a < b) {
-                                    return -1;
-                                } else if (a > b) {
-                                    return 1;
-                                }
-                                return 0;
-                            }
-                        }
+                        sort: true
                     },
                     {
                         name: 'year',
                         label: 'Year',
                         width: 10,
-                        sort: {
-                            comparator: (a, b) => {
-                                if (a < b) {
-                                    return -1;
-                                } else if (a > b) {
-                                    return 1;
-                                }
-                                return 0;
-                            }
-                        }
+                        sort: true
                     },
                     {
                         name: 'authors',
@@ -169,25 +142,6 @@ define([
                         },
                         sort: null
                     }
-                    // {
-                    //     name: 'abstract',
-                    //     label: 'Abstract',
-                    //     width: 40,
-                    //     sort: {
-                    //         comparator: (a, b) => {
-                    //             if (a < b) {
-                    //                 return -1;
-                    //             } else if (a > b) {
-                    //                 return 1;
-                    //             }
-                    //             return 0;
-                    //         }
-                    //     },
-                    //     component: {
-                    //         name: ScrollingTextComponent.name(),
-                    //         params: '{text: abstract, maxHeight: "10em"}'
-                    //     }
-                    // }
                 ]
             };
             this.table.columnMap = this.table.columns.reduce((map, column) => {
@@ -406,7 +360,10 @@ define([
 
     function buildSearchForm() {
         return div({
-            class: 'form-inline'
+            class: 'form-inline',
+            style: {
+                marginBottom: '10px'
+            }
         }, [
             div({
                 class: 'form-group'
@@ -416,7 +373,7 @@ define([
                     style: {
                         marginRight: '4px'
                     }
-                }, 'Search'),
+                }, 'PubMed Search'),
                 div({
                     class: 'input-group'
                 }, [
@@ -430,10 +387,16 @@ define([
                         }
                     }),
                     div({
-                        class: 'input-group-addon'
+                        class: 'input-group-addon',
+                        style: {
+                            width: '3em',
+                            maxWidth: '3em'
+                        }
                     }, gen.switch('status', [
                         [
-                            '"searching"', build.loading()
+                            '"searching"', span({
+                                class: 'fa fa-spinner fa-spin fa-fw'
+                            })
                         ],
                         [
                             '"error"', span({
@@ -466,18 +429,26 @@ define([
     }
 
     function buildResults() {
-        return div({
-            class: styles.classes.container,
-            dataBind: {
-                component: {
-                    name: TableComponent.quotedName(),
-                    params: {
-                        table: 'table',
-                        rows: 'publications'
+        return gen.if('publications().length > 0',
+            div({
+                class: styles.classes.container,
+                dataBind: {
+                    component: {
+                        name: TableComponent.quotedName(),
+                        params: {
+                            table: 'table',
+                            rows: 'publications'
+                        }
                     }
                 }
-            }
-        });
+            }),
+            div({
+                class: 'well',
+                style: {
+                    textStyle: 'italic',
+                    textAlign: 'center'
+                }
+            }, 'No publications found in PubMed with the above search terms; you may modify and rerun the search.'));
     }
 
     function template() {

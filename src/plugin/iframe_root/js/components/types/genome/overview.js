@@ -39,6 +39,7 @@ define([
             this.featureCount = null;
             this.gcContent = null;
             this.taxonomy = null;
+            this.kbaseID = null;
 
             this.getOverviewInfo()
                 .then(() => {
@@ -65,7 +66,8 @@ define([
                     'dna_size',
                     'num_contigs',
                     'gc_content',
-                    'taxonomy'
+                    'taxonomy',
+                    'id'
                 ]
             }]])
                 .spread(([objectData]) => {
@@ -74,6 +76,7 @@ define([
                     this.dnaSize = objectData.data.dna_size;
                     this.contigCount = objectData.data.num_contigs;
                     this.taxonomy = objectData.data.taxonomy;
+                    this.kbaseID = objectData.data.id;
 
                     let gcContent;
                     // comment below from genome landing page widget kbaseGenomeOverview
@@ -189,6 +192,12 @@ define([
                     }, 'Stats'),
                     buildStats()
                 ]),
+                div([
+                    div({
+                        class: style.classes.columnHeader
+                    }, 'KBase'),
+                    buildKBase()
+                ]),
                 // div([
                 //     div({
                 //         class: style.classes.columnHeader
@@ -297,6 +306,21 @@ define([
                             format: '"0,0"',
                             missing: '"-"'
                         }
+                    }
+                })
+            ])
+        ]);
+    }
+
+    function buildKBase() {
+        return table({
+            class: style.classes.table
+        }, [
+            tr([
+                th('KBase ID'),
+                td({
+                    dataBind: {
+                        text: 'kbaseID'
                     }
                 })
             ])

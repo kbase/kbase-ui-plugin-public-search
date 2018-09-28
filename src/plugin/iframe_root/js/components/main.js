@@ -24,7 +24,8 @@ define([
     '../lib/debug',
     '../lib/history',
     '../lib/style',
-    '../lib/text'
+    '../lib/text',
+    '../lib/instrument'
 ], function (
     Promise,
     ko,
@@ -51,7 +52,8 @@ define([
     debug,
     history,
     commonStyle,
-    text
+    text,
+    instrument
 ) {
     'use strict';
 
@@ -76,6 +78,13 @@ define([
             this.pageSize = ko.observable();
             this.totalPages = ko.observable();
             this.searchHistory = ko.observableArray();
+
+            this.instrument = new instrument.Instrument({
+                type: 'plugin',
+                name: 'public-search',
+                username: this.runtime.service('session').getUsername(),
+                bus: this.bus
+            });
 
             // Filters
 
@@ -361,9 +370,21 @@ define([
 
             this.subscribe(this.authorization, () => {
                 this.setupHistory();
+                this.instrument.setUsername(this.runtime.service('session').getUsername());
             });
 
             // MAIN
+
+            this.performanceMonitoringListener = window.setInterval(() => {
+                const measure = new instrument.Measure({
+                    id: 'knockout-debug',
+                    group: 'n/a',
+                    value: {
+                        scheduled: JSON.parse(JSON.stringify(window.scheduled))
+                    }
+                });
+                this.instrument.record(measure);
+            }, '60000');
 
             this.setupHistory();
         }
@@ -510,6 +531,25 @@ define([
             this.parentBus.send('set-plugin-params', {pluginParams});
         }
 
+        queryToMeasure(query) {
+            return {
+                authorization: {
+                    username: query.authorization && query.authorization.username
+                },
+                filter: {
+                    withPrivateData: query.input.withPrivateData,
+                    withPublicData: query.input.withPublicData,
+                    withReferenceData: query.input.withReferenceData,
+                    withUserData: query.input.withUserData
+                },
+                query: {
+                    input: query.input.searchInput
+                },
+                paging: query.paging,
+                sorting: query.sorting
+            };
+        }
+
         doSearch(query) {
             this.updatePluginParams(query);
 
@@ -563,6 +603,14 @@ define([
             //     dataTypes = query.input.dataTypes;
             // }
 
+            const measureGroup = instrument.createGroup();
+            const measure = new instrument.Measure({
+                id: 'search',
+                value: this.queryToMeasure(query),
+                group: measureGroup
+            });
+
+            this.instrument.record(measure);
 
             // console.log('dosearch');
             this.searching(true);
@@ -590,6 +638,22 @@ define([
             ])
                 .spread((result, summaryResult) => {
                     this.searchResults.removeAll();
+
+                    const measure = new instrument.Measure({
+                        id: 'search-result',
+                        group: measureGroup,
+                        value: {
+                            search: {
+                                total: result.total,
+                                pagination: result.pagination,
+                                searchTime: result.search_time,
+                                sorting: result.sorting_rules,
+                                hits: result.objects.length
+                            },
+                            summary: summaryResult
+                        }
+                    });
+                    this.instrument.record(measure);
 
                     this.searchSummary().forEach((summary) => {
                         summary.count(summaryResult.type_to_count[summary.type] || 0);
@@ -787,6 +851,12 @@ define([
             this.searchSummary().forEach((summary) => {
                 summary.count(null);
             });
+        }
+
+        dispose() {
+            if (this.performanceMonitoringListener) {
+                window.clearInterval(this.performanceMonitoringListener);
+            }
         }
     }
 

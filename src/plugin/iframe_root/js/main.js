@@ -115,6 +115,8 @@ require([
                     // hostId: this.id
                 });
 
+                this.performanceMonitoringListener = null;
+
                 // This is the channel for the window containing this iframe.
                 this.hostChannel = new WindowChannel.Channel({
                     window: this.rootWindow.parent,
@@ -216,6 +218,10 @@ require([
                                 this.runtime.unauth();
                                 this.rootViewModel.authorized(false);
                                 this.rootViewModel.authorization(null);
+                            });
+
+                            this.rootViewModel.bus.on('instrumentation', (payload) => {
+                                this.hostChannel.send('send-instrumentation', payload);
                             });
 
                             // this.hostChannel.send('add-button', {

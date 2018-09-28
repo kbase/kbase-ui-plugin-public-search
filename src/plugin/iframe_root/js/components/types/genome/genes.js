@@ -7,6 +7,7 @@ define([
     'kb_lib/htmlBuilders',
     'kb_lib/jsonRpc/genericClient',
     'kb_lib/jsonRpc/dynamicServiceClient',
+    'kb_lib/lang',
     'kb_knockout/components/table',
     './aliases',
     './functions',
@@ -20,6 +21,7 @@ define([
     builders,
     GenericClient,
     DynamicServiceClient,
+    lang,
     TableComponent,
     AliasesComponent,
     FunctionsComponent,
@@ -125,13 +127,26 @@ define([
                 return auth.token;
             });
 
+            this.ready = ko.observable(false);
+            this.contigs = ko.observableArray();
+
+            this.status = ko.observable('none');
+
             this.searchInput = ko.observable('*');
+            this.pageNumber = ko.observable(1);
+            this.pageCount = ko.observable(0);
 
             this.table = new Table();
 
-            // this.subscribe(this.table.pageSize, (newValue) => {
-            //     console.log('new page size', newValue);
-            // });
+            this.subscribe(this.searchInput, () => {
+                this.pageNumber(1);
+            });
+
+            this.lastSearchQuery = {
+                terms: null,
+                pageSize: null,
+                page: null
+            };
 
             this.searchQuery = ko.pureComputed(() => {
                 const searchInput = this.searchInput();
@@ -148,14 +163,17 @@ define([
                     return;
                 }
 
-                return {
+                const page = this.pageNumber();
+
+                const query = {
                     terms: searchInput,
-                    pageSize: pageSize
+                    pageSize: pageSize,
+                    page: page
                 };
+                return query;
             });
 
             this.subscribe(this.searchQuery, (newValue) => {
-                // console.log('hmm', newValue);
                 if (!newValue) {
                     return;
                 }
@@ -200,11 +218,44 @@ define([
                 //     }
                 // }
             };
+
+            this.getContigs()
+                .then((contigs) => {
+                    this.contigs(contigs);
+                    this.ready(true);
+                });
         }
 
-        doSearch(query) {
-            this.getGenes(query)
-                .then((genes) => {
+        doSearch() {
+            const query = this.searchQuery();
+            if (!query) {
+                return;
+            }
+            if (lang.isEqual(query, this.lastSearchQuery)) {
+                return;
+            }
+            if (!query.page) {
+                query.page = 1;
+            }
+
+            this.lastSearchQuery = JSON.parse(JSON.stringify(query));
+
+            this.status('searching');
+
+            return this.getGenes(query)
+                .then(({genes, total}) => {
+                    if (genes.length === 0) {
+                        this.table.rows.removeAll();
+                        this.pageNumber(null);
+                        this.pageCount(null);
+                        this.status('notfound');
+                        return;
+                    }
+
+                    this.status('done');
+
+                    this.pageCount(Math.ceil(total / query.pageSize));
+
                     const rows = genes.map(({id, type, aliases, functions, location}) => {
                         return new Row({
                             data: {
@@ -229,7 +280,86 @@ define([
                     this.table.rows(rows);
                 })
                 .catch((err) => {
+                    this.status('error');
                     console.error('ERROR', err);
+                });
+        }
+
+        doFirst() {
+            this.pageNumber(1);
+        }
+
+
+        doPrev() {
+            if (this.pageNumber() > 1) {
+                this.pageNumber(this.pageNumber() - 1);
+            }
+        }
+
+        doNext() {
+            if (this.pageNumber() < this.pageCount()) {
+                this.pageNumber(this.pageNumber() + 1);
+            }
+        }
+
+        doLast() {
+            this.pageNumber(this.pageCount());
+        }
+
+        getContigs() {
+            const workspace = this.runtime.service('rpc').makeClient({
+                module: 'Workspace',
+                timeout: 10000,
+                authenticated: true
+            });
+            return workspace.callFunc('get_objects2', [{
+                objects: [{
+                    ref: this.object.objectInfo.ref,
+                    included: ['contigs', 'num_contigs', 'contig_lengths', 'contigset_ref', 'assembly_ref']
+                }]
+            }])
+                .spread((result) => {
+                    console.log('contigs1', result);
+                    const {contigs, num_contigs, contig_lengths, contigset_ref, assembly_ref} = result.data[0].data;
+                    // const api = this.runtime.service('rpc').makeClient({
+                    //     module: 'GenomeAnnotationAPI',
+                    //     timeout: 10000,
+                    //     authenticated: true
+                    // });
+                    // return api.callFunc('get_summary', [{
+                    //     ref: contigset_ref,
+                    // }]);
+                    if (contigset_ref) {
+                        return workspace.callFunc('get_objects2', [{
+                            objects: [{
+                                ref: contigset_ref,
+                                included: [
+                                    'contigs/[*]/id',
+                                    'contigs/[*]/length'
+                                ]
+                            }]
+                        }]);
+                    } else if (assembly_ref) {
+                        return workspace.callFunc('get_objects2', [{
+                            objects: [{
+                                ref: assembly_ref,
+                                included: [
+                                    'contigs/[*]/contig_id',
+                                    'contigs/[*]/length'
+                                ]
+                            }]
+                        }])
+                            .then((result) => {
+                                console.log('result', result);
+                                return result;
+                            });
+                    } else {
+                        throw new Error('Cannot get contigs...');
+                    }
+                })
+                .spread((result) => {
+                    return result.data[0].data.contigs;
+                    // console.log('contigs?', result);
                 });
         }
 
@@ -245,7 +375,8 @@ define([
             //     token: this.token()
             // });
             // const query = this.searchInput();
-            const start = 0;
+
+            const start = (query.page - 1) * query.pageSize;
             const count = query.pageSize;
 
             let fullTextInAll = this.genomeGuid;
@@ -290,7 +421,7 @@ define([
             };
             return searchAPI.callFunc('search_objects', [param])
                 .spread((result) => {
-                    return result.objects.map(({data}) => {
+                    const genes = result.objects.map(({data}) => {
                         const {id, type, location, aliases, functions} = data;
                         return {
                             id, type,
@@ -311,6 +442,10 @@ define([
                             functions: functions || []
                         };
                     });
+                    return {
+                        total: result.total,
+                        genes: genes
+                    };
                 })
                 .catch((err) => {
                     console.error('error', err);
@@ -346,16 +481,19 @@ define([
         },
         col1: {
             css: {
-                flex: '2 1 0px',
+                // flex: '2 1 0px',
+                width: '15em',
                 display: 'flex',
-                flexDirection: 'column'
+                flexDirection: 'column',
+                // backgroundColor: 'aqua'
             }
         },
         col2: {
             css: {
                 flex: '1 1 0px',
                 display: 'flex',
-                flexDirection: 'column'
+                flexDirection: 'column',
+                // backgroundColor: 'yellow'
             }
         },
         searchBar: {
@@ -381,10 +519,76 @@ define([
                 }
             }),
             button({
+                class: 'btn btn-default',
+                style: {
+                    width: '3em',
+                    maxWidth: '3em'
+                },
                 dataBind: {
                     click: 'function(){doSearch()}'
                 }
-            }, 'Search')
+            }, gen.switch('$component.status()', [
+                ['"none"', span({
+                    class: 'fa fa-search'
+                })],
+                ['"searching"', span({
+                    class: 'fa fa-spinner fa-spin fa-fw'
+                })],
+                ['"done"', span({
+                    class: 'fa fa-search'
+                })],
+                ['"error"', span({
+                    class: 'fa fa-search'
+                })]
+            ])),
+            ' ',
+            button({
+                class: 'btn btn-default',
+                dataBind: {
+                    click: 'function(d){$component.doFirst.call($component)}',
+                    disable: 'pageNumber() === 1'
+                }
+            }, span({
+                class: 'fa fa-step-backward'
+            })),
+            button({
+                class: 'btn btn-default',
+                dataBind: {
+                    click: 'function(d){$component.doPrev.call($component)}',
+                    disable: 'pageNumber() === 1'
+                }
+            }, span({
+                class: 'fa fa-chevron-left'
+            })),
+            button({
+                class: 'btn btn-default',
+                dataBind: {
+                    click: 'function(d){$component.doNext.call($component)}',
+                    disable: 'pageNumber() === pageCount()'
+                }
+            }, span({
+                class: 'fa fa-chevron-right'
+            })),
+            button({
+                class: 'btn btn-default',
+                dataBind: {
+                    click: 'function(d){$component.doLast.call($component)}',
+                    disable: 'pageNumber() === pageCount()'
+                }
+            }, span({
+                class: 'fa fa-step-forward'
+            })),
+            span({
+                dataBind: {
+                    text: 'pageNumber'
+                }
+            }),
+            ' of ',
+            span({
+                dataBind: {
+                    text: 'pageCount'
+                }
+            })
         ]);
     }
 
@@ -408,6 +612,50 @@ define([
         });
     }
 
+    function buildContigs() {
+        return div({
+            style: {
+                flex: '1 1 0px',
+                overflowY: 'auto',
+                padding: '4px'
+            },
+            dataBind: {
+                foreach: 'contigs'
+            }
+        }, div([
+            div({
+                style: {
+                    display: 'inline-block',
+                    width: '60%',
+                    overflowY: 'auto',
+                    textOverflow: 'ellipsis'
+                },
+                dataBind: {
+                    text: 'id',
+                    attr: {
+                        title: 'id'
+                    }
+                }
+            }),
+            div({
+                style: {
+                    display: 'inline-block',
+                    width: '40%',
+                    overflowY: 'auto',
+                    textOverflow: 'ellipsis',
+                    textAlign: 'right'
+                },
+                dataBind: {
+                    typedText: {
+                        value: 'length',
+                        type: '"number"',
+                        format: '"0,0"'
+                    }
+                }
+            })
+        ]));
+    }
+
     function template() {
         return div({
             class: style.classes.component
@@ -419,23 +667,42 @@ define([
             }, [
                 'Genes'
             ]),
-            div({
-                class: style.classes.row
-            }, [
+            // div({
+            //     class: style.classes.row
+            // }, [
+            //     div({
+            //         class: style.classes.col1
+            //     }, 'hi'),
+            //     div({
+            //         class: style.classes.col2
+            //     }, 'hello')
+            // ]),
+            gen.if('ready',
                 div({
-                    class: style.classes.col1
+                    class: style.classes.row
                 }, [
                     div({
-                        class: style.classes.searchBar
-                    }, buildSearchBar()),
+                        class: style.classes.col1
+                    }, buildContigs()),
                     div({
-                        class: style.classes.searchResults
-                    }, buildResults())
+                        class: style.classes.col2
+                    }, [
+                        div({
+                            class: style.classes.searchBar
+                        }, buildSearchBar()),
+                        div({
+                            class: style.classes.searchResults
+                        }, buildResults())
+                    ])
                 ]),
                 div({
-                    class: style.classes.col2
-                })
-            ])
+                    style: {
+                        textAlign: 'center',
+                        padding: '10px'
+                    }
+                }, span({
+                    class: 'fa fa-pulse fa-spinner fa-fw'
+                })))
         ]);
     }
 

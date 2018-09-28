@@ -42,7 +42,7 @@ define([
                 }
             }, {
                 tab: {
-                    label: 'Composition (links out)'
+                    label: 'Object Composition'
                 },
                 panel: {
                     component: {
@@ -54,7 +54,7 @@ define([
                 }
             }, {
                 tab: {
-                    label: 'Used by (links in)'
+                    label: 'Objects Referencing'
                 },
                 panel: {
                     component: {

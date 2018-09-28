@@ -1,12 +1,10 @@
 define([
     'bluebird',
-    'knockout',
     'kb_knockout/registry',
     'kb_knockout/lib/generators',
     'kb_lib/html',
     'kb_lib/htmlBuilders',
     './overview',
-    '../common/taxonomy',
     '../common/publications',
     './genes',
     '../common/wikipedia',
@@ -14,13 +12,11 @@ define([
     '../builders'
 ], function (
     Promise,
-    ko,
     reg,
     gen,
     html,
     build,
     OverviewComponent,
-    TaxonomyComponent,
     PublicationsComponent,
     GenesComponent,
     WikipediaComponent,
@@ -42,7 +38,7 @@ define([
             this.setTabs({
                 primary: {
                     tab: {
-                        label: 'Genome'
+                        label: 'Features'
                     },
                     panel: {
                         component: {
@@ -68,20 +64,20 @@ define([
                             }
                         }
                     },
-                    {
-                        tab: {
-                            label: 'Taxonomy',
-                            component: null
-                        },
-                        panel: {
-                            component: {
-                                name: TaxonomyComponent.name(),
-                                params: {
-                                    ref: 'object.objectInfo.ref'
-                                }
-                            }
-                        }
-                    },
+                    // {
+                    //     tab: {
+                    //         label: 'Taxonomy',
+                    //         component: null
+                    //     },
+                    //     panel: {
+                    //         component: {
+                    //             name: TaxonomyComponent.name(),
+                    //             params: {
+                    //                 ref: 'object.objectInfo.ref'
+                    //             }
+                    //         }
+                    //     }
+                    // },
                     {
                         tab: {
                             label: 'Publications',

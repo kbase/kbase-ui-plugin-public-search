@@ -22,14 +22,16 @@ define([
             this.runtime = context.$root.runtime;
 
             this.ref = ref;
-            this.ready = ko.observable(false);
 
-            console.log('lineage...', ref, taxonomy);
+            this.ready = ko.observable(false);
+            this.error = ko.observable();
+
+            // console.log('lineage...', ref, taxonomy);
 
             if (taxonomy) {
                 this.taxonomy = this.parseTaxonomy(taxonomy);
                 this.ready(true);
-            } else {
+            } else if (ref) {
                 this.taxonomy = null;
                 this.getOverviewInfo()
                     .then(({taxonomy}) => {
@@ -38,7 +40,12 @@ define([
                     })
                     .catch((err) => {
                         console.error('ERROR', err);
+                        this.error(err.message);
                     });
+            } else {
+                // this.error('No lineage available');
+                this.ready(true);
+                this.taxonomy = [];
             }
         }
 
@@ -113,14 +120,36 @@ define([
             target: '_blank'
         })));
     }
+
+    function buildError() {
+        return div({
+            class: 'alert alert-danger',
+            dataBind: {
+                text: 'error'
+            }
+        });
+    }
+
+    function buildEmpty() {
+        return div({
+            style: {
+                fontStyle: 'italic'
+            }
+        }, 'No lineage available');
+    }
+
     // http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?name=Enterobacteriaceae
     function template() {
         return div({
             class: styles.classes.component
         },
         gen.if('ready',
-            buildLineage(),
-            build.loading('Loading taxonomy data')
+            gen.if('taxonomy.length > 0',
+                buildLineage(),
+                buildEmpty()),
+            gen.if('error',
+                buildError(),
+                build.loading('Loading taxonomy data'))
         ));
     }
 

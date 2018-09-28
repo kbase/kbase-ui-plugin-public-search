@@ -61,7 +61,7 @@ define([
                     this.ready(true);
                 })
                 .catch((err) => {
-                    console.error('ERRORx', err);
+                    console.error('ERRORx', params, err);
                     this.error(err);
                 });
         }

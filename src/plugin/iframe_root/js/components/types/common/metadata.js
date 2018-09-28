@@ -107,11 +107,23 @@ define([
         ]));
     }
 
+    function buildNoMetadata() {
+        return div({
+            class: 'well',
+            style: {
+                textStyle: 'italic',
+                textAign: 'center'
+            }
+        }, 'No metadata stored in this object');
+    }
+
     function template() {
         return div({
             class: styles.classes.component
         }, [
-            buildMetadataTable()
+            gen.if('metadata.length > 0',
+                buildMetadataTable(),
+                buildNoMetadata())
         ]);
     }
 

@@ -2,14 +2,12 @@ define([
     'knockout',
     'kb_knockout/registry',
     'kb_knockout/lib/generators',
-    'kb_lib/html',
-    'kb_lib/htmlBuilders'
+    'kb_lib/html'
 ], function (
     ko,
     reg,
     gen,
-    html,
-    builders
+    html
 ) {
     'use strict';
 
@@ -18,7 +16,11 @@ define([
             this.tree = ko.unwrap(params.tree);
             this.runtime = context.$root.runtime;
             this.componentName = name;
-            this.dataIcon = this.getDataIcon();
+            if (this.tree.accessible) {
+                this.dataIcon = this.getDataIcon();
+            } else {
+                this.dataIcon = null;
+            }
         }
 
         getDataIcon() {
@@ -45,20 +47,6 @@ define([
         span = t('span'),
         div = t('div');
 
-    // function buildIcon(icon, color) {
-    //     return div({
-    //         style: {
-    //             display: 'inline-block',
-    //             width: '30px'
-    //         }
-    //     }, span({
-    //         class: 'fa fa-lg fa-' + icon,
-    //         style: {
-    //             color: color
-    //         }
-    //     }));
-    // }
-
     function buildDataIcon() {
         return div({
             style: {
@@ -77,11 +65,82 @@ define([
                     }
                 }),
                 span({
-                    class: 'fa-inverse fa-stack-1x ',
+                    class: 'fa fa-inverse fa-stack-1x ',
                     dataBind: {
                         class: 'dataIcon.classes'
                     }
                 })
+            ])
+        ]);
+    }
+
+    function buildUnknownDataIcon() {
+        return div({
+            style: {
+                fontSize: '80%'
+            }
+        }, [
+            span({
+                class: 'fa-stack fa-2x'
+            }, [
+                span({
+                    class: 'fa fa-circle fa-stack-2x',
+                    style: {
+                        color: 'red'
+                    }
+                }),
+                span({
+                    class: 'fa fa-inverse fa-stack-1x fa-question',
+                })
+            ])
+        ]);
+    }
+
+    function buildNodeBox() {
+        return div({
+            style: {
+                padding: '4px',
+                border: '1px silver solid',
+                display: 'flex',
+                flexDirection: 'row'
+            }
+        }, [
+            gen.if('dataIcon',
+                div(
+                    buildDataIcon()
+                ),
+                div(
+                    buildUnknownDataIcon()
+                )),
+            div({
+                style: {
+                    flex: '1 1 0px'
+                }
+            }, [
+                div(gen.if('tree.accessible',
+                    a({
+                        dataBind: {
+                            text: 'tree.display.title',
+                            attr: {
+                                href: '"/#dataview/" + tree.ref'
+                            }
+                        },
+                        target: '_blank'
+                    }),
+                    span('This object is not accessible to you')
+                )),
+                div(gen.if('tree.accessible',
+                    a({
+                        dataBind: {
+                            text: 'tree.type',
+                            attr: {
+                                href: '"/#spec/type/" + tree.typeID'
+                            }
+                        },
+                        target: '_blank'
+                    }),
+                    span('Unknown type')
+                ))
             ])
         ]);
     }
@@ -93,38 +152,7 @@ define([
                 // padding: '4px'
             }
         }, [
-            div({
-                style: {
-                    padding: '4px',
-                    border: '1px silver solid',
-                    display: 'flex',
-                    flexDirection: 'row'
-                }
-            }, [
-                div(
-                    buildDataIcon()
-                ),
-                div({
-                    style: {
-                        flex: '1 1 0px'
-                    }
-                }, [
-                    div(a({
-                        dataBind: {
-                            text: 'tree.display.title',
-                            attr: {
-                                href: '"/#dataview/" + tree.ref'
-                            }
-                        },
-                        target: '_blank'
-                    })),
-                    div({
-                        dataBind: {
-                            text: 'tree.type'
-                        }
-                    })
-                ])
-            ]),
+            buildNodeBox(),
             div({
                 style: {
                     marginLeft: '20px'

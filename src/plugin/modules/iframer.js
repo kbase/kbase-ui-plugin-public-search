@@ -204,6 +204,10 @@ define([
                         // window.location.search = queryString;
                     });
 
+                    this.channel.on('send-instrumentation', (instrumentation) => {
+                        this.runtime.service('instrumentation').send(instrumentation);
+                    });
+
                     this.channel.on('ready', (message) => {
                         this.iframeChannel = new WindowChannel.Channel({
                             window: this.iframe.iframe.contentWindow,

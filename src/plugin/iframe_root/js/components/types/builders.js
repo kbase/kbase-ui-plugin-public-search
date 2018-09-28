@@ -170,21 +170,6 @@ define([
         }
 
         setTabs({primary, overview, custom}) {
-            if (primary) {
-                if (primary.tab) {
-                    this.tabs.push(primary);
-                } else {
-                    this.tabs.push({
-                        tab: 'Primary',
-                        panel: {
-                            component: primary,
-                            params: {
-                                object: 'object'
-                            }
-                        }
-                    });
-                }
-            }
             if (overview) {
                 this.tabs.push({
                     tab: {
@@ -199,6 +184,22 @@ define([
                         }
                     }
                 });
+            }
+
+            if (primary) {
+                if (primary.tab) {
+                    this.tabs.push(primary);
+                } else {
+                    this.tabs.push({
+                        tab: 'Primary',
+                        panel: {
+                            component: primary,
+                            params: {
+                                object: 'object'
+                            }
+                        }
+                    });
+                }
             }
 
             this.tabs.push({

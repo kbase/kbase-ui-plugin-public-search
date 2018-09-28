@@ -280,30 +280,17 @@ define([
     });
 
     function buildImage() {
-        return div([
-            gen.if('imageUrl',
-                img({
-                    class: style.classes.wikipediaImage,
-                    dataBind: {
-                        attr: {
-                            src: 'imageUrl'
-                        },
-                        style: {
-                            height: 'height'
-                        }
-                    }
-                }),
-                div({
-                    style: {
-                    },
-                    dataBind: {
-                        style: {
-                            width: 'height',
-                            height: 'height'
-                        }
-                    }
-                }, 'Image not found')),
-        ]);
+        return img({
+            class: style.classes.wikipediaImage,
+            dataBind: {
+                attr: {
+                    src: 'imageUrl'
+                },
+                style: {
+                    height: 'height'
+                }
+            }
+        });
     }
 
     function buildError() {
@@ -328,6 +315,33 @@ define([
                     text: 'error().message'
                 }
             })
+        ]);
+    }
+
+    function buildMissing() {
+        return div({
+            style: {
+                display: 'flex',
+                flexDirection: 'column'
+            }
+        }, [
+            div({
+                style: {
+                    textAlign: 'center',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    border: '1px silver dashed'
+                },
+                dataBind: {
+                    style: {
+                        // width: 'height',
+                        height: 'height',
+                    }
+                }
+            }, [
+                div('Image not found at Wikipedia')
+            ])
         ]);
     }
 
@@ -381,7 +395,9 @@ define([
         return div({
             class: style.classes.component
         }, gen.if('ready',
-            buildImage(),
+            gen.if('imageUrl',
+                buildImage(),
+                buildMissing()),
             gen.if('error',
                 buildError(),
                 buildLoading())));

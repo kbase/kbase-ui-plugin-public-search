@@ -28,6 +28,12 @@ module.exports = function (grunt) {
                 flatten: true,
                 src: 'node_modules/dagre-d3/dist/dagre-d3.js',
                 dest: '../src/plugin/iframe_root/js/vendor/dagre-d3'
+            },
+            'pure-uuid': {
+                expand: true,
+                flatten: true,
+                src: 'node_modules/pure-uuid/uuid',
+                dest: '../src/plugin/iframe_root/js/vendor/pure-uuid'
             }
         }
     });

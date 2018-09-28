@@ -13,12 +13,22 @@ define([
 ) {
     'use strict';
 
+    function defaultComparator(a, b) {
+        if (a < b) {
+            return -1;
+        } else if (a > b) {
+            return 1;
+        }
+        return 0;
+    }
+
     class ViewModel extends ViewModelBase {
         constructor(params) {
             super(params);
 
             this.rows = params.rows;
             this.table = params.table;
+
 
             // console.log('got rows...', this.rows());
 
@@ -37,8 +47,12 @@ define([
         sortTable(a, b) {
             const c = this.table.sort.column();
             const dir = this.table.sort.direction() === 'asc' ? 1 : -1;
-            const x = dir * this.table.columnMap[c].sort.comparator(a[c], b[c]);
-            return x;
+            const sortComparator = this.table.columnMap[c].sort;
+            if (typeof sortComparator === 'function') {
+                return dir * this.table.columnMap[c].sort.comparator(a[c], b[c]);
+            } else {
+                return dir * defaultComparator(a[c], b[c]);
+            }
         }
 
         doSort(data) {
