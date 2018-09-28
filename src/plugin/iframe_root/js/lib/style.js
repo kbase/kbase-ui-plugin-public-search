@@ -6,9 +6,9 @@ define([
     'use strict';
     const common = html.makeStyles({
         tooltipLight: {
-            // css: {
-            //     cursor: 'auto'
-            // },
+            css: {
+                // cursor: 'auto'
+            },
             pseudo: {
                 hover: {
                     // backgroundColor: 'rgba(0, 255, 0, 0.3)'
@@ -17,9 +17,9 @@ define([
             }
         },
         tooltipDark: {
-            // css: {
-            //     cursor: 'auto'
-            // },
+            css: {
+                // cursor: 'auto'
+            },
             pseudo: {
                 hover: {
                     // backgroundColor: 'rgba(0, 255, 0, 0.3)'
@@ -28,6 +28,8 @@ define([
             }
         }
     });
+
+    console.log('common styles?', common);
 
     return common;
 });
