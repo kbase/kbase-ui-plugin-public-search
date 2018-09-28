@@ -570,7 +570,7 @@
                         for (var i = 0, j = arrayLikeObject.length; i < j; i++) {
                             result.push(arrayLikeObject[i]);
                         }
-                return result;
+                        return result;
                     },
 
                     createSymbolOrString: function (identifier) {
@@ -591,7 +591,7 @@
                             if (isMatchingField(fields[i]))
                                 matches.push(fields[i]);
                         }
-                return matches;
+                        return matches;
                     },
 
                     parseJson: function (jsonString) {
@@ -2643,13 +2643,13 @@
                         }
                     }
                 }
-    
-        function objectLookup() {
+
+                function objectLookup() {
                     this.keys = [];
                     this.values = [];
                 }
-    
-        objectLookup.prototype = {
+
+                objectLookup.prototype = {
                     constructor: objectLookup,
                     save: function (key, value) {
                         var existingIndex = ko.utils.arrayIndexOf(this.keys, key);
@@ -3787,8 +3787,8 @@
                         'bindingContextForDescendants': shouldBindDescendants && contextToExtend
                     };
                 }
-    
-        ko.storedBindingContextForNode = function (node) {
+
+                ko.storedBindingContextForNode = function (node) {
                     var bindingInfo = ko.utils.domData.get(node, boundElementDomDataKey);
                     return bindingInfo && bindingInfo.context;
                 };
@@ -4558,8 +4558,8 @@
                                 ko.expressionRewriting.writeValueToProperty(modelValue, allBindings, 'checked', elemValue, true);
                             }
                         }
-    
-            function updateView() {
+
+                        function updateView() {
                             // This updates the view value from the model value.
                             // It runs in response to changes in the bound (checked) value.
                             var modelValue = ko.utils.unwrapObservable(valueAccessor()),
@@ -4578,8 +4578,8 @@
                                 element.checked = (checkedValue() === modelValue);
                             }
                         }
-    
-            var isCheckbox = element.type == 'checkbox',
+
+                        var isCheckbox = element.type == 'checkbox',
                             isRadio = element.type == 'radio';
 
                         // Only bind to check boxes and radio buttons
