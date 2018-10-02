@@ -127,7 +127,14 @@ define([
                         },
                         target: '_blank'
                     }),
-                    span('This object is not accessible to you')
+                    [
+                        span('This object is not accessible to you: '),
+                        span({
+                            dataBind: {
+                                text: 'tree.ref'
+                            }
+                        })
+                    ]
                 )),
                 div(gen.if('tree.accessible',
                     a({

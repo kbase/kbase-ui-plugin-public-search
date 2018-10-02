@@ -35,27 +35,38 @@ define([
     class History {
         constructor({name, maxSize}) {
             this.name = name;
-            this.maxSize = maxSize;
+            this.maxSize = maxSize || 10;
         }
 
-        getHistory() {
+        // updateHistory(term) {
+        //     // get history from cookie.
+        //     return this.getHistory()
+        //         .then((history) => {
+        //             let newHistory;
 
-        }
+        //             // if term is in history, remove it
+        //             if (history.includes(term)) {
+        //                 newHistory = history.filter((item) => {
+        //                     return (item !== term);
+        //                 });
+        //             } else {
+        //                 newHistory = history;
+        //             }
 
-        setHistory() {
+        //             // add term to top
+        //             newHistory.unshift(term);
 
-        }
+        //             // if > 10 history items, remove the last one
+        //             if (newHistory.length > this.maxHistoryLength) {
+        //                 newHistory = newHistory.slice(0, this.maxHistoryLength);
+        //             }
 
-        removeHistory() {
+        //             this.setHistory(newHistory);
 
-        }
-    }
+        //             return newHistory;
+        //         });
+        // }
 
-    class CookieHistory extends History {
-        constructor(params) {
-            super(params);
-            this.maxAge = params.maxAge || 60 * 60;
-        }
 
         updateHistory(term) {
             // get history from cookie.
@@ -75,15 +86,33 @@ define([
                     // add term to top
                     newHistory.unshift(term);
 
-                    // if > 10 history items, remove the last one
-                    if (newHistory.length > this.maxHistoryLength) {
-                        newHistory = newHistory.slice(0, this.maxHistoryLength);
+                    // ensure the history does not exceed the maximum
+                    // allowable length.
+                    if (newHistory.length > this.maxSize) {
+                        console.log('truncated?', newHistory.length, this.maxSize);
+                        newHistory = newHistory.slice(0, this.maxSize);
                     }
 
                     this.setHistory(newHistory);
 
                     return newHistory;
                 });
+        }
+
+        getHistory() {
+        }
+
+        setHistory() {
+        }
+
+        removeHistory() {
+        }
+    }
+
+    class CookieHistory extends History {
+        constructor(params) {
+            super(params);
+            this.maxAge = params.maxAge || 60 * 60;
         }
 
         setHistory(history) {
@@ -215,47 +244,6 @@ define([
                     // }];
                 });
         }
-
-        updateHistory(term) {
-            // get history from cookie.
-            return this.getHistory()
-                .then((history) => {
-                    let newHistory;
-
-                    // if term is in history, remove it
-                    if (history.includes(term)) {
-                        newHistory = history.filter((item) => {
-                            return (item !== term);
-                        });
-                    } else {
-                        newHistory = history;
-                    }
-
-                    // add term to top
-                    newHistory.unshift(term);
-
-                    // if > 10 history items, remove the last one
-                    if (newHistory.length > this.maxHistoryLength) {
-                        newHistory = newHistory.slice(0, this.maxHistoryLength);
-                    }
-
-                    this.setHistory(newHistory);
-
-                    return newHistory;
-                });
-        }
-
-        // setHistory(history) {
-        //     const cookieValue = encodeURIComponent(JSON.stringify(history));
-        //     const cookie = new Cookie.Cookie(this.name)
-        //         .setSecure(true)
-        //         .setDomain(window.location.hostname)
-        //         .setPath('/')
-        //         .setMaxAge(this.maxAge)
-        //         .setValue(cookieValue);
-        //     const cookieManager = new Cookie.CookieManager();
-        //     cookieManager.setItem(cookie);
-        // }
 
         getHistory() {
             const key = ['profile', 'plugins', 'public-search', 'settings', 'history'];

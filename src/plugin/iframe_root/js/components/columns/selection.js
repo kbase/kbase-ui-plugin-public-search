@@ -12,6 +12,7 @@ define([
     'use strict';
 
     const t = html.tag,
+        span = t('span'),
         div = t('div');
     // const {div} = html.tags(['div']);
 
@@ -41,8 +42,8 @@ define([
         }
     }
 
-    function template() {
-        return div({
+    function buildCheckbox() {
+        return span({
             style: {
                 cursor: 'pointer'
             },
@@ -52,6 +53,18 @@ define([
                 click: 'function(d,e){$component.toggleSelected.call($component,d,e)}'
             }
         });
+    }
+
+    function template() {
+        // return div({
+        //     style: {
+        //         flex: '1 1 0px',
+        //         display: 'flex',
+        //         flexDirection: 'column',
+        //         justifyContent: 'center'
+        //     }
+        // }, buildCheckbox());
+        return buildCheckbox();
     }
 
     function component() {

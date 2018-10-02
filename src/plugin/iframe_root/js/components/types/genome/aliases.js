@@ -63,6 +63,7 @@ define([
     function template() {
         return div({
             style: {
+                flex: '1 1 0px',
                 display: 'flex',
                 flexDirection: 'row'
             }

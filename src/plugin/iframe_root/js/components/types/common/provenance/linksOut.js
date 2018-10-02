@@ -120,6 +120,14 @@ define([
                     to: 'title'
                 }];
                 break;
+            case 'OntologyDictionary':
+                // just map a field so we don't get the whole object.
+                fieldsToInclude = ['auto_generated_by'];
+                displayMapping = [{
+                    from: 'info.1',
+                    to: 'title'
+                }];
+                break;
             default:
                 throw new Error('Sorry, no handler for ' + typeName);
             }

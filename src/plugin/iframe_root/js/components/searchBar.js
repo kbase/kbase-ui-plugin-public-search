@@ -8,7 +8,8 @@ define([
     'kb_lib/httpUtils',
     './copy/copyObjectsControl',
     '../lib/text',
-    '../lib/style'
+    '../lib/style',
+    './searchWarnings'
 ], function (
     Uuid,
     ko,
@@ -19,7 +20,8 @@ define([
     httpUtils,
     CopyObjectsControlComponent,
     text,
-    commonStyle
+    commonStyle,
+    SearchWarningsComponent
 ) {
     'use strict';
 
@@ -74,9 +76,9 @@ define([
                 this.clickListener(e);
             };
 
-            this.subscribe(this.searchInput, (newValue) => {
-                this.addToHistory(newValue);
-            });
+            // this.subscribe(this.searchInput, (newValue) => {
+            //     this.addToHistory(newValue);
+            // });
 
             document.addEventListener('click', this.documentClickListener, true);
         }
@@ -315,6 +317,7 @@ define([
                     placeholder: 'Search KBase Data',
                     title: text.getTooltip('SEARCH_INPUT')
                 }),
+                // TODO: warnings component here.
                 gen.if('showHistory',
                     div({
                         class: styles.classes.historyContainer,

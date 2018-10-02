@@ -25,7 +25,8 @@ define([
     '../lib/history',
     '../lib/style',
     '../lib/text',
-    '../lib/instrument'
+    '../lib/instrument',
+    '../lib/data'
 ], function (
     Promise,
     ko,
@@ -53,7 +54,8 @@ define([
     history,
     commonStyle,
     text,
-    instrument
+    instrument,
+    data
 ) {
     'use strict';
 
@@ -206,8 +208,12 @@ define([
                     return type.value;
                 });
 
+                // massage the search input (query)
+                const {terms, diagnosis, theStopWords} = this.cleanSearchInput(this.searchInput());
+
                 return {
                     searchInput: this.searchInput(),
+                    searchTerms: terms.join(' '),
                     forceSearch: this.forceSearch(),
                     dataTypes: dataTypes,
                     supportedDataTypes: supportedDataTypes,
@@ -304,7 +310,7 @@ define([
                 // otherwise, leave it alone.
                 // It may still be adjusted after the search completes.
                 if (this.lastSearch.query) {
-                    if (this.lastSearch.query.input.searchInput !== newValue.input.searchInput) {
+                    if (this.lastSearch.query.input.searchTerms !== newValue.input.searchTerms) {
                         if (this.page() && this.page() > 1) {
                             this.page(null);
                             return;
@@ -387,6 +393,58 @@ define([
             }, '60000');
 
             this.setupHistory();
+        }
+
+        cleanSearchInput(searchInput) {
+            if (!searchInput) {
+                return {
+                    terms: [],
+                    diagnosis: 'empty-input'
+                };
+            }
+
+            // Trim out whitespace.
+            var whiteSpaceStripped = searchInput.trim().split(/\s+/)
+                .filter(function (term) {
+                    return term.length;
+                });
+
+            // If that is all there is we have an empty query.
+            if (whiteSpaceStripped.length === 0) {
+                return {
+                    terms: [],
+                    diagnosis: 'just-whitespace'
+                };
+            }
+
+            // Remove stop words. If that is all we have, we
+            // have an empty query with another reason.
+            var stopWordsStripped = whiteSpaceStripped.filter(function (term) {
+                return !data.isStopWord(term);
+            });
+            if (whiteSpaceStripped.length > stopWordsStripped.length) {
+                var stopWords = whiteSpaceStripped.filter(function (term) {
+                    return data.isStopWord(term);
+                });
+                if (stopWordsStripped.length === 0) {
+                    return {
+                        terms: [],
+                        diagnosis: 'just-stopwords',
+                        theStopWords: stopWords
+                    };
+                }
+                return {
+                    terms: stopWordsStripped,
+                    diagnosis: 'some-stopwords',
+                    theStopWords: stopWords
+                };
+            }
+
+            return {
+                terms: stopWordsStripped,
+                diagnosis: 'ok',
+                theStopWords: null
+            };
         }
 
         setupHistory() {
@@ -543,7 +601,8 @@ define([
                     withUserData: query.input.withUserData
                 },
                 query: {
-                    input: query.input.searchInput
+                    input: query.input.searchInput,
+                    terms: query.input.searchTerms
                 },
                 paging: query.paging,
                 sorting: query.sorting
@@ -567,6 +626,7 @@ define([
             // Set the query params
 
             // NB this is async, so the history will not be updated right away here.
+            console.log('updating history?', this.history);
             this.history.updateHistory(query.input.searchInput)
                 .then((newHistory) => {
                     this.searchHistory(newHistory);
@@ -617,7 +677,7 @@ define([
             this.searchState('searching');
             Promise.all([
                 this.model.search({
-                    query: query.input.searchInput,
+                    query: query.input.searchTerms,
                     types: dataTypes,
                     start: start,
                     count: count,
@@ -629,7 +689,7 @@ define([
                 }),
                 this.model.searchSummary({
                     types: query.input.supportedDataTypes,
-                    query: query.input.searchInput,
+                    query: query.input.searchTerms,
                     withUserData: query.input.withUserData,
                     withReferenceData: query.input.withReferenceData,
                     withPrivate: query.input.withPrivateData,

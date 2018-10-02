@@ -129,6 +129,8 @@ define([
 
             this.ready = ko.observable(false);
             this.contigs = ko.observableArray();
+            this.selectedContig = ko.observable();
+            this.error = ko.observable();
 
             this.status = ko.observable('none');
 
@@ -221,8 +223,22 @@ define([
 
             this.getContigs()
                 .then((contigs) => {
-                    this.contigs(contigs);
+                    if (contigs) {
+                        this.contigs(contigs.map((contig) => {
+                            return {
+                                id: contig.id, 
+                                length: contig.length,
+                                selected: ko.observable(false)
+                            };
+                        }));
+                    } else {
+                        this.contigs([]);
+                    }
                     this.ready(true);
+                })
+                .catch((err) => {
+                    // simple error
+                    this.error(err.message);
                 });
         }
 
@@ -320,7 +336,8 @@ define([
             }])
                 .spread((result) => {
                     console.log('contigs1', result);
-                    const {contigs, num_contigs, contig_lengths, contigset_ref, assembly_ref} = result.data[0].data;
+                    const {contigset_ref, assembly_ref} = result.data[0].data;
+                    // const {contigs, num_contigs, contig_lengths, contigset_ref, assembly_ref} = result.data[0].data;
                     // const api = this.runtime.service('rpc').makeClient({
                     //     module: 'GenomeAnnotationAPI',
                     //     timeout: 10000,
@@ -338,28 +355,36 @@ define([
                                     'contigs/[*]/length'
                                 ]
                             }]
-                        }]);
+                        }])
+                            .spread((result) => {
+                                return result.data[0].data.contigs;
+                            });
                     } else if (assembly_ref) {
                         return workspace.callFunc('get_objects2', [{
                             objects: [{
                                 ref: assembly_ref,
                                 included: [
-                                    'contigs/[*]/contig_id',
-                                    'contigs/[*]/length'
+                                    'contigs',
                                 ]
                             }]
                         }])
-                            .then((result) => {
-                                console.log('result', result);
-                                return result;
+                            .spread((result) => {
+                                const contigs = result.data[0].data.contigs;
+                                return Object.keys(contigs).map((contigId) => {
+                                    const contig = contigs[contigId];
+                                    return {
+                                        id: contig.contig_id,
+                                        length: contig.length,
+                                        start: contig.start_position,
+                                    };
+                                })
+                                console.log('assembly contigs', result);
+                                return result.data[0].data.contigs;
                             });
                     } else {
-                        throw new Error('Cannot get contigs...');
+                        // throw new Error('Cannot get contigs...');
+                        return [];
                     }
-                })
-                .spread((result) => {
-                    return result.data[0].data.contigs;
-                    // console.log('contigs?', result);
                 });
         }
 
@@ -456,6 +481,20 @@ define([
         //     this.getGenes();
         //     console.log('search');
         // }
+        doSelectContig(data) {
+            if (this.selectedContig()) {
+                this.selectedContig().selected(false);
+            }
+            data.selected(true);
+            this.selectedContig(data);
+            const currentInput = this.searchInput();
+            // if (currentInput) {
+            //     this.searchInput(currentInput + ' ' + data.id);
+            // } else {
+                this.searchInput(data.id);
+            // }
+            // console.log('selecting contig', data);
+        }
     }
 
     const t = html.tag,
@@ -469,7 +508,8 @@ define([
             css: {
                 flex: '1 1 0px',
                 display: 'flex',
-                flexDirection: 'column'
+                flexDirection: 'column',
+                marginTop: '10px'
             }
         },
         row: {
@@ -479,12 +519,22 @@ define([
                 flexDirection: 'row'
             }
         },
+        columnHeader: {
+            css: {
+                backgroundColor: '#CCC',
+                color: '#555',
+                padding: '4px',
+                textAlign: 'center',
+                fontWeight: 'bold'
+            }
+        },
         col1: {
             css: {
                 // flex: '2 1 0px',
                 width: '15em',
                 display: 'flex',
                 flexDirection: 'column',
+                marginRight: '4px'
                 // backgroundColor: 'aqua'
             }
         },
@@ -507,6 +557,22 @@ define([
                 display: 'flex',
                 flexDirection: 'column',
                 border: '1px silver solid'
+            }
+        },
+        contigRow: {
+            css: {
+                padding: '4px',
+                cursor: 'pointer'
+            },
+            pseudo: {
+                hover: {
+                    backgroundColor: '#CCC'
+                }
+            }
+        },
+        selectedContig: {
+            css: {
+                backgroundColor: '#CCC'
             }
         }
     });
@@ -533,6 +599,9 @@ define([
                 })],
                 ['"searching"', span({
                     class: 'fa fa-spinner fa-spin fa-fw'
+                })],
+                ['"notfound"', span({
+                    class: 'fa fa-search'
                 })],
                 ['"done"', span({
                     class: 'fa fa-search'
@@ -579,16 +648,28 @@ define([
                 class: 'fa fa-step-forward'
             })),
             span({
-                dataBind: {
-                    text: 'pageNumber'
+                style: {
+                    marginLeft: '10px'
                 }
-            }),
-            ' of ',
+            }, gen.if('pageCount() > 0', 
+                [
+                span({
+                    dataBind: {
+                        text: 'pageNumber'
+                    }
+                }),
+                ' of ',
+                span({
+                    dataBind: {
+                        text: 'pageCount'
+                    }
+                })
+            ],
             span({
-                dataBind: {
-                    text: 'pageCount'
+                style: {
+                    fontStyle: 'italic'
                 }
-            })
+            }, 'No genes match this search')))
         ]);
     }
 
@@ -622,7 +703,13 @@ define([
             dataBind: {
                 foreach: 'contigs'
             }
-        }, div([
+        }, div({
+            class: style.classes.contigRow,
+            dataBind: {
+                click: 'function(d,e){$component.doSelectContig.call($component,d,e)}',
+                class: 'selected() ? "' + style.classes.selectedContig + '" : null'
+            }
+        }, [
             div({
                 style: {
                     display: 'inline-block',
@@ -656,37 +743,66 @@ define([
         ]));
     }
 
+    function buildNoContigs() {
+        return div({
+            class: 'alert alert-warning'
+        }, 'No contigs available');
+    }
+
+    function buildWaiting() {
+        return div({
+            style: {
+                textAlign: 'center',
+                padding: '10px'
+            }
+        }, span({
+            class: 'fa fa-pulse fa-spinner fa-fw'
+        }));
+    }
+
+    function buildError() {
+        return div({
+            class: 'alert alert-danger',
+            dataBind: {
+                text: 'error'
+            }
+        });
+    }
+
     function template() {
         return div({
             class: style.classes.component
         }, [
-            div({
-                style: {
-                    flex: '0 0 50px'
-                }
-            }, [
-                'Genes'
-            ]),
-            // div({
-            //     class: style.classes.row
-            // }, [
-            //     div({
-            //         class: style.classes.col1
-            //     }, 'hi'),
-            //     div({
-            //         class: style.classes.col2
-            //     }, 'hello')
-            // ]),
             gen.if('ready',
                 div({
                     class: style.classes.row
                 }, [
                     div({
                         class: style.classes.col1
-                    }, buildContigs()),
+                    }, [
+                        div({
+                            class: style.classes.columnHeader
+                        }, [
+                            'contigs (',
+                            gen.if('contigs().length > 0',
+                                span({
+                                    dataBind: {
+                                        text: 'contigs().length'
+                                    }
+                                }),
+                                'none'),
+                            ')'
+                        ]),
+                        gen.if('contigs().length > 0',
+                            buildContigs(),
+                            buildNoContigs())
+                    ]),
                     div({
                         class: style.classes.col2
                     }, [
+                        div({
+                            class: style.classes.columnHeader
+                        }, 'features'),
                         div({
                             class: style.classes.searchBar
                         }, buildSearchBar()),
@@ -695,14 +811,10 @@ define([
                         }, buildResults())
                     ])
                 ]),
-                div({
-                    style: {
-                        textAlign: 'center',
-                        padding: '10px'
-                    }
-                }, span({
-                    class: 'fa fa-pulse fa-spinner fa-fw'
-                })))
+                gen.if('error',
+                    buildError(),
+                    buildWaiting())
+            )
         ]);
     }
 
