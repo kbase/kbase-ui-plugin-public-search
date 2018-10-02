@@ -69,7 +69,6 @@ define([
         send() {
             const measurements = this.toJSON();
             this.clear();
-            // console.log('sending...', measurements);
             this.bus.send('instrumentation', {
                 type: this.type,
                 name: this.name,

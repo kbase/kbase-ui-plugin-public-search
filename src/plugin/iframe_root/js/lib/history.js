@@ -89,7 +89,6 @@ define([
                     // ensure the history does not exceed the maximum
                     // allowable length.
                     if (newHistory.length > this.maxSize) {
-                        console.log('truncated?', newHistory.length, this.maxSize);
                         newHistory = newHistory.slice(0, this.maxSize);
                     }
 
@@ -274,7 +273,7 @@ define([
                     return history.history;
                 })
                 .catch((err) => {
-                    console.log('Error fetching history', err);
+                    console.error('Error fetching history', err);
                     throw new Error('Error fetching history: ' + err.message);
                     // return [null, {
                     //     source: 'ProfileService:get_user_profile',

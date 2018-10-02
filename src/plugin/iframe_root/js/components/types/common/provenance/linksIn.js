@@ -110,7 +110,6 @@ define([
 
             this.getReferencingObjects()
                 .then((referencingObjects) => {
-                    // console.log('got referencing objects', referencingObjects);
                     this.ready(true);
                     this.referencingObjects(referencingObjects);
                 })

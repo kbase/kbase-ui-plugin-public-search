@@ -335,7 +335,6 @@ define([
                 }]
             }])
                 .spread((result) => {
-                    console.log('contigs1', result);
                     const {contigset_ref, assembly_ref} = result.data[0].data;
                     // const {contigs, num_contigs, contig_lengths, contigset_ref, assembly_ref} = result.data[0].data;
                     // const api = this.runtime.service('rpc').makeClient({
@@ -378,7 +377,6 @@ define([
                                         start: contig.start_position,
                                     };
                                 })
-                                console.log('assembly contigs', result);
                                 return result.data[0].data.contigs;
                             });
                     } else {
@@ -477,10 +475,6 @@ define([
                 });
         }
 
-        // doSearch() {
-        //     this.getGenes();
-        //     console.log('search');
-        // }
         doSelectContig(data) {
             if (this.selectedContig()) {
                 this.selectedContig().selected(false);
@@ -488,12 +482,7 @@ define([
             data.selected(true);
             this.selectedContig(data);
             const currentInput = this.searchInput();
-            // if (currentInput) {
-            //     this.searchInput(currentInput + ' ' + data.id);
-            // } else {
-                this.searchInput(data.id);
-            // }
-            // console.log('selecting contig', data);
+            this.searchInput(data.id);
         }
     }
 

@@ -242,13 +242,11 @@ define([
 
             this.subscribe(this.pageSize, () => {
                 // if the new page size puts the current page beyond the end, set it to the end.
-                // console.log('ah 1', this.page(), this.totalPages(), newValue);
                 if (this.page() > this.totalPages()) {
                     this.page(this.totalPages());
                 // } else if (!this.page() && this.totalPages() > 0) {
                 //     this.page(1);
                 }
-                // console.log('ah 2', this.page(), this.totalPages(), newValue);
             });
 
             // sorting interface
@@ -626,7 +624,6 @@ define([
             // Set the query params
 
             // NB this is async, so the history will not be updated right away here.
-            console.log('updating history?', this.history);
             this.history.updateHistory(query.input.searchInput)
                 .then((newHistory) => {
                     this.searchHistory(newHistory);
@@ -672,7 +669,6 @@ define([
 
             this.instrument.record(measure);
 
-            // console.log('dosearch');
             this.searching(true);
             this.searchState('searching');
             Promise.all([

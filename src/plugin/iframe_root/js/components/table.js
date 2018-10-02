@@ -28,20 +28,6 @@ define([
 
             this.rows = params.rows;
             this.table = params.table;
-
-
-            // console.log('got rows...', this.rows());
-
-            // this.rows = ko.pureComputed(() => {
-            //     const rows = params.rows.sorted((a, b) => {
-            //         const c = this.table.sort.column();
-            //         const x = this.table.sort.direction() * this.table.columnMap[c].sort.comparator(a[c], b[c]);
-            //         return x;
-            //     });
-            //     return rows
-            //     // return params.rows;
-            // });
-
         }
 
         sortTable(a, b) {

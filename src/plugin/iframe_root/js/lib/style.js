@@ -29,7 +29,5 @@ define([
         }
     });
 
-    console.log('common styles?', common);
-
     return common;
 });

@@ -66,7 +66,6 @@ define([
                 }
             } else {
                 // no tree
-                // console.log('no tree');
             }
         }
     }

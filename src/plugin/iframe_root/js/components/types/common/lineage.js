@@ -26,8 +26,6 @@ define([
             this.ready = ko.observable(false);
             this.error = ko.observable();
 
-            // console.log('lineage...', ref, taxonomy);
-
             if (taxonomy) {
                 this.taxonomy = this.parseTaxonomy(taxonomy);
                 this.ready(true);
