@@ -4,28 +4,24 @@ define([
     'kb_knockout/lib/generators',
     'kb_knockout/lib/viewModelBase',
     'kb_lib/html',
-    'kb_lib/htmlBuilders',
-    'kb_lib/jsonRpc/genericClient',
-    'kb_lib/jsonRpc/dynamicServiceClient',
     'kb_lib/lang',
     'kb_knockout/components/table',
     './aliases',
     './functions',
-    './location'
+    './location',
+    './contigs'
 ], function (
     ko,
     reg,
     gen,
     ViewModelBase,
     html,
-    builders,
-    GenericClient,
-    DynamicServiceClient,
     lang,
     TableComponent,
     AliasesComponent,
     FunctionsComponent,
-    LocationComponent
+    LocationComponent,
+    ContigsComponent
 ) {
     'use strict';
 
@@ -128,17 +124,23 @@ define([
             });
 
             this.ready = ko.observable(false);
-            this.contigs = ko.observableArray();
-            this.selectedContig = ko.observable();
             this.error = ko.observable();
 
             this.status = ko.observable('none');
+
+            this.selectedContig = ko.observable();
+            this.contigsCount = ko.observable();
+
 
             this.searchInput = ko.observable('*');
             this.pageNumber = ko.observable(1);
             this.pageCount = ko.observable(0);
 
             this.table = new Table();
+
+            this.subscribe(this.selectedContig, (newValue) => {
+                this.searchInput(newValue);
+            });
 
             this.subscribe(this.searchInput, () => {
                 this.pageNumber(1);
@@ -220,26 +222,6 @@ define([
                 //     }
                 // }
             };
-
-            this.getContigs()
-                .then((contigs) => {
-                    if (contigs) {
-                        this.contigs(contigs.map((contig) => {
-                            return {
-                                id: contig.id, 
-                                length: contig.length,
-                                selected: ko.observable(false)
-                            };
-                        }));
-                    } else {
-                        this.contigs([]);
-                    }
-                    this.ready(true);
-                })
-                .catch((err) => {
-                    // simple error
-                    this.error(err.message);
-                });
         }
 
         doSearch() {
@@ -305,7 +287,6 @@ define([
             this.pageNumber(1);
         }
 
-
         doPrev() {
             if (this.pageNumber() > 1) {
                 this.pageNumber(this.pageNumber() - 1);
@@ -322,82 +303,12 @@ define([
             this.pageNumber(this.pageCount());
         }
 
-        getContigs() {
-            const workspace = this.runtime.service('rpc').makeClient({
-                module: 'Workspace',
-                timeout: 10000,
-                authenticated: true
-            });
-            return workspace.callFunc('get_objects2', [{
-                objects: [{
-                    ref: this.object.objectInfo.ref,
-                    included: ['contigs', 'num_contigs', 'contig_lengths', 'contigset_ref', 'assembly_ref']
-                }]
-            }])
-                .spread((result) => {
-                    const {contigset_ref, assembly_ref} = result.data[0].data;
-                    // const {contigs, num_contigs, contig_lengths, contigset_ref, assembly_ref} = result.data[0].data;
-                    // const api = this.runtime.service('rpc').makeClient({
-                    //     module: 'GenomeAnnotationAPI',
-                    //     timeout: 10000,
-                    //     authenticated: true
-                    // });
-                    // return api.callFunc('get_summary', [{
-                    //     ref: contigset_ref,
-                    // }]);
-                    if (contigset_ref) {
-                        return workspace.callFunc('get_objects2', [{
-                            objects: [{
-                                ref: contigset_ref,
-                                included: [
-                                    'contigs/[*]/id',
-                                    'contigs/[*]/length'
-                                ]
-                            }]
-                        }])
-                            .spread((result) => {
-                                return result.data[0].data.contigs;
-                            });
-                    } else if (assembly_ref) {
-                        return workspace.callFunc('get_objects2', [{
-                            objects: [{
-                                ref: assembly_ref,
-                                included: [
-                                    'contigs',
-                                ]
-                            }]
-                        }])
-                            .spread((result) => {
-                                const contigs = result.data[0].data.contigs;
-                                return Object.keys(contigs).map((contigId) => {
-                                    const contig = contigs[contigId];
-                                    return {
-                                        id: contig.contig_id,
-                                        length: contig.length,
-                                        start: contig.start_position,
-                                    };
-                                })
-                                return result.data[0].data.contigs;
-                            });
-                    } else {
-                        // throw new Error('Cannot get contigs...');
-                        return [];
-                    }
-                });
-        }
-
         getGenes(query) {
             const searchAPI = this.runtime.service('rpc').makeClient({
                 module: 'KBaseSearchEngine',
                 timeout: 10000,
                 authenticated: true
             });
-            // const searchApi = new DynamicServiceClient({
-            //     module: 'KBaseSearchEngine',
-            //     url: this.runtime.config('services.ServiceWizard.url'),
-            //     token: this.token()
-            // });
-            // const query = this.searchInput();
 
             const start = (query.page - 1) * query.pageSize;
             const count = query.pageSize;
@@ -473,16 +384,6 @@ define([
                 .catch((err) => {
                     console.error('error', err);
                 });
-        }
-
-        doSelectContig(data) {
-            if (this.selectedContig()) {
-                this.selectedContig().selected(false);
-            }
-            data.selected(true);
-            this.selectedContig(data);
-            const currentInput = this.searchInput();
-            this.searchInput(data.id);
         }
     }
 
@@ -640,25 +541,25 @@ define([
                 style: {
                     marginLeft: '10px'
                 }
-            }, gen.if('pageCount() > 0', 
+            }, gen.if('pageCount() > 0',
                 [
+                    span({
+                        dataBind: {
+                            text: 'pageNumber'
+                        }
+                    }),
+                    ' of ',
+                    span({
+                        dataBind: {
+                            text: 'pageCount'
+                        }
+                    })
+                ],
                 span({
-                    dataBind: {
-                        text: 'pageNumber'
+                    style: {
+                        fontStyle: 'italic'
                     }
-                }),
-                ' of ',
-                span({
-                    dataBind: {
-                        text: 'pageCount'
-                    }
-                })
-            ],
-            span({
-                style: {
-                    fontStyle: 'italic'
-                }
-            }, 'No genes match this search')))
+                }, 'No genes match this search')))
         ]);
     }
 
@@ -682,62 +583,6 @@ define([
         });
     }
 
-    function buildContigs() {
-        return div({
-            style: {
-                flex: '1 1 0px',
-                overflowY: 'auto',
-                padding: '4px'
-            },
-            dataBind: {
-                foreach: 'contigs'
-            }
-        }, div({
-            class: style.classes.contigRow,
-            dataBind: {
-                click: 'function(d,e){$component.doSelectContig.call($component,d,e)}',
-                class: 'selected() ? "' + style.classes.selectedContig + '" : null'
-            }
-        }, [
-            div({
-                style: {
-                    display: 'inline-block',
-                    width: '60%',
-                    overflowY: 'auto',
-                    textOverflow: 'ellipsis'
-                },
-                dataBind: {
-                    text: 'id',
-                    attr: {
-                        title: 'id'
-                    }
-                }
-            }),
-            div({
-                style: {
-                    display: 'inline-block',
-                    width: '40%',
-                    overflowY: 'auto',
-                    textOverflow: 'ellipsis',
-                    textAlign: 'right'
-                },
-                dataBind: {
-                    typedText: {
-                        value: 'length',
-                        type: '"number"',
-                        format: '"0,0"'
-                    }
-                }
-            })
-        ]));
-    }
-
-    function buildNoContigs() {
-        return div({
-            class: 'alert alert-warning'
-        }, 'No contigs available');
-    }
-
     function buildWaiting() {
         return div({
             style: {
@@ -758,52 +603,62 @@ define([
         });
     }
 
+    function buildContigSelector() {
+        return gen.component({
+            name: ContigsComponent.name(),
+            params: {
+                genomeRef: 'object.objectInfo.ref',
+                selectedContig: 'selectedContig',
+                contigsCount: 'contigsCount'
+            }
+        });
+    }
+
     function template() {
         return div({
             class: style.classes.component
         }, [
-            gen.if('ready',
+            div({
+                class: style.classes.row
+            }, [
                 div({
-                    class: style.classes.row
+                    class: style.classes.col1
                 }, [
                     div({
-                        class: style.classes.col1
+                        class: style.classes.columnHeader
                     }, [
-                        div({
-                            class: style.classes.columnHeader
-                        }, [
-                            'contigs (',
-                            gen.if('contigs().length > 0',
+                        'contigs (',
+                        gen.if('typeof contigsCount() === "undefined"',
+                            span({class: 'fa fa-spin fa-spinner fa-fw'}),
+                            gen.if('contigsCount() > 0',
                                 span({
                                     dataBind: {
-                                        text: 'contigs().length'
+                                        text: 'contigsCount()'
                                     }
                                 }),
-                                'none'),
-                            ')'
-                        ]),
-                        gen.if('contigs().length > 0',
-                            buildContigs(),
-                            buildNoContigs())
+                                'none')),
+                        ')'
                     ]),
-                    div({
-                        class: style.classes.col2
-                    }, [
-                        div({
-                            class: style.classes.columnHeader
-                        }, 'features'),
-                        div({
-                            class: style.classes.searchBar
-                        }, buildSearchBar()),
-                        div({
-                            class: style.classes.searchResults
-                        }, buildResults())
-                    ])
+                    buildContigSelector()
                 ]),
-                gen.if('error',
-                    buildError(),
-                    buildWaiting())
-            )
+                div({
+                    class: style.classes.col2
+                }, [
+                    div({
+                        class: style.classes.columnHeader
+                    }, 'features'),
+                    div({
+                        class: style.classes.searchBar
+                    }, buildSearchBar()),
+                    div({
+                        class: style.classes.searchResults
+                    }, buildResults())
+                ])
+            ])
+            // gen.if('error',
+            //     buildError(),
+            //     buildWaiting())
+            // )
         ]);
     }
 

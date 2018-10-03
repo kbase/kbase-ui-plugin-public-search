@@ -6,7 +6,7 @@ define([
     'kb_lib/htmlBuilders',
     './overview',
     '../common/publications',
-    './genes',
+    './genes/main',
     '../common/wikipedia',
     './trees',
     '../builders'

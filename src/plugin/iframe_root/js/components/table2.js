@@ -32,6 +32,8 @@ define([
                 columnMap[column.name] = column;
                 return columnMap;
             }, {});
+
+            this.selectedRow = ko.observable();
         }
 
         sortTable(a, b) {
@@ -64,8 +66,8 @@ define([
             const style = {
                 width: column.width + '%'
             };
-            if (column.cellStyle) {
-                Object.assign(style, column.cellStyle);
+            if (column.style && column.style.cell) {
+                Object.assign(style, column.style.cell);
             } else {
                 Object.assign(style, {
                     padding: '4px'
@@ -79,6 +81,19 @@ define([
                 return key + ':' + String(obj[key]);
             }).join(',') + '}';
         }
+
+        doSelectRow(row) {
+            if (row.selected) {
+                row.selected(true);
+                if (this.selectedRow()) {
+                    this.selectedRow().selected(false);
+                }
+                this.selectedRow(row);
+            }
+            if (this.table.selectedRow) {
+                this.table.selectedRow(row);
+            }
+        }
     }
 
     // VIEW
@@ -90,7 +105,6 @@ define([
     const style = html.makeStyles({
         component: {
             css: {
-
             }
         },
         table: {
@@ -126,7 +140,12 @@ define([
         },
         row: {
             css: {
-
+                cursor: 'pointer'
+            },
+            pseudo: {
+                hover: {
+                    backgroundColor: '#CCC'
+                }
             }
         },
         cell: {
@@ -134,6 +153,11 @@ define([
                 display: 'inline-block',
                 verticalAlign: 'top',
                 wordBreak: 'break-all'
+            }
+        },
+        selectedRow: {
+            css: {
+                backgroundColor: '#CCC'
             }
         }
     });
@@ -145,12 +169,15 @@ define([
     // Anyhoo, it works now.
     function buildRow() {
         return div({
+            class: style.classes.row,
             dataBind: {
                 with: 'row',
                 as: '"row"',
                 // noChildContext: 'true',
-                style: '$component.table.rowStyle',
+                style: '$component.table.style.row',
                 // log: 'table'
+                click: 'function(d){$component.doSelectRow.call($component, d)}',
+                class: 'row.selected() ? "' + style.classes.selectedRow + '" : null'
             }
         }, gen.foreachAs('$component.table.columns', 'column',
             // make the implicit context the row again.
@@ -241,7 +268,7 @@ define([
             class: style.classes.table,
             dataBind: {
                 style: {
-                    'background-color': 'table.style && table.style.backgroundColor ? table.style.backgroundColor : "transparent"'
+                    'background-color': 'table.style.table.backgroundColor ? table.style.table.backgroundColor : "transparent"'
                 }
             }
         }, [
@@ -250,8 +277,8 @@ define([
                 class: style.classes.tableBody,
                 dataBind: {
                     style: {
-                        maxHeight: 'table.style.maxHeight || null',
-                        overflowY: 'table.style.maxHeight ? "scroll" : null'
+                        maxHeight: 'table.style.table.maxHeight || null',
+                        overflowY: 'table.style.table.maxHeight ? "scroll" : null'
                     }
                 }
             }, gen.foreachAs(
