@@ -823,10 +823,12 @@ define([
                             break;
                         case 'refdata':
                             if (object.data.source) {
-                                owner = 'kbase';
+                                owner = workspace.owner;
+                                // owner = 'kbase';
                                 name = object.data.source;
                             } else {
-                                owner = 'kbase';
+                                owner = workspace.owner;
+                                // owner = 'kbase';
                                 name = 'n/a';
                             }
                             break;
