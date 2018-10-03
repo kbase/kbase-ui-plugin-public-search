@@ -26,19 +26,6 @@ define([
 ) {
     'use strict';
 
-    const t = html.tag,
-        a = t('a'),
-        h3 = t('h3'),
-        div = t('div'),
-        span = t('span'),
-        input = t('input'),
-        button = t('button'),
-        table = t('table'),
-        thead = t('thead'),
-        tbody = t('tbody'),
-        tr = t('tr'), td = t('td'), th = t('th'),
-        p = t('p'), b = t('b');
-
     // VIEWMODEL
 
     class ViewModel extends ViewModelBase {
@@ -277,9 +264,22 @@ define([
         }
     }
 
-    // UI
+    // VIEW
 
-    var styles = html.makeStyles({
+    const t = html.tag,
+        a = t('a'),
+        h3 = t('h3'),
+        div = t('div'),
+        span = t('span'),
+        input = t('input'),
+        button = t('button'),
+        table = t('table'),
+        thead = t('thead'),
+        tbody = t('tbody'),
+        tr = t('tr'), td = t('td'), th = t('th'),
+        p = t('p'), b = t('b');
+
+    var style = html.makeStyles({
         viewTable: {
             css: {
                 width: '100%'
@@ -350,7 +350,7 @@ define([
 
     function buildObjectView() {
         return table({
-            class: styles.classes.viewTable
+            class: style.classes.viewTable
         }, [
             tr([
                 th('name'),
@@ -421,7 +421,7 @@ define([
                     gen.ifnot('selectedObjects().length',
                         span('no objects selected'),
                         table({
-                            class: styles.classes.selectedObjectsTable
+                            class: style.classes.selectedObjectsTable
                         }, [
                             thead([
                                 tr([
@@ -436,13 +436,13 @@ define([
                                 }
                             }, [
                                 tr({
-                                    class: [styles.classes.selectableRow],
+                                    class: [style.classes.selectableRow],
                                     style: {
                                         cursor: 'pointer'
                                     },
                                     dataBind: {
                                         click: 'function(d,e){$component.doSelectObject.call($component,d,e)}',
-                                        class: 'selected() ? "' + styles.scopes.selected + '" : false'
+                                        class: 'selected() ? "' + style.scopes.selected + '" : false'
                                     }
                                 }, [
                                     td({
@@ -667,7 +667,7 @@ define([
                                     }, 'Select a narrative from those available to you on the left.')),
                                 gen.with('selectedNarrativeObject',
                                     table({
-                                        class: styles.classes.viewTable
+                                        class: style.classes.viewTable
                                     }, [
 
                                         tr([
@@ -860,7 +860,7 @@ define([
         return {
             viewModelWithContext: ViewModel,
             template: template(),
-            stylesheet: styles.sheet
+            stylesheet: style.sheet
         };
     }
 
