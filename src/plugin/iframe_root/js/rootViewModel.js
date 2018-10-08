@@ -41,6 +41,11 @@ define([
 
             this.supportedDataTypes = [
                 {
+                    value: 'Narrative',
+                    label: 'Narrative',
+                    indexAvailable: true
+                },
+                {
                     value: 'Assembly',
                     label: 'Assembly',
                     indexAvailable: true
@@ -147,8 +152,14 @@ define([
                     width: 1
                 },
                 {
+                    name: 'name',
+                    label: 'Container',
+                    type: 'string',
+                    width: 3
+                },
+                {
                     name: 'source',
-                    label: 'Data Source',
+                    label: 'Type',
                     type: 'string',
                     width: 1
                 },
@@ -157,38 +168,7 @@ define([
                     label: 'Owner',
                     type: 'string',
                     width: 1
-                },
-                {
-                    name: 'name',
-                    label: 'Title',
-                    type: 'string',
-                    width: 3
                 }
-                // {
-                //     name: 'inspect',
-                //     label: 'Inspect',
-                //     type: 'action',
-                //     width: 5,
-                //     component: InspectControl.name(),
-                //     rowStyle: {
-                //         textAlign: 'center'
-                //     },
-                //     headerStyle: {
-                //         textAlign: 'center'
-                //     }
-                // },
-                // {
-                //     name: 'copy',
-                //     label: 'Copy',
-                //     width: 6,
-                //     component: StageControl.name(),
-                //     rowStyle: {
-                //         textAlign: 'center'
-                //     },
-                //     headerStyle: {
-                //         textAlign: 'center'
-                //     }
-                // }
             ];
 
             this.columnsMap = this.columns.reduce(function (acc, col) {

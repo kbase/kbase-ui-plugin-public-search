@@ -128,6 +128,22 @@ define([
                     to: 'title'
                 }];
                 break;
+            case 'Narrative':
+                // just map a field so we don't get the whole object.
+                fieldsToInclude = ['nbformat', 'nbformat_minor'];
+                displayMapping = [{
+                    from: 'info.1',
+                    to: 'title'
+                }];
+                break;
+            case 'Pangenome':
+                // just map a field so we don't get the whole object.
+                fieldsToInclude = ['name'];
+                displayMapping = [{
+                    from: 'data.name',
+                    to: 'title'
+                }];
+                break;
             default:
                 throw new Error('Sorry, no handler for ' + typeName);
             }
@@ -267,7 +283,7 @@ define([
                         return tree;
                     })
                     .catch((err) => {
-                        console.error('Error getting object display info', err);
+                        console.error('Error getting object display info', err, param, tree);
                         return {
                             title: '** ERROR **'
                         };

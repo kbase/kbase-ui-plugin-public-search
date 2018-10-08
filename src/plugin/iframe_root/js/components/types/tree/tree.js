@@ -320,7 +320,6 @@ define([
         ));
     }
 
-
     function component() {
         return {
             viewModelWithContext: ViewModel,

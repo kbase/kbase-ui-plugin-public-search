@@ -4,14 +4,16 @@ define([
     './narrative/narrative',
     './default/default',
     './pangenome/pangenome',
-    './tree/tree'
+    './tree/tree',
+    './rnaSeqSampleSet/main'
 ], function (
     GenomeComponent,
     TaxonComponent,
     NarrativeComponent,
     DefaultComponent,
     PangenomeComponent,
-    TreeComponent
+    TreeComponent,
+    RNASeqSampleSetComponent
 ) {
     'use strict';
 
@@ -21,6 +23,9 @@ define([
             return GenomeComponent;
         // case 'taxon':
         //     return TaxonComponent;
+        case 'rnaseqsampleset':
+            return RNASeqSampleSetComponent;
+
         case 'narrative':
             return NarrativeComponent;
         case 'pangenome':

@@ -26,7 +26,8 @@ define([
     '../lib/style',
     '../lib/text',
     '../lib/instrument',
-    '../lib/data'
+    '../lib/data',
+    '../lib/types/controller'
 ], function (
     Promise,
     ko,
@@ -55,7 +56,8 @@ define([
     commonStyle,
     text,
     instrument,
-    data
+    data,
+    TypeController
 ) {
     'use strict';
 
@@ -74,12 +76,14 @@ define([
             this.pluginParams = this.parsePluginParams(params.pluginParams);
 
             // Primary search inputs
+            // TODO: fold into table object
             this.searchInput = ko.observable(this.pluginParams.query);
             this.forceSearch = ko.observable();
             this.page = ko.observable(1);
             this.pageSize = ko.observable();
             this.totalPages = ko.observable();
             this.searchHistory = ko.observableArray();
+            this.view = ko.observable('compact');
 
             this.instrument = new instrument.Instrument({
                 type: 'plugin',
@@ -518,6 +522,8 @@ define([
                 return object.data.name;
             case 'FBAModel':
                 return object.data.name;
+            case 'RNASeqSampleSet':
+                return object.data.sampleset_desc || object.object_name;
             default:
                 if (object.data) {
                     if (object.data.scientific_name) {
@@ -803,9 +809,10 @@ define([
 
                     // Populate results
                     const searchResults = result.objects.map((object) => {
+                        const searchObject = TypeController.makeSearchObject(object);
                         // just testing...
-                        const [, workspaceId, objectId, version] = object.guid.match(/^WS:(\d+)\/(\d+)\/(\d+)$/);
-                        const workspace = workspaces[workspaceId];
+                        // const [, workspaceId, objectId, version] = object.guid.match(/^WS:(\d+)\/(\d+)\/(\d+)$/);
+                        const workspace = workspaces[searchObject.workspaceId];
                         let owner;
                         let name;
                         let mode = 'normal';
@@ -882,6 +889,13 @@ define([
                                     version: version,
                                     ref: [workspaceId, objectId, version].join('/'),
                                     workspaceType: workspace.type
+                                },
+                                detail: {
+                                    // TODO: replace this with an object of a type
+                                    // corresponding with the search/kbase type, which
+                                    // extracts the data out of object.data, object.key_props,
+                                    // and others.
+                                    searchObject: object
                                 }
                             }
                         };
@@ -1104,11 +1118,11 @@ define([
                     gen.component({
                         name: NavBarComponent.name(),
                         params: ['bus', 'page', 'totalPages', 'summaryCount', 'resultCount',
-                            'totalCount', 'realTotalCount', 'searching', 'searchState']
+                            'totalCount', 'realTotalCount', 'searching', 'searchState', 'view']
                     }),
                     gen.component({
                         name: ResultsAreaComponent.name(),
-                        params: ['bus', 'searchResults', 'searching', 'pageSize', 'searchState', 'showOverlay', 'errorMessage', 'selectedRows']
+                        params: ['bus', 'searchResults', 'searching', 'pageSize', 'searchState', 'showOverlay', 'errorMessage', 'selectedRows', 'view']
                     })
                 ])
             ]),

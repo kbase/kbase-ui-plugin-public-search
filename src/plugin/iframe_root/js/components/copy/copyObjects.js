@@ -504,7 +504,7 @@ define([
                     }, [
                         gen.if('objectToView',
                             gen.with('objectToView', buildObjectView()),
-                            'If you click on an object listed on the left, details will show here')
+                            'If you click on an object listed on the left, its detail will show here')
                     ])
                 ]))
             ])

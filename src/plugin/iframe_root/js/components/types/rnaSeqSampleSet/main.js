@@ -57,20 +57,22 @@ define([
         return [
             // If we ever get a universal "name" or "description" or "title"
             // field we would use that here rather than object name.
-            a({
-                style: {
-                    fontSize: '120%',
-                    fontWeight: 'bold',
-                    fontStyle: 'italic'
-                },
-                dataBind: {
-                    text: 'object.workspaceInfo.metadata.narrative_nice_name',
-                    attr: {
-                        href: '"/narrative/ws." + object.workspaceInfo.id + ".obj." + object.objectInfo.id'
-                    }
-                },
-                target: '_blank'
-            }),
+            gen.if('object.objectInfo.name',
+                a({
+                    style: {
+                        fontSize: '120%',
+                        fontWeight: 'bold',
+                        fontStyle: 'italic'
+                    },
+                    dataBind: {
+                        text: 'object.objectInfo.name',
+                        attr: {
+                            href: '"/#dataview/" + object.objectInfo.ref'
+                        }
+                    },
+                    target: '_blank'
+                }),
+                div(build.loading())),
             div(a({
                 dataBind: {
                     text: 'object.objectInfo.typeName + " " + object.objectInfo.typeMajorVersion + "." + object.objectInfo.typeMinorVersion',

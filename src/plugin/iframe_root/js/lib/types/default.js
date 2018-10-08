@@ -5,11 +5,11 @@ define([
 ) {
     'use strict';
 
-    class GenomeObject extends base.BaseObject {
+    class DefaultSearchObject extends base.BaseObject {
         constructor(params) {
             super(params);
         }
     }
 
-    return GenomeObject;
+    return DefaultSearchObject;
 });

@@ -235,19 +235,19 @@ define([
                     }
                 }
             });
-            this.tabs.push({
-                tab: {
-                    label: 'Metadata'
-                },
-                panel: {
-                    component: {
-                        name: MetadataComponent.name(),
-                        params: {
-                            object: 'object'
-                        }
-                    }
-                }
-            });
+            // this.tabs.push({
+            //     tab: {
+            //         label: 'Metadata'
+            //     },
+            //     panel: {
+            //         component: {
+            //             name: MetadataComponent.name(),
+            //             params: {
+            //                 object: 'object'
+            //             }
+            //         }
+            //     }
+            // });
 
             // custom tabs:
             custom.forEach((tab) => {

@@ -15,16 +15,11 @@ define([
 ) {
     'use strict';
 
-    const t = html.tag,
-        div = t('div'),
-        span = t('span'),
-        button = t('button');
-
     class ViewModel extends ViewModelBase {
         constructor(params) {
             super(params);
 
-            const {page, totalPages, summaryCount, resultCount, totalCount, realTotalCount, searching, searchState} = params;
+            const {page, totalPages, summaryCount, resultCount, totalCount, realTotalCount, searching, searchState, view} = params;
 
             this.page = page;
             this.totalPages = totalPages;
@@ -34,6 +29,20 @@ define([
             this.realTotalCount = realTotalCount;
             this.searching = searching;
             this.searchState = searchState;
+
+            this.view = view;
+        }
+
+        compactView() {
+            return this.view() === 'compact';
+        }
+
+        expandedView() {
+            return this.view() === 'expanded';
+        }
+
+        setView(view) {
+            this.view(view);
         }
 
         doFirstPage() {
@@ -70,6 +79,13 @@ define([
         }
     }
 
+    // VIEW
+
+    const t = html.tag,
+        div = t('div'),
+        span = t('span'),
+        button = t('button');
+
     var styles = html.makeStyles({
         component: {
             css: {
@@ -89,6 +105,30 @@ define([
         cell: {
             css: {
                 padding: '4px'
+            }
+        },
+        col1: {
+            css: {
+                flex: '2 1 0px',
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center'
+            }
+        },
+        col2: {
+            css: {
+                flex: '2 1 0px',
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center'
+            }
+        },
+        col3: {
+            css: {
+                flex: '1 1 0px',
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center'
             }
         }
     });
@@ -259,6 +299,7 @@ define([
                             }
                         }
                     }),
+                    ' objects',
                     gen.if('realTotalCount() > totalCount()', span({
                         style: {
                             fontStyle: 'italic'
@@ -292,65 +333,46 @@ define([
         ]);
     }
 
+    function buildButtons() {
+        return div({
+            class: 'btn-group'
+        }, [
+            button({
+                class: 'btn btn-default',
+                title: 'Compact rows',
+                dataBind: {
+                    class: 'compactView() ? "active" : null',
+                    click: '() => {$component.setView("compact")}'
+                }
+            }, span({
+                class: 'fa fa-bars'
+            })),
+            button({
+                class: 'btn btn-default',
+                title: 'Expanded rows',
+                dataBind: {
+                    class: 'expandedView() ? "active" : null',
+                    click: '() => {$component.setView("expanded")}'
+                }
+            }, span({
+                class: 'fa fa-square-o'
+            }))
+        ]);
+    }
+
     function template() {
         return div({
             class: styles.classes.component
         }, [
             div({
-                style: {
-                    flex: '1 1 0px',
-                    display: 'flex',
-                    flexDirection: 'row',
-                    alignItems: 'center'
-                }
+                class: styles.classes.col1
             }, buildNavbar()),
             div({
-                style: {
-                    flex: '1 1 0px',
-                    display: 'flex',
-                    flexDirection: 'row',
-                    alignItems: 'center'
-                }
+                class: styles.classes.col2
             }, buildSummary()),
-            // div({
-            //     style: {
-            //         flex: '1',
-            //         display: 'flex',
-            //         flexDirection: 'row',
-            //         alignItems: 'center'
-            //     }
-            // }, div({
-            //     dataBind: {
-            //         component: {
-            //             name: SummaryComponent.quotedName(),
-            //             params: {
-            //                 typeCounts: 'typeCounts',
-            //                 resultCount: 'resultCount',
-            //                 searchStatus: 'searchStatus'
-            //             }
-            //         }
-            //     }
-            // })),
-            // div({
-            //     style: {
-            //         flex: '1',
-            //         display: 'flex',
-            //         flexDirection: 'row',
-            //         alignItems: 'center',
-            //         justifyContent: 'flex-end'
-            //     }
-            // }, div({
-            //     dataBind: {
-            //         component: {
-            //             name: AccessControlComponent.quotedName(),
-            //             params: {
-            //                 withPrivateData: 'withPrivateData',
-            //                 withPublicData: 'withPublicData',
-            //             }
-            //         }
-            //     }
-            // }))
-
+            div({
+                class: styles.classes.col3
+            }, buildButtons())
         ]);
     }
 

@@ -6,9 +6,10 @@ define([
     'kb_lib/html',
     'kb_lib/htmlBuilders',
     '../lib/model',
-    'kb_knockout/components/table',
+    './autoTable/main',
     './inspector',
-    './resultsError'
+    './resultsError',
+    './detail'
 ], function (
     ko,
     reg,
@@ -19,7 +20,8 @@ define([
     model,
     TableComponent,
     InspectorComponent,
-    ResultsErrorComponent
+    ResultsErrorComponent,
+    DetailComponent
 ) {
     'use strict';
 
@@ -32,23 +34,26 @@ define([
     class ViewModel extends ViewModelBase {
         constructor(params, context) {
             super(params);
-            const {searchResults, searching, pageSize, searchState, showOverlay, errorMessage, selectedRows} = params;
+            const {searchResults, searching, pageSize, searchState, showOverlay, errorMessage, selectedRows, view} = params;
 
             this.searchResults = searchResults;
             this.searching = searching;
             this.showOverlay = showOverlay;
             this.selectedRows = selectedRows;
+            this.view = view;
 
             const columns = context.$root.columns;
 
             this.table = {
                 rows: this.searchResults,
                 selectedRows: selectedRows,
+                detailComponent: DetailComponent.name(),
                 columns: columns,
                 isLoading: searching,
                 pageSize: pageSize,
                 state: searchState,
                 errorMessage: errorMessage,
+                view: view,
                 env: {
                     selectedRows: selectedRows
                 },
