@@ -21,7 +21,7 @@
                     workspaceTypes: true,
                     dataTypes: true
                 widget: public-search_panel
-                authorization: false
+                authorization: true
         menu:
             -
                 name: public-search
