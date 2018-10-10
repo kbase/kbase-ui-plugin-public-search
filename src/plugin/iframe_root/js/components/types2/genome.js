@@ -9,17 +9,9 @@ define([
 ) {
     'use strict';
 
-    class ViewModel {
-        constructor({row}) {
-            this.row = row;
-            const obj = row.data.detail.searchObject;
-
-            this.domain = obj.data.domain;
-            this.scientificName = obj.data.scientific_name;
-            this.contigCount = obj.data.num_contigs;
-            this.featureCount = obj.data.features;
-            this.source = obj.data.source;
-            this.sourceId = obj.data.source_id;
+    class ViewModel extends builder.TypeComponentBase {
+        constructor(params) {
+            super(params);
         }
     }
 

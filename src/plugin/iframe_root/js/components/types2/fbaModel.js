@@ -13,21 +13,9 @@ define([
 ) {
     'use strict';
 
-    class ViewModel {
-        constructor({row}) {
-            this.row = row;
-            const obj = row.data.detail.searchObject;
-
-            this.id = obj.data.id;
-            this.name = obj.data.name;
-            this.compartments = obj.data.modelcompartments;
-            this.compounds = obj.data.modelcompounds;
-            this.reactions = obj.data.modelreactions;
-            this.source = obj.data.source;
-            this.type = obj.data.type;
-
-            this.scientificName = obj.key_props.scientific_name;
-            this.lineage = obj.key_props.taxonomy;
+    class ViewModel extends builder.TypeComponentBase {
+        constructor(params) {
+            super(params);
         }
     }
 
@@ -54,10 +42,6 @@ define([
                 label: 'scientific name',
                 property: 'scientificName'
             }
-            // {
-            //     label: 'lineage',
-            //     property: 'lineage'
-            // }
         ]]
     }, {
         class: 'col1',

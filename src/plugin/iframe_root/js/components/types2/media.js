@@ -13,17 +13,9 @@ define([
 ) {
     'use strict';
 
-    class ViewModel {
-        constructor({row}) {
-            this.row = row;
-            const obj = row.data.detail.searchObject;
-
-            this.id = obj.data.id;
-            this.isDefined = obj.data.isDefined;
-            this.isMinimal = obj.data.isMinimal;
-            this.compoundCount = obj.data.mediacompounds;
-            this.name = obj.data.name;
-            this.type = obj.data.type;
+    class ViewModel extends builder.TypeComponentBase {
+        constructor(params) {
+            super(params);
         }
     }
 
@@ -55,13 +47,13 @@ define([
                 label: 'is minimal?',
                 property: 'isMinimal',
                 type: 'boolean',
-                format: 'true,false'
+                format: ['Yes', 'No']
             },
             {
                 label: 'is defined?',
                 property: 'isDefined',
                 type: 'boolean',
-                format: 'true,false'
+                format: ['Yes', 'No']
             }
         ], [
             {

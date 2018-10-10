@@ -9,14 +9,9 @@ define([
 ) {
     'use strict';
 
-    class ViewModel {
-        constructor({row}) {
-            this.row = row;
-            const obj = row.data.detail.searchObject;
-
-            this.sampleCount = obj.data.num_samples || '-';
-            this.description = obj.data.sampleset_desc || '-';
-            this.source = obj.data.source || '-';
+    class ViewModel extends builder.TypeComponentBase {
+        constructor(params) {
+            super(params);
         }
     }
 

@@ -133,13 +133,19 @@ define([
 
 
             this.searchInput = ko.observable('*');
+            this.contigFilterInput = ko.observable();
             this.pageNumber = ko.observable(1);
             this.pageCount = ko.observable(0);
 
             this.table = new Table();
 
             this.subscribe(this.selectedContig, (newValue) => {
-                this.searchInput(newValue);
+                // this.searchInput(newValue);
+                if (newValue) {
+                    this.contigFilterInput(newValue);
+                } else {
+                    this.contigFilterInput(null);
+                }
             });
 
             this.subscribe(this.searchInput, () => {
@@ -171,6 +177,9 @@ define([
 
                 const query = {
                     terms: searchInput,
+                    filter: {
+                        contig: this.contigFilterInput()
+                    },
                     pageSize: pageSize,
                     page: page
                 };
@@ -323,11 +332,19 @@ define([
                 ascending: 1,
                 is_object_property: 1
             }];
+            const lookupInKeys = {};
+            if (query.filter.contig && query.filter.contig.length > 0) {
+                // lookupInKeys.contig_id = {
+                //     value: query.filter.contig
+                // };
+                fullTextInAll += ' ' + query.filter.contig;
+            }
             const param = {
                 object_types: ['GenomeFeature'],
                 match_filter: {
                     full_text_in_all: fullTextInAll,
                     exclude_subobjects: 0,
+                    lookup_in_keys: lookupInKeys
                     // lookup_in_keys: {
                     //     parent_guid: {
                     //         value: this.genomeGuid
@@ -353,8 +370,10 @@ define([
                 },
                 sorting_rules: sortingRules
             };
+            console.log('param?', param);
             return searchAPI.callFunc('search_objects', [param])
                 .spread((result) => {
+                    console.log('result', result);
                     const genes = result.objects.map(({data}) => {
                         const {id, type, location, aliases, functions} = data;
                         return {
@@ -441,6 +460,11 @@ define([
                 border: '1px silver solid'
             }
         },
+        filterBar: {
+            css: {
+                border: '1px silver solid'
+            }
+        },
         searchResults: {
             css: {
                 flex: '1 1 0px',
@@ -466,6 +490,26 @@ define([
             }
         }
     });
+
+    function buildFilterBar() {
+        return div({}, [
+            span('Selected Contig: '),
+            gen.if('contigFilterInput',
+                span({
+                    style: {
+                        fontWeight: 'bold'
+                    },
+                    dataBind: {
+                        text: 'contigFilterInput'
+                    }
+                }),
+                span({
+                    style: {
+                        fontStyle: 'italic'
+                    }
+                }, 'No contig selected'))
+        ]);
+    }
 
     function buildSearchBar() {
         return div({}, [
@@ -650,6 +694,9 @@ define([
                     div({
                         class: style.classes.searchBar
                     }, buildSearchBar()),
+                    div({
+                        class: style.classes.filterBar
+                    }, buildFilterBar()),
                     div({
                         class: style.classes.searchResults
                     }, buildResults())

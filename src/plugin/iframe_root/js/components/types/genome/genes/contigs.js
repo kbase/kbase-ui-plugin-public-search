@@ -27,7 +27,11 @@ define([
             this.selectedRow = ko.observable();
             this.subscribe(this.selectedRow, (newValue) => {
                 if (newValue) {
-                    this.selectedContig(newValue.id);
+                    if (this.selectedContig() === newValue.id) {
+                        this.selectedContig(null);
+                    } else {
+                        this.selectedContig(newValue.id);
+                    }
                 } else {
                     this.selectedContig(null);
                 }
@@ -45,6 +49,9 @@ define([
                     },
                     row: {
                         // borderBottom: '1px silver solid'
+                    },
+                    selectedRow: {
+                        backgroundColor: 'aqua'
                     }
                 },
                 selectedRow: this.selectedRow,
@@ -201,7 +208,7 @@ define([
         },
         selectedContig: {
             css: {
-                backgroundColor: '#CCC'
+                backgroundColor: 'aqua'
             }
         }
     });

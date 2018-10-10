@@ -13,20 +13,9 @@ define([
 ) {
     'use strict';
 
-    class ViewModel {
-        constructor({row}) {
-            this.row = row;
-            const obj = row.data.detail.searchObject;
-
-            // Note: Narrative data is removed due to size of narrative data.
-            this.gcContent = obj.data.gc_content;
-            this.insertMeanSize = obj.data.insert_size_mean;
-            this.phredType = obj.data.phred_type;
-            this.meanQualityScore = obj.data.qual_mean;
-            this.readCount = obj.data.read_count;
-            this.readMeanLength = obj.data.read_length_mean;
-            this.sequencingTechnology = obj.data.sequencing_tech;
-            this.libraryFiles = obj.data.lib1;
+    class ViewModel extends builder.TypeComponentBase {
+        constructor(params) {
+            super(params);
         }
     }
 

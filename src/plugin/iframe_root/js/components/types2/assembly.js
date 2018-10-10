@@ -13,15 +13,9 @@ define([
 ) {
     'use strict';
 
-    class ViewModel {
-        constructor({row}) {
-            this.row = row;
-            const obj = row.data.detail.searchObject;
-
-            // Note: Narrative data is removed due to size of narrative data.
-            this.contigCount = obj.data.contigs;
-            this.dnaSize = obj.data.dna_size;
-            this.gcContent = obj.data.gc_content;
+    class ViewModel extends builder.TypeComponentBase {
+        constructor(params) {
+            super(params);
         }
     }
 

@@ -128,7 +128,8 @@ define([
                 flex: '1 1 0px',
                 display: 'flex',
                 flexDirection: 'row',
-                alignItems: 'center'
+                alignItems: 'center',
+                justifyContent: 'flex-end'
             }
         }
     });
@@ -339,7 +340,7 @@ define([
         }, [
             button({
                 class: 'btn btn-default',
-                title: 'Compact rows',
+                title: 'Show results in compact rows - one row per item',
                 dataBind: {
                     class: 'compactView() ? "active" : null',
                     click: '() => {$component.setView("compact")}'
@@ -349,7 +350,7 @@ define([
             })),
             button({
                 class: 'btn btn-default',
-                title: 'Expanded rows',
+                title: 'Show results with expanded rows - some detail shown within row',
                 dataBind: {
                     class: 'expandedView() ? "active" : null',
                     click: '() => {$component.setView("expanded")}'

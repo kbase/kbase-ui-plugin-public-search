@@ -1,56 +1,70 @@
 define([
+    './assembly',
+    './fbaModel',
     './genome',
-    // './narrative',
-    './default'
-    // './pangenome',
-    // './tree',
-    // './fbaModel',
-    // './rnaSeqSampleSet',
-    // './assembly',
-    // './pairedEndLibrary',
-    // './singleEndLibrary',
-    // './media'
+    './media',
+    './narrative',
+    './pairedEndLibrary',
+    './pangenome',
+    './rnaSeqSampleSet',
+    './singleEndLibrary',
+    './tree',
+    './default',
 ], function (
+    AssemblyObject,
+    FBAModelObject,
     GenomeObject,
-    // NarrativeComponent,
+    MediaObject,
+    NarrativeObject,
+    PairedEndLibraryObject,
+    PangenomeObject,
+    RNASeqSampleSetObject,
+    SingleEndLibraryObject,
+    TreeObject,
     DefaultObject
-    // PangenomeComponent,
-    // TreeComponent,
-    // FBAModelComponent,
-    // RNASeqSampleSetComponent,
-    // AssemblyComponent,
-    // PairedEndLibraryComponent,
-    // SingleEndLibraryComponent,
-    // MediaComponent
 ) {
     'use strict';
 
+    // // case 'assembly':
+    // //     return AssemblyComponent;
+    // // case 'fbamodel':
+    // //     return FBAModelComponent;
+    // case 'genome':
+    //     return GenomeObject;
+    // // case 'narrative':
+    // //     return NarrativeComponent;
+    // // case 'singleendlibrary':
+    // //     return SingleEndLibraryComponent;
+    // // case 'pairedendlibrary':
+    // //     return PairedEndLibraryComponent;
+    // // case 'rnaseqsampleset':
+    // //     return RNASeqSampleSetComponent;
+    // // case 'pangenome':
+    // //     return PangenomeComponent;
+    // case 'tree':
+    //     return new TreeObject({object});
+    // // case 'media':
+    // //     return MediaComponent;
+    // default:
+    //     return new DefaultObject({object});
+    // }
+
+    const searchObjectMap = {
+        assembly: AssemblyObject,
+        fbamodel: FBAModelObject,
+        genome: GenomeObject,
+        media: MediaObject,
+        narrative: NarrativeObject,
+        pairedendlibrary: PairedEndLibraryObject,
+        pangenome: PangenomeObject,
+        rnaseqsampleset: RNASeqSampleSetObject,
+        singleendlibrary: SingleEndLibraryObject,
+        tree: TreeObject
+    };
+
     function makeSearchObject(object) {
-        console.log('object', object);
-        switch (object.type.toLowerCase()) {
-        // case 'assembly':
-        //     return AssemblyComponent;
-        // case 'fbamodel':
-        //     return FBAModelComponent;
-        case 'genome':
-            return new GenomeObject({object});
-        // case 'narrative':
-        //     return NarrativeComponent;
-        // case 'singleendlibrary':
-        //     return SingleEndLibraryComponent;
-        // case 'pairedendlibrary':
-        //     return PairedEndLibraryComponent;
-        // case 'rnaseqsampleset':
-        //     return RNASeqSampleSetComponent;
-        // case 'pangenome':
-        //     return PangenomeComponent;
-        // case 'tree':
-        //     return TreeComponent;
-        // case 'media':
-        //     return MediaComponent;
-        default:
-            return new DefaultObject({object});
-        }
+        const searchObjectClass = searchObjectMap[object.type.toLowerCase()] || DefaultObject;
+        return new searchObjectClass({object});
     }
 
     return {makeSearchObject};

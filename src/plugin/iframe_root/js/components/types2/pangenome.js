@@ -13,15 +13,9 @@ define([
 ) {
     'use strict';
 
-    class ViewModel {
-        constructor({row}) {
-            this.row = row;
-            const obj = row.data.detail.searchObject;
-
-            this.name = obj.data.name;
-            this.genomeRefCount = obj.data.genome_refs;
-            this.orthologCount = obj.data.orthologs;
-            this.type = obj.data.type;
+    class ViewModel extends builder.TypeComponentBase {
+        constructor(params) {
+            super(params);
         }
     }
 

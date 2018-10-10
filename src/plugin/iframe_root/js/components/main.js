@@ -512,30 +512,6 @@ define([
             });
         }
 
-        grokDescription(object) {
-            switch (object.type) {
-            case 'Narrative':
-                return object.key_props['title'];
-            case 'Tree':
-                return object.data.default_node_labels.user1;
-            case 'Pangenome':
-                return object.data.name;
-            case 'FBAModel':
-                return object.data.name;
-            case 'RNASeqSampleSet':
-                return object.data.sampleset_desc || object.object_name;
-            default:
-                if (object.data) {
-                    if (object.data.scientific_name) {
-                        return object.data.scientific_name;
-                    } else if (object.data.name) {
-                        return object.data.name;
-                    }
-                }
-                return object.object_name;
-            }
-        }
-
         parsePluginParams(pluginParams) {
             return {
                 query: pluginParams.query,
@@ -847,7 +823,7 @@ define([
                             owner = 'n/a';
                             name = 'n/a';
                             mode = 'inaccessible';
-                            debug.tryInaccessibleObject(this.runtime, object.guid, [workspaceId, objectId, version].join('/'));
+                            debug.tryInaccessibleObject(this.runtime, object.guid, searchObject.ref);
                             break;
                         default:
                             owner = '** err';
@@ -881,14 +857,15 @@ define([
                                     value: name
                                 },
                                 description: {
-                                    value: this.grokDescription(object)
+                                    value: searchObject.title
                                 },
                                 metadata: {
-                                    workspaceId: workspaceId,
-                                    objectId: objectId,
-                                    version: version,
-                                    ref: [workspaceId, objectId, version].join('/'),
-                                    workspaceType: workspace.type
+                                    workspaceId: searchObject.workspaceId,
+                                    objectId: searchObject.objectId,
+                                    version: searchObject.version,
+                                    ref: searchObject.ref,
+                                    workspaceType: workspace.type,
+                                    searchObject: searchObject
                                 },
                                 detail: {
                                     // TODO: replace this with an object of a type
@@ -984,14 +961,16 @@ define([
                 minWidth: '15em',
                 display: 'flex',
                 flexDirection: 'column',
-                paddingRight: '10px'
+                paddingRight: '10px',
+                overflow: 'auto'
             }
         },
         resultsColumn: {
             css: {
                 flex: '1 1 0px',
                 display: 'flex',
-                flexDirection: 'column'
+                flexDirection: 'column',
+                minWidth: '0'
             }
         },
         fieldGroupLabel: {

@@ -9,6 +9,15 @@ define([
 ) {
     'use strict';
 
+    // VIEW MODEL
+
+    class TypeComponentBase {
+        constructor({row}) {
+            this.detail = row.data.metadata.searchObject.detail;
+        }
+    }
+
+
     // VIEW
 
     const t = html.tag,
@@ -90,7 +99,7 @@ define([
                                 class: style.classes.value,
                                 dataBind: {
                                     typedText: {
-                                        value: field.property,
+                                        value: 'detail.' + field.property,
                                         type: '"' + field.type + '"',
                                         format: '"' + field.format + '"'
                                     }
@@ -100,7 +109,7 @@ define([
                             return span({
                                 class: style.classes.value,
                                 dataBind: {
-                                    text: field.property
+                                    text: 'detail.' + field.property
                                 }
                             });
                         }
@@ -119,6 +128,7 @@ define([
 
     return {
         build: buildCols,
-        style: style
+        style: style,
+        TypeComponentBase: TypeComponentBase
     };
 });

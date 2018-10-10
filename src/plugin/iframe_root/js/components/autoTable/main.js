@@ -204,8 +204,8 @@ define([
             flex: '1 1 0px',
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'flex-start',
-            minWidth: '40em'
+            // justifyContent: 'flex-start',
+            // minWidth: '40em'
         },
         header: {
             flex: '0 0 50px'
@@ -216,21 +216,15 @@ define([
             flexDirection: 'row',
             alignItems: 'center',
             fontWeight: 'bold',
-            color: 'gray'
+            color: 'gray',
+            overflow: 'hidden'
         },
         tableBody: {
             css: {
                 flex: '1 1 0px',
                 display: 'flex',
-                flexDirection: 'column'
-            }
-        },
-        rows: {
-            css: {
-                flex: '1 1 0px',
-                display: 'flex',
                 flexDirection: 'column',
-                position: 'relative'
+                overflow: 'hidden'
             }
         },
         compactRow: {
@@ -238,7 +232,8 @@ define([
                 flex: '0 0 35px',
                 display: 'flex',
                 flexDirection: 'column',
-                borderBottom: '1px #DDD solid'
+                borderBottom: '1px #DDD solid',
+                overflow: 'hidden'
             }
         },
         expandedRow: {
@@ -251,11 +246,13 @@ define([
         },
         commonRow: {
             css: {
-                height: '35px',
+                flex: '1 1 0px',
                 // backgroundColor: 'yellow',
                 display: 'flex',
                 flexDirection: 'row',
-                alignItems: 'center'
+                // alignItems: 'center',
+                overflow: 'hidden',
+                flexWrap: 'nowrap'
             }
         },
         detailRow: {
@@ -288,15 +285,35 @@ define([
             }
         },
         cell: {
-            flex: '0 0 0px',
-            overflow: 'hidden',
-            whiteSpace: 'nowrap',
-            // borderBottom: '1px #DDD solid',
-            height: '35px',
-            padding: '4px 4px',
+            flexGrow: '1',
+            flexShrink: '1',
+            minWidth: '0',
+            padding: '4px',
+            display: 'flex',
+            flexDirection: 'column',
+        },
+        rowContent: {
+            flex: '1 1 0px',
             display: 'flex',
             flexDirection: 'row',
-            alignItems: 'center'
+            alignItems: 'stretch'
+        },
+        content: {
+            flex: '1 1 0px',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            minWidth: '0'
+        },
+        value: {
+            css: {
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                minWidth: '0'
+            }
         },
         headerCell: {
             css: {
@@ -459,6 +476,7 @@ define([
     function buildColValue() {
         return gen.if('row.data[column.name].action',
             span({
+                class: style.classes.value,
                 dataBind: {
                     typedText: {
                         value: 'row.data[column.name].value',
@@ -473,6 +491,7 @@ define([
             }),
             gen.if('row.data[column.name].url',
                 a({
+                    class: style.classes.value,
                     dataBind: {
                         typedText: {
                             value: 'row.data[column.name].value',
@@ -487,6 +506,7 @@ define([
                     }
                 }),
                 span({
+                    class: style.classes.value,
                     dataBind: {
                         typedText: {
                             value: 'row.data[column.name].value',
@@ -686,7 +706,7 @@ define([
         }, gen.if('row.mode === "inaccessible"',
             buildEmptyCol(),
             div({
-                class: [style.classes.innerCell],
+                class: [style.classes.content],
                 dataBind: {
                     style: 'column.style'
                 }
@@ -706,7 +726,8 @@ define([
                         }
                     }),
                     gen.if('row.data[column.name]', buildColValue())))
-            ]))));
+            ])
+        )));
     }
 
     function buildDetailRow() {
@@ -738,47 +759,39 @@ define([
     }
 
     function buildRows() {
-        return div({
-            dataBind: {
-                foreach: {
-                    data: 'rows',
-                    as: '"row"'
-                }
-            },
-            class: style.classes.rows
-        }, gen.if('$component.table.view() === "compact"',
-            buildCompactRow(),
-            buildExpandedRow()));
+        return gen.foreachAs('rows', 'row',
+            gen.if('$component.table.view() === "compact"',
+                buildCompactRow(),
+                buildExpandedRow()));
     }
 
     function buildLoading() {
-        gen.if('$component.isLoading',
+        return div({
+            style: {
+                position: 'absolute',
+                left: '0',
+                right: '0',
+                top: '0',
+                bottom: '0',
+                backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                fontSize: '300%',
+                display: 'flex',
+                flexDirection: 'column',
+                zIndex: '5'
+            }
+        }, [
             div({
                 style: {
-                    position: 'absolute',
-                    left: '0',
-                    right: '0',
-                    top: '0',
-                    bottom: '0',
-                    backgroundColor: 'rgba(255, 255, 255, 0.5)',
-                    fontSize: '300%',
+                    flex: '1 1 0px',
                     display: 'flex',
-                    flexDirection: 'column',
-                    zIndex: '5'
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    alignItems: 'center'
                 }
             }, [
-                div({
-                    style: {
-                        flex: '1 1 0px',
-                        display: 'flex',
-                        flexDirection: 'row',
-                        justifyContent: 'center',
-                        alignItems: 'center'
-                    }
-                }, [
-                    gen.if('$component.isLoadingSlowly', build.loading())
-                ])
-            ]));
+                gen.if('$component.isLoadingSlowly', build.loading())
+            ])
+        ]);
     }
 
     function buildMessage(type, message) {
@@ -825,17 +838,9 @@ define([
                 ],
                 [
                     '$default',
-                    div({
-                        style: {
-                            flex: '1 1 0px',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            position: 'relative'
-                        }
-                    }, [
+                    gen.if('$component.isLoading',
                         buildLoading(),
-                        gen.if('$component.rows().length > 0', buildRows())
-                    ]),
+                        buildRows())
                 ]
             ]))
         ]);
