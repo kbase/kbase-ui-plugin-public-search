@@ -46,6 +46,10 @@ define([
         'Clear the search input and reset the search results.'
     ]);
 
+    addTooltip('SEARCH_RESET_BUTTON', [
+        'Reset all search controls - input and filters.'
+    ]);
+
     addTooltip('COPY_OBJECTS_BUTTON', [
         'When you have selected one or more search result items, this button will become enabled.\n\n',
         'It will open a tool with which you may copy the selected data objects into an existing or new ',

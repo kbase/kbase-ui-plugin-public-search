@@ -283,6 +283,26 @@ define([
                 });
             });
 
+            // resetting
+
+            this.canReset = ko.pureComputed(() => {
+                if (this.searchInput()) {
+                    return true;
+                }
+
+                if (!this.withPrivateData() || !this.withPublicData()) {
+                    return true;
+                }
+
+                if (!this.withUserData() || !this.withReferenceData()) {
+                    return true;
+                }
+
+                if (this.omittedDataTypes().length > 0) {
+                    return true;
+                }
+            });
+
             // computeds
             this.searchQuery = ko.pureComputed(() => {
                 return {
@@ -381,20 +401,44 @@ define([
                 this.instrument.setUsername(this.runtime.service('session').getUsername());
             });
 
+            // ACTIONS
+            this.actions = {
+                resetSearch: () => {
+                    this.resetSearchControls();
+                }
+            };
+
             // MAIN
 
-            this.performanceMonitoringListener = window.setInterval(() => {
-                const measure = new instrument.Measure({
-                    id: 'knockout-debug',
-                    group: 'n/a',
-                    value: {
-                        scheduled: JSON.parse(JSON.stringify(window.scheduled))
-                    }
-                });
-                this.instrument.record(measure);
-            }, '60000');
+            // this.performanceMonitoringListener = window.setInterval(() => {
+            //     if (window.scheduled) {
+            //         const measure = new instrument.Measure({
+            //             id: 'knockout-debug',
+            //             group: 'n/a',
+            //             value: {
+            //                 scheduled: JSON.parse(JSON.stringify(window.scheduled))
+            //             }
+            //         });
+            //         this.instrument.record(measure);
+            //     }
+            // }, 60000);
 
             this.setupHistory();
+        }
+
+        resetSearchControls() {
+            this.searchInput('');
+
+            // reset data privacy
+            this.withPrivateData(true);
+            this.withPublicData(true);
+
+            // reset workspace type
+            this.withUserData(true);
+            this.withReferenceData(true);
+
+            // reset data types
+            this.omittedDataTypes([]);
         }
 
         cleanSearchInput(searchInput) {
@@ -903,9 +947,9 @@ define([
         }
 
         dispose() {
-            if (this.performanceMonitoringListener) {
-                window.clearInterval(this.performanceMonitoringListener);
-            }
+            // if (this.performanceMonitoringListener) {
+            //     window.clearInterval(this.performanceMonitoringListener);
+            // }
         }
     }
 
@@ -1023,7 +1067,7 @@ define([
                 }, [
                     gen.component({
                         name: SearchBarComponent.name(),
-                        params: ['bus', 'searchInput', 'forceSearch', 'searching', 'selectedObjects', 'searchHistory']
+                        params: ['bus', 'searchInput', 'forceSearch', 'searching', 'selectedObjects', 'searchHistory', 'canReset', 'actions']
                     }),
                 ]),
             ]),

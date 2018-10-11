@@ -37,7 +37,7 @@ define([
         constructor(params, context) {
             super(params);
 
-            const {searchInput, forceSearch, searching, selectedObjects, searchHistory} = params;
+            const {searchInput, forceSearch, searching, selectedObjects, searchHistory, canReset, actions} = params;
 
             this.selectedObjects = selectedObjects;
 
@@ -70,6 +70,10 @@ define([
 
             // hack to ensure that clicking in side the history control does not close it!
             this.historyContainerId = html.genId();
+
+            this.canReset = canReset;
+            this.resetSearchControls = actions.resetSearch;
+
 
             // TODO: fold better dom event listening (and removal) into base class.
             this.documentClickListener = (e) => {
@@ -109,6 +113,10 @@ define([
 
         doClearInput() {
             this.searchInput('');
+        }
+
+        doReset() {
+            this.resetSearchControls();
         }
 
         doSearch() {
@@ -385,6 +393,16 @@ define([
                 }
             }, span({
                 class: 'fa fa-trash-o'
+            })),
+            div({
+                class: ['input-group-addon', styles.classes.addonButton, commonStyle.classes.tooltipDark],
+                title: text.getTooltip('SEARCH_RESET_BUTTON'),
+                dataBind: {
+                    click: 'canReset() ? doReset : null',
+                    css: 'canReset() ? "' + styles.classes.addonButton + '" : "' + styles.classes.addonButtonDisabled + '"'
+                }
+            }, span({
+                class: 'fa fa-recycle'
             }))
         ]));
     }

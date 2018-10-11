@@ -374,10 +374,8 @@ define([
                 },
                 sorting_rules: sortingRules
             };
-            console.log('param?', param);
             return searchAPI.callFunc('search_objects', [param])
                 .spread((result) => {
-                    console.log('result', result);
                     const genes = result.objects.map(({data}) => {
                         const {id, type, location, aliases, functions} = data;
                         return {
@@ -527,7 +525,7 @@ define([
                 dataBind: {
                     textInput: 'searchInput'
                 },
-                placeholder: 'Search Features (* for all)'
+                placeholder: 'Search Features'
             }),
             button({
                 class: 'btn btn-default',
