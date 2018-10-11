@@ -153,7 +153,7 @@ define([
                 },
                 {
                     name: 'name',
-                    label: 'Container',
+                    label: 'Workspace',
                     type: 'string',
                     width: 3
                 },
