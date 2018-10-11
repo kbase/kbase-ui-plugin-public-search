@@ -27,5 +27,5 @@
                 name: public-search
                 path: [public-search]
                 label: Search
-                icon: public-search 
+                icon: search 
                 beta: true
