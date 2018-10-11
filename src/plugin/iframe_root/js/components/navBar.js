@@ -90,7 +90,8 @@ define([
         component: {
             css: {
                 display: 'flex',
-                flexDirection: 'row'
+                flexDirection: 'row',
+                alignItems: 'stretch'
             }
         },
         toolbar: {
@@ -98,7 +99,6 @@ define([
                 flex: '1 1 0px',
                 display: 'flex',
                 flexDirection: 'row',
-                marginBottom: '10px',
                 alignItems: 'center'
             }
         },
@@ -274,7 +274,6 @@ define([
             [
                 '"success"',
                 div([
-                    'Showing ',
                     span({
                         style: {
                             fontWeight: 'bold'
@@ -287,7 +286,7 @@ define([
                             }
                         }
                     }),
-                    ' out of ',
+                    ' of ',
                     span({
                         style: {
                             fontWeight: 'bold'

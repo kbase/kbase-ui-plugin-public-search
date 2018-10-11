@@ -134,6 +134,7 @@ define([
 
             this.searchInput = ko.observable('*');
             this.contigFilterInput = ko.observable();
+            this.totalFound = ko.observable();
             this.pageNumber = ko.observable(1);
             this.pageCount = ko.observable(0);
 
@@ -251,6 +252,9 @@ define([
 
             return this.getGenes(query)
                 .then(({genes, total}) => {
+
+                    this.totalFound(total);
+
                     if (genes.length === 0) {
                         this.table.rows.removeAll();
                         this.pageNumber(null);
@@ -488,12 +492,18 @@ define([
             css: {
                 backgroundColor: '#CCC'
             }
+        },
+        label: {
+            css: {
+                fontWeight: 'bold',
+                color: 'rgba(150,150,150,1)'
+            }
         }
     });
 
     function buildFilterBar() {
         return div({}, [
-            span('Selected Contig: '),
+            buildLabel('selected contig '),
             gen.if('contigFilterInput',
                 span({
                     style: {
@@ -511,12 +521,13 @@ define([
         ]);
     }
 
-    function buildSearchBar() {
-        return div({}, [
+    function buildSearchInput() {
+        return [
             input({
                 dataBind: {
                     textInput: 'searchInput'
-                }
+                },
+                placeholder: 'Search Features (* for all)'
             }),
             button({
                 class: 'btn btn-default',
@@ -543,8 +554,18 @@ define([
                 ['"error"', span({
                     class: 'fa fa-search'
                 })]
-            ])),
-            ' ',
+            ]))
+        ];
+    }
+
+    function buildLabel(label) {
+        return span({
+            class: style.classes.label
+        }, label);
+    }
+
+    function buildNavButtons() {
+        return [
             button({
                 class: 'btn btn-default',
                 dataBind: {
@@ -581,21 +602,27 @@ define([
             }, span({
                 class: 'fa fa-step-forward'
             })),
-            span({
+            div({
                 style: {
+                    display: 'inline-block',
                     marginLeft: '10px'
                 }
             }, gen.if('pageCount() > 0',
                 [
+                    buildLabel('pg '),
                     span({
                         dataBind: {
                             text: 'pageNumber'
                         }
                     }),
-                    ' of ',
+                    buildLabel(' of '),
                     span({
                         dataBind: {
-                            text: 'pageCount'
+                            typedText: {
+                                value: 'pageCount',
+                                type: '"number"',
+                                format: '"0,0"'
+                            }
                         }
                     })
                 ],
@@ -604,7 +631,36 @@ define([
                         fontStyle: 'italic'
                     }
                 }, 'No genes match this search')))
-        ]);
+        ];
+    }
+
+    function buildResultsSummary() {
+        return gen.if('totalFound()',
+            div({
+                style: {
+                    display: 'inline-block',
+                    marginLeft: '10px'
+                }
+            }, [
+                buildLabel('found '),
+                span({
+                    dataBind: {
+                        typedText: {
+                            value: 'totalFound()',
+                            type: '"number"',
+                            format: '"0,0"'
+                        }
+                    }
+                })
+            ]));
+    }
+
+    function buildSearchBar() {
+        return [
+            buildSearchInput(),
+            buildNavButtons(),
+            buildResultsSummary()
+        ];
     }
 
     function buildResults() {
