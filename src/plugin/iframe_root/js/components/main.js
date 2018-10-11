@@ -999,9 +999,9 @@ define([
         },
         columnGroup: {
             css: {
-                border: '1px silver solid',
+                border: '1px rgba(200,200,200,0.5) solid',
                 // padding: '4px',
-                marginBottom: '10px'
+                marginBottom: '14px'
             }
         }
     });

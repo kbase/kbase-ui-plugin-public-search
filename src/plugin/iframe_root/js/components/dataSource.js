@@ -181,7 +181,7 @@ define([
                     ),
                     div({
                         class: '-cell'
-                    }, 'Narratives')
+                    }, 'Narrative')
                 ]),
                 div({
                     class: '-row',

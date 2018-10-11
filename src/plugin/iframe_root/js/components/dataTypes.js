@@ -284,13 +284,13 @@ define([
                 }, span({
                     class: commonStyle.classes.tooltipDark,
                     title: text.getTooltip('DATA_TYPES_DATA_TYPE_COLUMN')
-                }, 'Data Type')),
+                }, 'data type')),
                 div({
                     class: '-cell'
                 }, span({
                     class: commonStyle.classes.tooltipDark,
                     title: text.getTooltip('DATA_TYPES_COUNT_COLUMN')
-                }, 'Count'))
+                }, 'count'))
             ]),
             div({
                 class: '-body-container'
