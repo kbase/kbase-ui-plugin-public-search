@@ -28,7 +28,7 @@ define([
             this.error = ko.observable();
 
             // overview fields
-            console.log('narrative info?', this.object.workspaceInfo, this.object.objectInfo);
+            // console.log('narrative info?', this.object.workspaceInfo, this.object.objectInfo);
 
             this.title = this.object.workspaceInfo.metadata.narrative_nice_name;
             this.abstract = null;
@@ -44,7 +44,6 @@ define([
             };
 
             // this.appCellCount = 20;
-            this.genomeCount = 13;
             this.objectCounts = null;
 
             Promise.all([
@@ -52,7 +51,7 @@ define([
                 this.getAbstract()
             ])
                 .spread((objectTypeCounts, {abstract, createdBy, createdAt}) => {
-                    console.log('got overview!', objectTypeCounts);
+                    // console.log('got overview!', objectTypeCounts);
                     this.objectCounts = objectTypeCounts;
                     this.abstract = abstract;
                     this.createdBy = createdBy;
@@ -153,17 +152,15 @@ define([
 
                     return {abstract, createdBy, createdAt};
                 });
-            // .spread(([object]) => {
-            //     console.log('got narr', object);
-            // });
         }
     }
 
     // VIEW
 
     const t = html.tag,
-        div = t('div'),
+        a = t('a'),
         span = t('span'),
+        div = t('div'),
         table = t('table'),
         tbody = t('tbody'),
         tr = t('tr'),
@@ -248,13 +245,19 @@ define([
                 fontSize: '120%',
             }
         },
+        createdBy: {
+            css: {
+                fontWeight: 'italic'
+            }
+        },
         narrativeAbstract: {
             css: {
                 // maxHeight: '20em',
                 // overflowY: 'auto',
                 padding: '6px',
                 border: '1px rgba(200,200,200, 0.5) solid',
-                borderRadius: '4px'
+                borderRadius: '4px',
+                boxShadow: '4px 4px 4px rgba(100,100,100,1)'
             },
             inner: {
                 h2: {
@@ -264,8 +267,77 @@ define([
                     fontSize: '100%'
                 }
             }
+        },
+        label: {
+            css: {
+                fontWeight: 'bold',
+                color: 'rgba(200,200,200,1)',
+                marginRight: '4px'
+            }
         }
     });
+
+    function buildStats() {
+        return table({
+            class: style.classes.table
+        }, [
+            tbody({
+            }, [
+                tr([
+                    th('created'),
+                    td({
+                        dataBind: {
+                            typedText: {
+                                value: 'createdAt',
+                                type: '"date"',
+                                format: '"MMM D, YYYY @ hh:mm a"'
+                            }
+                        }
+                    })
+                ]),
+                tr([
+                    th('by'),
+                    td(a({
+                        target: '_blank',
+                        dataBind: {
+                            text: 'createdBy',
+                            attr: {
+                                href: '"/#people/" + createdBy',
+                            }
+                        }
+                    }))
+                ]),
+                gen.if('createdBy !== lastSavedBy || createdAt.getTime() !== lastSavedAt.getTime()',
+                    [
+                        tr([
+                            th('last saved'),
+                            td({
+                                dataBind: {
+                                    typedText: {
+                                        value: 'lastSavedAt',
+                                        type: '"date"',
+                                        format: '"MMM D, YYYY @ hh:mm a"'
+                                    }
+                                }
+                            })
+                        ]),
+                        tr([
+                            th('by'),
+                            td(a({
+                                target: '_blank',
+                                dataBind: {
+                                    text: 'lastSavedBy',
+                                    attr: {
+                                        href: '"/#people/" + lastSavedBy',
+                                    }
+                                }
+                            }))
+                        ])
+                    ])
+
+            ])
+        ]);
+    }
 
     function buildAbstract() {
         return div([
@@ -276,42 +348,17 @@ define([
                 }
             }),
             div([
-                span('Created : '),
                 span({
+                    class: style.classes.label
+                }, 'creator'),
+                a({
+                    class: style.classes.createdBy,
+                    target: '_blank',
                     dataBind: {
-                        typedText: {
-                            value: 'createdAt',
-                            type: '"date"',
-                            format: '"MMM D, YYYY"'
+                        text: 'createdBy',
+                        attr: {
+                            href: '"/#people/" + createdBy',
                         }
-                    }
-                })
-            ]),
-            div([
-                span('Created by: '),
-                span({
-                    dataBind: {
-                        text: 'createdBy'
-                    }
-                })
-            ]),
-            div([
-                span('Last saved: '),
-                span({
-                    dataBind: {
-                        typedText: {
-                            value: 'lastSavedAt',
-                            type: '"date"',
-                            format: '"MMM D, YYYY"'
-                        }
-                    }
-                })
-            ]),
-            div([
-                span('Last saved by: '),
-                span({
-                    dataBind: {
-                        text: 'lastSavedBy'
                     }
                 })
             ]),
@@ -330,63 +377,6 @@ define([
                 }, 'Sorry, no introductory markdown cell found for this Narrative.')))
         ]);
     }
-
-    // function buildSummary() {
-    //     return table({
-    //         class: style.classes.table
-    //     }, [
-    //         tr([
-    //             th('Title'),
-    //             td({
-    //                 dataBind: {
-    //                     text: 'title'
-    //                 }
-    //             })
-    //         ]),
-    //         tr([
-    //             th('First Cell'),
-    //             td(gen.if('abstract',
-    //                 div({
-    //                     dataBind: {
-    //                         htmlMarkdown: 'abstract'
-    //                     }
-    //                 }),
-    //                 'none'))
-    //         ]),
-    //         // tr([
-    //         //     th('Owner'),
-    //         //     td({
-    //         //         dataBind: {
-    //         //             text: 'owner'
-    //         //         }
-    //         //     })
-    //         // ]),
-    //         // tr([
-    //         //     th('Creator'),
-    //         //     td({
-    //         //         dataBind: {
-    //         //             text: 'creator'
-    //         //         }
-    //         //     })
-    //         // ]),
-    //         // tr([
-    //         //     th('Created'),
-    //         //     td({
-    //         //         dataBind: {
-    //         //             text: 'title'
-    //         //         }
-    //         //     })
-    //         // ]),
-    //         // tr([
-    //         //     th('Last Saved'),
-    //         //     td({
-    //         //         dataBind: {
-    //         //             text: 'title'
-    //         //         }
-    //         //     })
-    //         // ]),
-    //     ]);
-    // }
 
     function buildCells() {
         return table({
@@ -463,7 +453,7 @@ define([
                 div([
                     div({
                         class: style.classes.columnHeader
-                    }, 'Abstract'),
+                    }, 'Narrative'),
                     buildAbstract()
                 ]),
 
@@ -489,21 +479,12 @@ define([
                     }, 'Objects'),
                     buildObjects()
                 ]),
-                // div([
-                //     div({
-                //         class: style.classes.columnHeader
-                //     }, 'Taxonomic Lineage'),
-                //     div({
-                //         dataBind: {
-                //             component: {
-                //                 name: LineageComponent.quotedName(),
-                //                 params: {
-                //                     taxonomy: 'taxonomy'
-                //                 }
-                //             }
-                //         }
-                //     })
-                // ])
+                div([
+                    div({
+                        class: style.classes.columnHeader
+                    }, 'Info'),
+                    buildStats()
+                ])
             ])
         ]);
     }
