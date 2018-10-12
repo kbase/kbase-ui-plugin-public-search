@@ -155,25 +155,11 @@ define([
         });
     }
 
-    function buildSearchingScreen() {
-        return gen.if('searching', div({
-            style: {
-                position: 'absolute',
-                top: '0',
-                bottom: '0',
-                right: '0',
-                left: '0',
-                backgroundColor: 'rgba(255,255,255,0.5)'
-            }
-        }));
-    }
-
     function template() {
         return div({
             class: styles.classes.container
         }, [
-            buildResults(),
-            buildSearchingScreen()
+            buildResults()
         ]);
     }
 

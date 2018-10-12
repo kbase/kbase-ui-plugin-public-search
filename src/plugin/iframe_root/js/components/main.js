@@ -27,7 +27,8 @@ define([
     '../lib/text',
     '../lib/instrument',
     '../lib/data',
-    '../lib/types/controller'
+    '../lib/types/controller',
+    '../lib/searchJob'
 ], function (
     Promise,
     ko,
@@ -57,7 +58,8 @@ define([
     text,
     instrument,
     data,
-    TypeController
+    TypeController,
+    SearchJob
 ) {
     'use strict';
 
@@ -410,6 +412,8 @@ define([
 
             // MAIN
 
+            this.currentSearchJob = new SearchJob();
+
             // this.performanceMonitoringListener = window.setInterval(() => {
             //     if (window.scheduled) {
             //         const measure = new instrument.Measure({
@@ -634,7 +638,20 @@ define([
         }
 
         doSearch(query) {
+            // if (utils.isEqual(query, lastQuery)) {
+            //     console.warn('duplicate query suppressed?', query, lastQuery);
+            //     return;
+            // }
             this.updatePluginParams(query);
+
+            // Always cancel the previous search ... this will gracefully fail if
+            // there is no current search.
+            this.currentSearchJob.cancel();
+
+            if (this.currentSearchJob.promise) {
+                this.currentSearchJob.promise.cancel();
+                this.currentSearchJob.promise;
+            }
 
             // translate query to model call
             if (!query.input.searchInput || query.input.searchInput.trim().length === 0) {
@@ -646,6 +663,8 @@ define([
                 this.page(1);
                 return;
             }
+
+            const newSearchJob = new SearchJob();
 
             // Set the query params
 
@@ -697,247 +716,254 @@ define([
 
             this.searching(true);
             this.searchState('searching');
-            Promise.all([
-                this.model.search({
-                    query: query.input.searchTerms,
-                    types: dataTypes,
-                    start: start,
-                    count: count,
-                    withUserData: query.input.withUserData,
-                    withReferenceData: query.input.withReferenceData,
-                    sorting: query.sorting.sortSpec,
-                    withPrivate: query.input.withPrivateData,
-                    withPublic: query.input.withPublicData
-                }),
-                this.model.searchSummary({
-                    types: query.input.supportedDataTypes,
-                    query: query.input.searchTerms,
-                    withUserData: query.input.withUserData,
-                    withReferenceData: query.input.withReferenceData,
-                    withPrivate: query.input.withPrivateData,
-                    withPublic: query.input.withPublicData
-                })
-            ])
-                .spread((result, summaryResult) => {
-                    this.searchResults.removeAll();
 
-                    const measure = new instrument.Measure({
-                        id: 'search-result',
-                        group: measureGroup,
-                        value: {
-                            search: {
-                                total: result.total,
-                                pagination: result.pagination,
-                                searchTime: result.search_time,
-                                sorting: result.sorting_rules,
-                                hits: result.objects.length
-                            },
-                            summary: summaryResult
-                        }
-                    });
-                    this.instrument.record(measure);
+            const newSearchPromise = Promise.try(() => {
+                newSearchJob.started();
+            })
+                .then(() => {
+                    return Promise.all([
+                        this.model.search({
+                            query: query.input.searchTerms,
+                            types: dataTypes,
+                            start: start,
+                            count: count,
+                            withUserData: query.input.withUserData,
+                            withReferenceData: query.input.withReferenceData,
+                            sorting: query.sorting.sortSpec,
+                            withPrivate: query.input.withPrivateData,
+                            withPublic: query.input.withPublicData
+                        }),
+                        this.model.searchSummary({
+                            types: query.input.supportedDataTypes,
+                            query: query.input.searchTerms,
+                            withUserData: query.input.withUserData,
+                            withReferenceData: query.input.withReferenceData,
+                            withPrivate: query.input.withPrivateData,
+                            withPublic: query.input.withPublicData
+                        })
+                    ])
+                        .spread((result, summaryResult) => {
+                            this.searchResults.removeAll();
 
-                    this.searchSummary().forEach((summary) => {
-                        summary.count(summaryResult.type_to_count[summary.type] || 0);
-                        // if (this.omittedDataTypes().includes(summary.type)) {
-                        //     summary.count(null);
-                        // } else {
-                        //     summary.count(summaryResult.type_to_count[summary.type] || 0);
-                        // }
-                    });
+                            const measure = new instrument.Measure({
+                                id: 'search-result',
+                                group: measureGroup,
+                                value: {
+                                    search: {
+                                        total: result.total,
+                                        pagination: result.pagination,
+                                        searchTime: result.search_time,
+                                        sorting: result.sorting_rules,
+                                        hits: result.objects.length
+                                    },
+                                    summary: summaryResult
+                                }
+                            });
+                            this.instrument.record(measure);
 
-                    const len = result.objects.length;
-                    if (len === 0) {
-                        this.searchState('notfound');
-                        this.totalCount(0);
-                        this.realTotalCount(0);
-                        this.page(1);
-                        return;
-                    }
-                    if (!this.page()) {
-                        this.page(1);
-                    }
+                            this.searchSummary().forEach((summary) => {
+                                summary.count(summaryResult.type_to_count[summary.type] || 0);
+                                // if (this.omittedDataTypes().includes(summary.type)) {
+                                //     summary.count(null);
+                                // } else {
+                                //     summary.count(summaryResult.type_to_count[summary.type] || 0);
+                                // }
+                            });
 
-                    if (result.total > this.maxResultCount) {
-                        this.totalCount(this.maxResultCount);
-                        this.realTotalCount(result.total);
-                    } else {
-                        this.totalCount(result.total);
-                        this.realTotalCount(result.total);
-                    }
-
-                    // we receive the workspace and object info for each search result.
-                    // Here we transform them into more usable forms.
-                    const workspacesMap = {};
-                    for (const [id, info] of Object.entries(result.access_groups_info)) {
-                        workspacesMap[id] = serviceUtils.workspaceInfoToObject(info);
-                    }
-                    this.workspacesMap = workspacesMap;
-
-                    const objectsMap = {};
-                    for (const [ref, info] of Object.entries(result.objects_info)) {
-                        objectsMap[ref] = serviceUtils.objectInfoToObject(info);
-                    }
-                    this.objectsMap = objectsMap;
-
-                    const workspaces = {};
-                    for (const [id, info] of Object.entries((workspacesMap))) {
-                        // grok the workspace type
-                        const workspace = {
-                            type: null,
-                            name: null,
-                            owner: null,
-                            ownerRealName: null
-                        };
-                        if (info == null) {
-                            workspace.type = 'inaccessible';
-                        // } else if (info.globalread === 'n' && info.user_permission === 'n') {
-                        //     workspace.type = 'inaccessible';
-                        } else {
-                            workspace.owner = info.owner;
-                            if (result.access_group_narrative_info[id]) {
-                                workspace.ownerRealName = result.access_group_narrative_info[id][4];
+                            const len = result.objects.length;
+                            if (len === 0) {
+                                this.searchState('notfound');
+                                this.totalCount(0);
+                                this.realTotalCount(0);
+                                this.page(1);
+                                return;
                             }
-                            if (info.metadata.narrative) {
-                                if (info.metadata.narrative_nice_name) {
-                                    workspace.type = 'narrative';
-                                    workspace.name = info.metadata.narrative_nice_name;
-                                } else {
-                                    workspace.type = 'tempnarrative';
-                                    workspace.name = 'Untitled';
-                                }
-                            } else if (info.metadata.searchtags) {
-                                if (info.metadata.searchtags.includes('refdata')) {
-                                    workspace.type = 'refdata';
-                                    workspace.name = info.name;
-                                } else {
-                                    workspace.type = 'workspace';
-                                    workspace.name = info.name;
-                                }
+                            if (!this.page()) {
+                                this.page(1);
+                            }
+
+                            if (result.total > this.maxResultCount) {
+                                this.totalCount(this.maxResultCount);
+                                this.realTotalCount(result.total);
                             } else {
-                                workspace.type = 'workspace';
-                                workspace.name = info.name;
+                                this.totalCount(result.total);
+                                this.realTotalCount(result.total);
                             }
-                        }
-                        workspaces[id] = workspace;
-                    }
 
-                    // Calculate page stats
-                    // if (!this.page()) {
-                    //     this.page(1);
-                    // }
-
-                    // Populate results
-                    const searchResults = result.objects.map((object) => {
-                        const searchObject = TypeController.makeSearchObject(object);
-                        // just testing...
-                        // const [, workspaceId, objectId, version] = object.guid.match(/^WS:(\d+)\/(\d+)\/(\d+)$/);
-                        const workspace = workspaces[searchObject.workspaceId];
-                        let owner;
-                        let name;
-                        let mode = 'normal';
-                        const source = workspace.type;
-                        switch (workspace.type) {
-                        case 'narrative':
-                            owner = workspace.owner;
-                            name = workspace.name;
-                            // name = 'narrative';
-                            break;
-                        case 'tempnarrative':
-                            owner = workspace.owner;
-                            name = workspace.name;
-                            // name = 'narrative';
-                            break;
-                        case 'refdata':
-                            if (object.data.source) {
-                                owner = workspace.owner;
-                                // owner = 'kbase';
-                                name = object.data.source;
-                            } else {
-                                owner = workspace.owner;
-                                // owner = 'kbase';
-                                name = 'n/a';
+                            // we receive the workspace and object info for each search result.
+                            // Here we transform them into more usable forms.
+                            const workspacesMap = {};
+                            for (const [id, info] of Object.entries(result.access_groups_info)) {
+                                workspacesMap[id] = serviceUtils.workspaceInfoToObject(info);
                             }
-                            break;
-                        case 'workspace':
-                            owner = workspace.owner;
-                            name = workspace.name;
-                            break;
-                        case 'inaccessible':
-                            owner = 'n/a';
-                            name = 'n/a';
-                            mode = 'inaccessible';
-                            debug.tryInaccessibleObject(this.runtime, object.guid, searchObject.ref);
-                            break;
-                        default:
-                            owner = '** err';
-                            name = '** err';
-                        }
+                            this.workspacesMap = workspacesMap;
 
-                        const row = {
-                            mode: mode,
-                            id: object.guid,
-                            // should be added in the table component; we shouldn't necessarily
-                            // know about this here. or perhaps in an class provided by the table
-                            // module.
-                            over: ko.observable(false),
-                            data: {
-                                selected: {
-                                    value: ko.observable(this.selectedRows().includes(object.guid))
-                                },
-                                type: {
-                                    value: object.type
-                                },
-                                date: {
-                                    value: new Date(object.timestamp)
-                                },
-                                owner: {
-                                    value: owner
-                                },
-                                source: {
-                                    value: source
-                                },
-                                name: {
-                                    value: name
-                                },
-                                description: {
-                                    value: searchObject.title
-                                },
-                                metadata: {
-                                    workspaceId: searchObject.workspaceId,
-                                    objectId: searchObject.objectId,
-                                    version: searchObject.version,
-                                    ref: searchObject.ref,
-                                    workspaceType: workspace.type,
-                                    searchObject: searchObject
-                                },
-                                detail: {
-                                    // TODO: replace this with an object of a type
-                                    // corresponding with the search/kbase type, which
-                                    // extracts the data out of object.data, object.key_props,
-                                    // and others.
-                                    searchObject: object
+                            const objectsMap = {};
+                            for (const [ref, info] of Object.entries(result.objects_info)) {
+                                objectsMap[ref] = serviceUtils.objectInfoToObject(info);
+                            }
+                            this.objectsMap = objectsMap;
+
+                            const workspaces = {};
+                            for (const [id, info] of Object.entries((workspacesMap))) {
+                                // grok the workspace type
+                                const workspace = {
+                                    type: null,
+                                    name: null,
+                                    owner: null,
+                                    ownerRealName: null
+                                };
+                                if (info == null) {
+                                    workspace.type = 'inaccessible';
+                                // } else if (info.globalread === 'n' && info.user_permission === 'n') {
+                                //     workspace.type = 'inaccessible';
+                                } else {
+                                    workspace.owner = info.owner;
+                                    if (result.access_group_narrative_info[id]) {
+                                        workspace.ownerRealName = result.access_group_narrative_info[id][4];
+                                    }
+                                    if (info.metadata.narrative) {
+                                        if (info.metadata.narrative_nice_name) {
+                                            workspace.type = 'narrative';
+                                            workspace.name = info.metadata.narrative_nice_name;
+                                        } else {
+                                            workspace.type = 'tempnarrative';
+                                            workspace.name = 'Untitled';
+                                        }
+                                    } else if (info.metadata.searchtags) {
+                                        if (info.metadata.searchtags.includes('refdata')) {
+                                            workspace.type = 'refdata';
+                                            workspace.name = info.name;
+                                        } else {
+                                            workspace.type = 'workspace';
+                                            workspace.name = info.name;
+                                        }
+                                    } else {
+                                        workspace.type = 'workspace';
+                                        workspace.name = info.name;
+                                    }
                                 }
+                                workspaces[id] = workspace;
                             }
-                        };
-                        return row;
-                    });
-                    this.searchResults(searchResults);
-                    this.searchState('success');
-                })
-                .catch((error) => {
-                    this.searchResults.removeAll();
-                    this.resetSearchSummary();
-                    this.totalCount(0);
-                    this.realTotalCount(0);
-                    this.page(1);
-                    this.searchState('error');
-                    this.error(error);
-                    // this.showError();
+
+                            // Populate results
+                            const searchResults = result.objects.map((object) => {
+                                const searchObject = TypeController.makeSearchObject(object);
+                                // just testing...
+                                // const [, workspaceId, objectId, version] = object.guid.match(/^WS:(\d+)\/(\d+)\/(\d+)$/);
+                                const workspace = workspaces[searchObject.workspaceId];
+                                let owner;
+                                let name;
+                                let mode = 'normal';
+                                const source = workspace.type;
+                                switch (workspace.type) {
+                                case 'narrative':
+                                    owner = workspace.owner;
+                                    name = workspace.name;
+                                    // name = 'narrative';
+                                    break;
+                                case 'tempnarrative':
+                                    owner = workspace.owner;
+                                    name = workspace.name;
+                                    // name = 'narrative';
+                                    break;
+                                case 'refdata':
+                                    if (object.data.source) {
+                                        owner = workspace.owner;
+                                        // owner = 'kbase';
+                                        name = object.data.source;
+                                    } else {
+                                        owner = workspace.owner;
+                                        // owner = 'kbase';
+                                        name = 'n/a';
+                                    }
+                                    break;
+                                case 'workspace':
+                                    owner = workspace.owner;
+                                    name = workspace.name;
+                                    break;
+                                case 'inaccessible':
+                                    owner = 'n/a';
+                                    name = 'n/a';
+                                    mode = 'inaccessible';
+                                    debug.tryInaccessibleObject(this.runtime, object.guid, searchObject.ref);
+                                    break;
+                                default:
+                                    owner = '** err';
+                                    name = '** err';
+                                }
+
+                                const row = {
+                                    mode: mode,
+                                    id: object.guid,
+                                    // should be added in the table component; we shouldn't necessarily
+                                    // know about this here. or perhaps in an class provided by the table
+                                    // module.
+                                    over: ko.observable(false),
+                                    data: {
+                                        selected: {
+                                            value: ko.observable(this.selectedRows().includes(object.guid))
+                                        },
+                                        type: {
+                                            value: object.type
+                                        },
+                                        date: {
+                                            value: new Date(object.timestamp)
+                                        },
+                                        owner: {
+                                            value: owner
+                                        },
+                                        source: {
+                                            value: source
+                                        },
+                                        name: {
+                                            value: name
+                                        },
+                                        description: {
+                                            value: searchObject.title
+                                        },
+                                        metadata: {
+                                            workspaceId: searchObject.workspaceId,
+                                            objectId: searchObject.objectId,
+                                            version: searchObject.version,
+                                            ref: searchObject.ref,
+                                            workspaceType: workspace.type,
+                                            searchObject: searchObject
+                                        },
+                                        detail: {
+                                            // TODO: replace this with an object of a type
+                                            // corresponding with the search/kbase type, which
+                                            // extracts the data out of object.data, object.key_props,
+                                            // and others.
+                                            searchObject: object
+                                        }
+                                    }
+                                };
+                                return row;
+                            });
+                            this.searchResults(searchResults);
+                            this.searchState('success');
+                        })
+                        .catch((error) => {
+                            this.searchResults.removeAll();
+                            this.resetSearchSummary();
+                            this.totalCount(0);
+                            this.realTotalCount(0);
+                            this.page(1);
+                            this.searchState('error');
+                            this.error(error);
+                            newSearchJob.error(error);
+                            // this.showError();
+                        })
+                        .finally(() => {
+                            this.searching(false);
+                        });
                 })
                 .finally(() => {
-                    this.searching(false);
+                    newSearchJob.finished();
                 });
+            newSearchJob.running(newSearchPromise);
+            this.currentSearchJob = newSearchJob;
         }
 
         resetSearchSummary() {

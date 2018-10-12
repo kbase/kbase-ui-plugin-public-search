@@ -234,9 +234,16 @@ define([
                 }
             }
         },
-        cell: {
+        cellWrapper: {
             flex: '0 0 0px',
-            overflow: 'hidden',
+            position: 'relative',
+            height: '35px',
+            display: 'flex',
+            fiexDirection: 'column'
+        },
+        cell: {
+            flex: '1 1 0px',
+            overflowX: 'hidden',
             whiteSpace: 'nowrap',
             borderBottom: '1px #DDD solid',
             height: '35px',
@@ -248,7 +255,7 @@ define([
         headerCell: {
             css: {
                 flex: '0 0 0px',
-                overflow: 'hidden',
+                overflowX: 'hidden',
                 whiteSpace: 'nowrap',
                 // border: '1px silver solid',
                 borderTop: '1px #DDD solid',
@@ -262,7 +269,7 @@ define([
         },
         innerCell: {
             flex: '1 1 0px',
-            overflow: 'hidden',
+            overflowX: 'hidden',
             whiteSpace: 'nowrap',
             textOverflow: 'ellipsis',
             alignSelf: 'stretch',
@@ -638,11 +645,14 @@ define([
                 class: styles.classes.itemRow
             }, [
                 div({
+                    class: styles.classes.cellWrapper,
                     dataBind: {
                         style: 'column.rowStyle',
                         class: 'row.over() && !column.noSelect ? "' + styles.classes.rowOver + '" : null'
-                    },
-                    class: [styles.classes.cell]
+                    }
+                },
+                div({
+                    class: styles.classes.cell
                 }, gen.if('row.mode === "inaccessible"',
                     buildEmptyCol(),
                     div({
@@ -666,7 +676,7 @@ define([
                                 }
                             }),
                             gen.if('row.data[column.name]', buildColValue())))
-                    ])))
+                    ]))))
             ])
         ]);
     }

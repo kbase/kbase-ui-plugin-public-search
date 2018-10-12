@@ -120,7 +120,8 @@ define([
                 flex: '2 1 0px',
                 display: 'flex',
                 flexDirection: 'row',
-                alignItems: 'center'
+                alignItems: 'center',
+                position: 'relative'
             }
         },
         col3: {
@@ -199,7 +200,8 @@ define([
             div({
                 class: styles.classes.cell,
                 style: {
-                    flex: '0 0 auto'
+                    flex: '0 0 auto',
+                    position: 'relative'
                 }
             }, [
                 // Note: if no pages, then display nothing here.
@@ -217,50 +219,61 @@ define([
                         ''
                     ],
                     [
-                        '"searching"',
-                        span({
-                            style: {
-                                fontSize: '80%'
-                            }
-                        },  build.loading())
-                    ],
-                    [
-                        '"success"',
-                        gen.if('totalPages() === 0',
-                            'no pages',
-                            div({
-                                style: {
-                                    display: 'inline-block',
-                                    marginLeft: '6px'
-                                }
-                            }, [
-                                ' Page ',
-                                span({
+                        '["searching", "success"]', [
+                            gen.if('searchState() === "searching"', buildLoadingScreen()),
+                            gen.if('totalPages() === 0',
+                                'no pages',
+                                div({
                                     style: {
-                                        fontWeight: 'bold'
-                                    },
-                                    dataBind: {
-                                        text: 'page'
+                                        display: 'inline-block',
+                                        marginLeft: '6px'
                                     }
-                                }),
-                                ' of ',
-                                span({
-                                    style: {
-                                        fontWeight: 'bold'
-                                    },
-                                    dataBind: {
-                                        typedText: {
-                                            value: 'totalPages',
-                                            type: '"number"',
-                                            format: '"0,0"'
+                                }, [
+                                    ' Page ',
+                                    span({
+                                        style: {
+                                            fontWeight: 'bold'
+                                        },
+                                        dataBind: {
+                                            text: 'page'
                                         }
-                                    }
-                                })
-                            ]))
+                                    }),
+                                    ' of ',
+                                    span({
+                                        style: {
+                                            fontWeight: 'bold'
+                                        },
+                                        dataBind: {
+                                            typedText: {
+                                                value: 'totalPages',
+                                                type: '"number"',
+                                                format: '"0,0"'
+                                            }
+                                        }
+                                    })
+                                ]))
+                        ]
                     ]
                 ])
             ])
         ]);
+    }
+
+    function buildLoadingScreen() {
+        return div({
+            style: {
+                position: 'absolute',
+                left: '0',
+                right: '0',
+                top: '0',
+                bottom: '0',
+                backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                fontSize: '300%',
+                display: 'flex',
+                flexDirection: 'column',
+                zIndex: '5'
+            }
+        });
     }
 
     function buildSummary() {
@@ -269,66 +282,65 @@ define([
             ['"notfound"', ''],
             ['"error"', ''],
             [
-                '"searching"', ''
-            ],
-            [
-                '"success"',
-                div([
-                    span({
-                        style: {
-                            fontWeight: 'bold'
-                        },
-                        dataBind: {
-                            typedText: {
-                                value: 'resultCount',
-                                type: '"number"',
-                                format: '"0,0"'
-                            }
-                        }
-                    }),
-                    ' of ',
-                    span({
-                        style: {
-                            fontWeight: 'bold'
-                        },
-                        dataBind: {
-                            typedText: {
-                                value: 'realTotalCount',
-                                type: '"number"',
-                                format: '"0,0"'
-                            }
-                        }
-                    }),
-                    ' objects',
-                    gen.if('realTotalCount() > totalCount()', span({
-                        style: {
-                            fontStyle: 'italic'
-                        }
-                    }, [
-                        ' (truncated to ',
+                '["searching", "success"]', [
+                    gen.if('searchState() === "searching"', buildLoadingScreen()),
+                    div([
                         span({
+                            style: {
+                                fontWeight: 'bold'
+                            },
                             dataBind: {
                                 typedText: {
-                                    value: 'totalCount',
+                                    value: 'resultCount',
                                     type: '"number"',
                                     format: '"0,0"'
                                 }
                             }
-                        }), ' ',
+                        }),
+                        ' of ',
                         span({
-                            class: 'fa fa-question-circle',
-                            dataTooltipHook: 'truncatedText',
                             style: {
-                                color: 'gray',
-                                cursor: 'pointer'
+                                fontWeight: 'bold'
                             },
                             dataBind: {
-                                click: 'function(d,e){$component.showTruncatedResultsTooltip(d,e)}'
+                                typedText: {
+                                    value: 'realTotalCount',
+                                    type: '"number"',
+                                    format: '"0,0"'
+                                }
                             }
                         }),
-                        ')'
-                    ]))
-                ])
+                        ' objects',
+                        gen.if('realTotalCount() > totalCount()', span({
+                            style: {
+                                fontStyle: 'italic'
+                            }
+                        }, [
+                            ' (truncated to ',
+                            span({
+                                dataBind: {
+                                    typedText: {
+                                        value: 'totalCount',
+                                        type: '"number"',
+                                        format: '"0,0"'
+                                    }
+                                }
+                            }), ' ',
+                            span({
+                                class: 'fa fa-question-circle',
+                                dataTooltipHook: 'truncatedText',
+                                style: {
+                                    color: 'gray',
+                                    cursor: 'pointer'
+                                },
+                                dataBind: {
+                                    click: 'function(d,e){$component.showTruncatedResultsTooltip(d,e)}'
+                                }
+                            }),
+                            ')'
+                        ]))
+                    ])
+                ]
             ]
         ]);
     }

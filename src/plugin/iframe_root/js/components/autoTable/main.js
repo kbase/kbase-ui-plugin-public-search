@@ -786,7 +786,8 @@ define([
                     display: 'flex',
                     flexDirection: 'row',
                     justifyContent: 'center',
-                    alignItems: 'center'
+                    alignItems: 'center',
+                    color: 'rgba(200, 200, 200, 0.8)'
                 }
             }, [
                 gen.if('$component.isLoadingSlowly', build.loading())
@@ -837,10 +838,11 @@ define([
                     buildMessage('danger', 'error')
                 ],
                 [
-                    '$default',
-                    gen.if('$component.isLoading',
-                        buildLoading(),
-                        buildRows())
+                    '["searching", "success"]',
+                    [
+                        buildRows(),
+                        gen.if('$component.table.isLoading', buildLoading())
+                    ]
                 ]
             ]))
         ]);

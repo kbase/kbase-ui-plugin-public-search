@@ -6,6 +6,7 @@ define([
     'kb_lib/html',
     'kb_lib/lang',
     'kb_knockout/components/table',
+    // '../../../autoTable/main',
     './aliases',
     './functions',
     './location',
