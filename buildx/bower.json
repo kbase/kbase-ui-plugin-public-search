@@ -1,0 +1,49 @@
+{
+    "name": "kbase-ui-plugin-public-search-internal",
+    "description": "Just the internal iframe app",
+    "keywords": [
+        "kbase", "widget"
+    ],
+    "author": [
+        "eapearson@lbl.gov"
+    ],
+    "install": {
+        "path": "../src/plugin/iframe_root/js/vendor",
+        "sources": {
+            "knockout-arraytransforms": "bower_components/knockout-arraytransforms/dist/knockout-arraytransforms.js",
+            "knockout-switch-case": "bower_components/knockout-switch-case/knockout-switch-case.js",
+            "bootstrap": [
+                {"bower_components/bootstrap/dist/css/bootstrap.css" : "css/bootstrap.css"},
+                {"bower_components/bootstrap/dist/css/bootstrap-theme.css" : "css/bootstrap-theme.css"},
+                {"bower_components/bootstrap/dist/fonts/**": "fonts/"},
+                {"bower_components/bootstrap/dist/js/bootstrap.js": "bootstrap.js"}
+            ],
+            "kbase-common-es6": "bower_components/kbase-common-es6/src/**",
+            "kbase-knockout-extensions-es6": "bower_components/kbase-knockout-extensions-es6/src/**",
+            "knockout-projections": "bower_components/knockout-projections/dist/knockout-projections.js",
+            "font-awesome": [
+                {"bower_components/font-awesome/css/font-awesome.css": "css/font-awesome.css"},
+                {"bower_components/font-awesome/fonts/**": "fonts/"}
+            ]
+        }
+    },
+    "dependencies": {
+        "bluebird": "3.5.2",
+        "bootstrap": "3.3.7",
+        "bower-knockout-mapping": "2.6.0",
+        "font-awesome": "4.7.0",
+        "kbase-knockout": "3.5.1-beta7",
+        "kbase-knockout-extensions-es6": "0.6.14",
+        "knockout-projections": "eapearson/knockout-projections#1.1.1",
+        "knockout-switch-case": "2.1.0",
+        "knockout-validation": "2.0.3",
+        "kbase-common-es6": "0.10.5",
+        "kbase-common-ts": "0.19.0",
+        "normalize-css": "8.0.0",
+        "requirejs": "eapearson/requirejs#3.0.0-alpha5",
+        "require-css": "0.1.10",
+        "requirejs-yaml": "eapearson/requirejs-yaml#1.0.5",
+        "select2": "4.0.5"
+    },
+    "license": "SEE LICENSE IN ../LICENSE"
+}

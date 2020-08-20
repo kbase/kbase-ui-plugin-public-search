@@ -1,0 +1,10 @@
+## YAML Template.
+---
+package:
+  name: public-search
+  description: Public Search
+  version: 0.1.0
+views:
+  - view: main
+    module: mainView
+    type: es6

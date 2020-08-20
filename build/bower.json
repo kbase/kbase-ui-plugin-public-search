@@ -8,7 +8,7 @@
         "eapearson@lbl.gov"
     ],
     "install": {
-        "path": "../src/plugin/iframe_root/js/vendor",
+        "path": "../src/plugin/iframe_root/modules/vendor",
         "sources": {
             "knockout-arraytransforms": "bower_components/knockout-arraytransforms/dist/knockout-arraytransforms.js",
             "knockout-switch-case": "bower_components/knockout-switch-case/knockout-switch-case.js",
