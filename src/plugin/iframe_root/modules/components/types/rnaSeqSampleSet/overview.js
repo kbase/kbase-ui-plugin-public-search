@@ -72,7 +72,6 @@ define([
                 no_data: 0
             }])
                 .spread((result) => {
-                    console.log('object data?', result);
                     const d = result.data[0].data;
                     this.id = d.sampleset_id;
                     this.description = d.sampleset_desc;

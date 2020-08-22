@@ -8,3 +8,4 @@ views:
   - view: main
     module: mainView
     type: es6
+    

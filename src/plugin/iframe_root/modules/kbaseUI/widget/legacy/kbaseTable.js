@@ -46,7 +46,7 @@
 
 define([
     'jquery',
-    'css!font_awesome',
+    'css!font-awesome_css',
     './widget',
     './deletePrompt',
     './buttonControls',

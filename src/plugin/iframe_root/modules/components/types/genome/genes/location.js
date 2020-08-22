@@ -67,7 +67,7 @@ define([
             div({
                 style: {
                     flex: '1 1 0px',
-                    border: '1px silver dotted',
+                    // border: '1px silver dotted',
                     // position: 'relative',
                     // zIndex: '100'
                 },
@@ -91,8 +91,8 @@ define([
                     left: '0',
                     top: '0',
                     right: '0',
-                    backgroundColor: '#FFF',
-                    border: '1px silver solid'
+                    backgroundColor: 'transparent',
+                    // border: '1px silver solid'
                 },
                 // dataBind: {
                 //     style: {
@@ -140,7 +140,11 @@ define([
                     ' (',
                     span({
                         dataBind: {
-                            text: 'length'
+                            typedText: {
+                                value: 'length',
+                                type: '"number"',
+                                format: '"0,0"'
+                            }
                         }
                     }),
                     ')'

@@ -2,14 +2,12 @@ define([
     'knockout',
     'kb_knockout/lib/generators',
     'kb_lib/html',
-    'utils',
     './components/main',
     './rootViewModel'
 ], function (
     ko,
     gen,
     html,
-    utils,
     MainComponent,
     RootViewModel
 ) {
@@ -82,6 +80,10 @@ define([
 
         attach(node) {
             this.hostNode = node;
+            this.container = node.appendChild(document.createElement('div'));
+            this.container.style.display = 'flex';
+            this.container.style.flex = '1 1 0px';
+            this.container.style['flex-direction'] = 'column';
         }
 
         start(params) {
@@ -98,7 +100,7 @@ define([
             // this.authorized = token ? true : false;
 
             // this.runtime = new runtime.Runtime({config, token, username, realname, email});
-            this.render(ko);
+            this.render(ko, params);
 
             // TODO: revive me?
             // this.rootViewModel.bus.on('set-plugin-params', ({pluginParams}) => {
@@ -144,7 +146,9 @@ define([
         }
 
         detach() {
-            return null;
+            if (this.container && this.hostNode) {
+                this.hostNode.removeChild(this.container);
+            }
         }
     }
 

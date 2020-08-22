@@ -8,7 +8,7 @@ require(['loader'], function () {
         'kb_lib/props',
         'yaml!./config.yml',
         'bootstrap',
-        'css!font_awesome'
+        'css!font-awesome_css'
     ], (Promise, Integration, Dispatcher, knockoutLoader, props, pluginConfig) => {
         const pluginConfigDB = new props.Props({ data: pluginConfig });
         Promise.try(() => {

@@ -1,4 +1,4 @@
-define(['jquery', 'bootstrap', 'css!font_awesome', './widget'], function ($) {
+define(['jquery', 'bootstrap', 'css!font-awesome_css', './widget'], function ($) {
     'use strict';
     $.KBWidget({
         name: 'kbaseSearchControls',

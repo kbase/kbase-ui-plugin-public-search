@@ -28,8 +28,6 @@ define([
             this.error = ko.observable();
 
             // overview fields
-            // console.log('narrative info?', this.object.workspaceInfo, this.object.objectInfo);
-
             this.title = this.object.workspaceInfo.metadata.narrative_nice_name;
             this.abstract = null;
             this.createdBy = null;
@@ -51,7 +49,6 @@ define([
                 this.getAbstract()
             ])
                 .spread((objectTypeCounts, {abstract, createdBy, createdAt}) => {
-                    // console.log('got overview!', objectTypeCounts);
                     this.objectCounts = objectTypeCounts;
                     this.abstract = abstract;
                     this.createdBy = createdBy;
@@ -134,7 +131,6 @@ define([
                             return cell.source;
                         });
                     const welcomeRe = /Welcome to KBase's Narrative Interface!/;
-                    // console.log('cells', markdownCells);
                     const abstract = markdownCells.find((content) => {
                         if (!content) {
                             return false;
@@ -144,11 +140,9 @@ define([
                         }
                         return true;
                     });
-                    // console.log('metadata', result);
                     const createdBy = narrativeObject.creator;
                     const fixedCreated = narrativeObject.created.split('+')[0];
                     const createdAt = new Date(fixedCreated);
-                    // console.log('result', result);
 
                     return {abstract, createdBy, createdAt};
                 });

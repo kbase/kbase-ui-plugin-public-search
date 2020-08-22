@@ -5,7 +5,6 @@ define([], function () {
         constructor({object}) {
             this.object = object;
             const [, workspaceId, objectId, version] = object.guid.match(/^WS:(\d+)\/(\d+)\/(\d+)$/);
-            // console.log('object', workspaceId, objectId, version);
             this.workspaceId = workspaceId;
             this.objectId = objectId;
             this.version = version;

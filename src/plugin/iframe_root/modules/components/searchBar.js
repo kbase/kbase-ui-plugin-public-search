@@ -166,7 +166,6 @@ define([
                 usp: 'pp_url',
                 'entry.45112532': arg.username,
                 'entry.1257375807': arg.realname,
-                'entry.1670959681': arg.email,
                 'entry.250050267': arg.subject
             };
             return baseUrl + '?' + httpUtils.encodeQuery(query);
@@ -176,7 +175,6 @@ define([
             const fields = {
                 username: this.runtime.service('session').getUsername() || '',
                 realname: this.runtime.service('session').getRealname() || '',
-                email: this.runtime.service('session').getEmail() || '',
                 subject: 'Public Search'
             };
             window.open(this.googleFormLink(fields), '_blank');

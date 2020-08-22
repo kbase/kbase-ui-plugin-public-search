@@ -254,10 +254,13 @@ define([
                         overflowY: 'table.style.maxHeight ? "scroll" : null'
                     }
                 }
-            }, gen.foreachAs(
-                'rows.sorted((a,b) => {return $component.sortTable.call($component,a,b)})',
-                'row',
-                rowTemplate))
+            }, gen.if('rows().length > 0',
+                gen.foreachAs(
+                    'rows.sorted((a,b) => {return $component.sortTable.call($component,a,b)})',
+                    'row',
+                    rowTemplate),
+                div('Sorry, no features')
+            ))
         ]);
     }
 

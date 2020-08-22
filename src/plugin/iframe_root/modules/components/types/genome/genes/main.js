@@ -27,7 +27,7 @@ define([
     'use strict';
 
     class Column {
-        constructor({name, label, type, sort, width, style, noSelect, component}) {
+        constructor({name, label, type, sort, width, style, noSelect, component, action}) {
             this.name = name;
             this.label = label;
             this.type = type;
@@ -36,6 +36,7 @@ define([
             this.style = style || {};
             this.noSelect = noSelect || false;
             this.component = component || null;
+            this.action = action;
         }
     }
 
@@ -49,7 +50,8 @@ define([
     }
 
     class Table {
-        constructor({rows} = {}) {
+        constructor({rows, info} = {}) {
+            this.info = info;
             this.rows = ko.observableArray(rows || []);
             this.selectedRows = ko.observableArray();
             this.columns = [
@@ -63,24 +65,30 @@ define([
                     name: 'id',
                     label: 'ID',
                     type: 'string',
-                    width: 2
+                    width: 2,
+                    action: {
+                        fn: (id) => {
+                            const url = `/#dataview//${this.info.workspaceId}/${this.info.objectId}/${this.info.objectVersion}?sub=Feature&subid=${id.value}`;
+                            window.open(url, '_blank');
+                        }
+                    }
                 }),
-                new Column({
-                    name: 'aliases',
-                    label: 'Aliases',
-                    width: 3,
-                    component: AliasesComponent.name()
-                }),
+                // new Column({
+                //     name: 'aliases',
+                //     label: 'Aliases',
+                //     width: 3,
+                //     component: AliasesComponent.name()
+                // }),
                 new Column({
                     name: 'functions',
                     label: 'Functions',
-                    width: 3,
+                    width: 4,
                     component: FunctionsComponent.name()
                 }),
                 new Column({
                     name: 'location',
                     label: 'Location',
-                    width: 3,
+                    width: 2,
                     component: LocationComponent.name()
                 })
             ];
@@ -103,6 +111,11 @@ define([
                 column.sort.active(true);
             };
             this.rowAction = null;
+            this.undefinedHTML = span({
+                style: {
+                    color: 'rgba(200, 200, 200, 1)'
+                }
+            }, '∅');
         }
     }
 
@@ -113,6 +126,9 @@ define([
             this.object = object;
             // for now reconstruct the guid...
             this.genomeGuid = 'WS:' + [object.objectInfo.wsid, object.objectInfo.id, object.objectInfo.version].map(String).join('/');
+            this.workspaceId = object.objectInfo.wsid;
+            this.objectId = object.objectInfo.id;
+            this.objectVersion = object.objectInfo.version;
             // this.genomeGuid = object.guid;
             // this.ref = ref;
             this.runtime = context.$root.runtime;
@@ -139,7 +155,13 @@ define([
             this.pageNumber = ko.observable(1);
             this.pageCount = ko.observable(0);
 
-            this.table = new Table();
+            this.table = new Table({
+                info: {
+                    workspaceId: this.workspaceId,
+                    objectId: this.objectId,
+                    objectVersion: this.objectVersion
+                }
+            });
 
             this.subscribe(this.selectedContig, (newValue) => {
                 // this.searchInput(newValue);
@@ -268,7 +290,9 @@ define([
 
                     this.pageCount(Math.ceil(total / query.pageSize));
 
-                    const rows = genes.map(({id, type, aliases, functions, location}) => {
+                    const rows = genes.map((gene) => {
+
+                        const {id, type, aliases, functions, location} = gene;
                         return new Row({
                             data: {
                                 id: {
@@ -379,6 +403,7 @@ define([
                 .spread((result) => {
                     const genes = result.objects.map(({data}) => {
                         const {id, type, location, aliases, functions} = data;
+
                         return {
                             id, type,
                             location: location.map(([id, start, strand, length]) => {
@@ -395,12 +420,12 @@ define([
                                     return {type, name};
                                 }
                             }) : [],
-                            functions: functions || []
+                            functions: functions || (data.function ? [data.function] : undefined)
                         };
                     });
                     return {
                         total: result.total,
-                        genes: genes
+                        genes
                     };
                 })
                 .catch((err) => {
@@ -682,25 +707,25 @@ define([
         });
     }
 
-    function buildWaiting() {
-        return div({
-            style: {
-                textAlign: 'center',
-                padding: '10px'
-            }
-        }, span({
-            class: 'fa fa-pulse fa-spinner fa-fw'
-        }));
-    }
+    // function buildWaiting() {
+    //     return div({
+    //         style: {
+    //             textAlign: 'center',
+    //             padding: '10px'
+    //         }
+    //     }, span({
+    //         class: 'fa fa-pulse fa-spinner fa-fw'
+    //     }));
+    // }
 
-    function buildError() {
-        return div({
-            class: 'alert alert-danger',
-            dataBind: {
-                text: 'error'
-            }
-        });
-    }
+    // function buildError() {
+    //     return div({
+    //         class: 'alert alert-danger',
+    //         dataBind: {
+    //             text: 'error'
+    //         }
+    //     });
+    // }
 
     function buildContigSelector() {
         return gen.component({

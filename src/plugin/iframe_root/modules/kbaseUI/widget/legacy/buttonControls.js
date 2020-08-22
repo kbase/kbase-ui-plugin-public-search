@@ -36,7 +36,7 @@ define([
     '../visWidgets/geometry/point',
     '../visWidgets/geometry/size',
     'bootstrap',
-    'css!font_awesome',
+    'css!font-awesome_css',
     './widget'
 ], function ($, Rectangle, Point, Size) {
     'use strict';
