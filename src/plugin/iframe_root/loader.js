@@ -21,7 +21,7 @@ define([], function () {
             'knockout-projections': 'vendor/knockout-projections/knockout-projections',
             'knockout-switch-case': 'vendor/knockout-switch-case/knockout-switch-case',
             'knockout-validation': 'vendor/knockout-validation/knockout.validation',
-            knockout: 'vendor/kbase-knockout/knockout',
+            knockout: 'vendor/knockout/knockout',
             // knockout: 'vendor/knockout/knockout',
             marked: 'vendor/marked/marked',
             moment: 'vendor/moment/moment',

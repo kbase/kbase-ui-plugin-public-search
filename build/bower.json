@@ -33,7 +33,7 @@
         "bower-knockout-mapping": "2.6.0",
         "font-awesome": "4.7.0",
         "knockout": "3.5.1",
-        "kbase-knockout-extensions-es6": "0.7.2",
+        "kbase-knockout-extensions-es6": "0.7.3",
         "knockout-projections": "eapearson/knockout-projections#1.1.1",
         "knockout-switch-case": "2.1.0",
         "knockout-validation": "2.0.3",
