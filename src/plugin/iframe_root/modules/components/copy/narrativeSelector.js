@@ -386,7 +386,8 @@ define([
                         dataBind: {
                             value: 'inputValue',
                             valueUpdate: '"input"'
-                        }
+                        },
+                        placeholder: 'Search for Narratives and/or browse below'
                     }),
                     div({
                         style: {

@@ -43,7 +43,6 @@
         "requirejs": "eapearson/requirejs#3.0.0-alpha5",
         "require-css": "0.1.10",
         "requirejs-yaml": "eapearson/requirejs-yaml#1.0.5",
-        "select2": "4.0.5",
         "pure-uuid": "1.5.8"
     },
     "resolutions": {

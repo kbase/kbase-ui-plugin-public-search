@@ -9,9 +9,6 @@ define([
     '../../lib/ui',
     '../../lib/model',
     './narrativeSelector',
-
-    // for effect
-    'select2'
 ], function (
     ko,
     reg,
@@ -204,17 +201,11 @@ define([
             case 'new':
                 this.copyIntoNewNarrative(this.newNarrativeName())
                     .then((newNarrative) => {
-                        const narrativeId = [
-                            'ws',
-                            newNarrative.workspaceInfo.id,
-                            'obj',
-                            newNarrative.objectInfo.id
-                        ].join('.');
-                        const narrativeUrl = this.makeNarrativeUrl('/narrative/' + narrativeId);
+                        const url = this.makeNarrativeUrl(`/narrative/${newNarrative.workspaceInfo.id}`);
                         this.selectedNarrativeObject({
                             workspaceInfo: newNarrative.workspaceInfo,
                             objectInfo: newNarrative.objectInfo,
-                            url: narrativeUrl
+                            url
                         });
                         this.copyStatus('success');
                     })
@@ -230,17 +221,11 @@ define([
                         workspaceId: narrative.workspaceInfo.id
                     })
                         .then(() => {
-                            const narrativeId = [
-                                'ws',
-                                narrative.workspaceInfo.id,
-                                'obj',
-                                narrative.objectInfo.id
-                            ].join('.');
-                            const narrativeUrl = this.makeNarrativeUrl('/narrative/' + narrativeId);
+                            const url = this.makeNarrativeUrl(`/narrative/${narrative.workspaceInfo.id}`);
                             this.selectedNarrativeObject({
                                 workspaceInfo: narrative.workspaceInfo,
                                 objectInfo: narrative.objectInfo,
-                                url: narrativeUrl
+                                url
                             });
                             this.copyStatus('success');
                         })

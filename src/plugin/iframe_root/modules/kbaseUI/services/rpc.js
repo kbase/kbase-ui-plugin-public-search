@@ -35,9 +35,9 @@ define(['bluebird', '../rpc'], function (Promise, rpc) {
             }
             const client = new rpc.RPCClient({
                 runtime: this.runtime,
-                module: module,
-                timeout: timeout,
-                authenticated: authenticated
+                module,
+                timeout,
+                authenticated
             });
             return client;
         }

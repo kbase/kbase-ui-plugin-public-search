@@ -50,30 +50,6 @@ define([
             ko.applyBindings(this.rootViewModel, this.container);
         }
 
-        // renderLayout() {
-        //     return div({
-        //         style: {
-        //             flex: '1 1 0px',
-        //             overflow: 'auto',
-        //             minHeight: '0px'
-        //         }
-        //     }, div(
-        //         {
-        //             class: 'container-fluid',
-        //             style: {
-        //                 width: '100%'
-        //             },
-        //             dataKBTesthookPlugin: 'public-search'
-        //         },
-        //         [
-        //             div({ class: 'row' }, [
-        //                 div({ class: 'col-md-8' }, [div({ id: widgetSet.addWidget('kb_dataview_jsonView') })]),
-        //                 div({ class: 'col-md-4' }, [div({ id: widgetSet.addWidget('kb_dataview_jsonViewOverview') })])
-        //             ])
-        //         ]
-        //     ));
-        // }
-
         init() {
             this.runtime.send('ui', 'setTitle', 'KBase Data Search');
         }
@@ -87,19 +63,6 @@ define([
         }
 
         start(params) {
-
-            // const {token, username, config, realname, email} = payload;
-            // if (token) {
-            //     this.authorization = {token, username, realname, email};
-            // } else {
-            //     this.authorization = null;
-            // }
-            // this.token = token;
-            // this.username = username;
-            // this.config = config;
-            // this.authorized = token ? true : false;
-
-            // this.runtime = new runtime.Runtime({config, token, username, realname, email});
             this.render(ko, params);
 
             // TODO: revive me?
@@ -120,25 +83,6 @@ define([
                 this.rootViewModel.authorized(false);
                 this.rootViewModel.authorization(null);
             });
-
-            // this.channel.on('loggedin', ({token, username, realname, email}) => {
-            //     this.runtime.auth({token, username, realname, email});
-            //     this.rootViewModel.authorized(true);
-            //     this.rootViewModel.authorization({token, username, realname, email});
-            //     // really faked for now.
-            //     // this.runtime.service('session').
-            // });
-
-            // this.channel.on('loggedout', () => {
-            //     this.runtime.unauth();
-            //     this.rootViewModel.authorized(false);
-            //     this.rootViewModel.authorization(null);
-            // });
-
-            // this.rootViewModel.bus.on('instrumentation', (payload) => {
-            //     this.hostChannel.send('send-instrumentation', payload);
-            // });
-
         }
 
         stop() {

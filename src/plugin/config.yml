@@ -19,7 +19,7 @@
             -
                 name: public-search
                 path: [public-search]
-                label: Search
+                label: '"Public" Search'
                 icon: search 
                 beta: true
                 

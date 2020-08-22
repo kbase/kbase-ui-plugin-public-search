@@ -23,21 +23,18 @@ define(['kb_lib/jsonRpc/dynamicServiceClient', 'kb_lib/jsonRpc/genericClient', '
             this.RPCError = RPCError;
         }
 
-        call(moduleName, functionName, params) {
-            const serviceUrl = this.runtime.config(['services', moduleName, 'url'].join('.'));
+        call(module, functionName, params) {
+            const url = this.runtime.config(['services', module, 'url'].join('.'));
             const token = this.runtime.service('session').getAuthToken();
             let client;
-            if (serviceUrl) {
+            if (url) {
                 client = new GenericClient({
-                    module: moduleName,
-                    url: serviceUrl,
-                    token: token
+                    module, url, token
                 });
             } else {
                 client = new DynamicService({
                     url: this.runtime.config('services.service_wizard.url'),
-                    token: token,
-                    module: moduleName
+                    token, module
                 });
             }
             const funcParams = params || [];
@@ -83,24 +80,24 @@ define(['kb_lib/jsonRpc/dynamicServiceClient', 'kb_lib/jsonRpc/genericClient', '
         }
 
         setup() {
-            const serviceUrl = this.runtime.config(['services', this.moduleName, 'url'].join('.'));
+            const url = this.runtime.config(['services', this.moduleName, 'url'].join('.'));
             let token;
             if (this.authenticated) {
                 token = this.runtime.service('session').getAuthToken();
             } else {
                 token = null;
             }
-            if (serviceUrl) {
+            if (url) {
                 this.client = new GenericClient({
                     module: this.moduleName,
-                    url: serviceUrl,
-                    token: token,
+                    url,
+                    token,
                     timeout: this.timeout
                 });
             } else {
                 this.client = new DynamicService({
                     url: this.runtime.config('services.service_wizard.url'),
-                    token: token,
+                    token,
                     module: this.moduleName,
                     timeout: this.timeout
                 });

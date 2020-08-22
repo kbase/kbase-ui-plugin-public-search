@@ -13,16 +13,13 @@ define(['kb_common_ts/Auth2'], (auth2) => {
         }
 
         getAuthToken() {
-            this.runtime.authentication && this.runtime.authentication.token;
+            return this.runtime.authentication && this.runtime.authentication.token;
         }
         getUsername() {
             return this.runtime.authentication && this.runtime.authentication.username;
         }
         getRealname() {
             return this.runtime.authentication && this.runtime.authentication.realname;
-        }
-        getEmail() {
-            return this.runtime.authentication && this.runtime.authentication.email;
         }
         isLoggedIn() {
             return this.runtime.token ? true : false;
