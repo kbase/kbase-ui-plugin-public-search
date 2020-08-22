@@ -29,7 +29,6 @@ define([], function () {
             numeral: 'vendor/numeral/numeral',
             uuid: 'vendor/pure-uuid/uuid',
             require: 'vendor/requirejs/require',
-            select2: 'vendor/select2/select2',
             text: 'vendor/requirejs-text/text',
             vega: 'vendor/vega/vega',
             yaml: 'vendor/requirejs-yaml/yaml'

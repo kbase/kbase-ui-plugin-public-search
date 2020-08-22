@@ -293,6 +293,7 @@ define([
                 timeout: 10000,
                 authenticated: true
             });
+
             return narrativeService.callFunc('copy_object', [{
                 ref: arg.sourceObjectRef,
                 target_ws_id: arg.targetWorkspaceId

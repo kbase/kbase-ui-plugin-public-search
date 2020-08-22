@@ -123,9 +123,9 @@ define(['./windowChannel', './runtime'], (WindowChannel, Runtime) => {
                         authorization,
                         config
                     } = payload;
-                    const { token, username, realname, email } = authorization;
+                    const { token, username, realname } = authorization;
                     if (token) {
-                        this.authorization = { token, username, realname, email };
+                        this.authorization = { token, username, realname };
                     } else {
                         this.authorization = null;
                     }
@@ -139,7 +139,6 @@ define(['./windowChannel', './runtime'], (WindowChannel, Runtime) => {
                         authentication: authorization,
                         config,
                         token,
-                        email,
                         username,
                         pluginConfigDB: this.pluginConfigDB
                     });
@@ -155,8 +154,8 @@ define(['./windowChannel', './runtime'], (WindowChannel, Runtime) => {
                             reject(err);
                         });
 
-                    this.channel.on('loggedin', ({ token, username, realname, email }) => {
-                        this.runtime.send('session', 'loggedin',{ token, username, realname, email });
+                    this.channel.on('loggedin', ({ token, username, realname }) => {
+                        this.runtime.send('session', 'loggedin',{ token, username, realname });
                     });
 
                     this.channel.on('loggedout', () => {
