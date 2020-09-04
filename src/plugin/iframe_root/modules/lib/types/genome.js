@@ -23,7 +23,7 @@ define([
                 domain: this.object.data.domain,
                 scientificName: this.object.data.scientific_name,
                 contigCount: this.object.data.num_contigs,
-                featureCount: this.object.data.features,
+                featureCount: this.object.data.feature_count,
                 source: this.object.data.source,
                 sourceId: this.object.data.source_id,
             };
