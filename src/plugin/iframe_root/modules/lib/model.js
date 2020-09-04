@@ -34,6 +34,11 @@ define([
                 }
             };
 
+            // Workaround for search2 bug.
+            if (query === null) {
+                delete param.match_filter.full_text_in_all;
+            }
+
             if (types) {
                 param.object_types = types;
             }
@@ -58,7 +63,7 @@ define([
             }
 
             const searchAPI = this.runtime.service('rpc').makeClient({
-                module: 'KBaseSearchEngine',
+                module: 'SearchAPI2Legacy',
                 timeout: 10000,
                 authenticated: true
             });
@@ -107,6 +112,11 @@ define([
                 sorting_rules: sortingRules
             };
 
+            // Workaround for search2 bug.
+            if (query === null) {
+                delete param.match_filter.full_text_in_all;
+            }
+
             if (withReferenceData) {
                 if (withUserData) {
                     // nothing to do, put no source tags restrictions at all
@@ -132,7 +142,7 @@ define([
             }
 
             const searchAPI = this.runtime.service('rpc').makeClient({
-                module: 'KBaseSearchEngine',
+                module: 'SearchAPI2Legacy',
                 timeout: 10000,
                 authenticated: true
             });

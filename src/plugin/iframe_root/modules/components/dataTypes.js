@@ -340,33 +340,51 @@ define([
                         }))
                     ),
 
-                    div({
-                        class: '-cell',
-                        dataBind: {
-                            text: 'type',
-                            style: {
-                                'font-weight': 'count() ? "bold" : "normal"',
-                                'font-style': 'count() ? "normal" : "italic"',
-                                'color': 'selected() ? "#000" : "#AAA"'
+                    gen.if('indexAvailable',
+                        div({
+                            class: '-cell',
+                            dataBind: {
+                                text: 'type',
+                                style: {
+                                    'font-weight': 'count() ? "bold" : "normal"',
+                                    'font-style': 'count() ? "normal" : "italic"',
+                                    'color': 'selected() ? "#000" : "#AAA"'
+                                }
                             }
-                        }
-                    }),
-                    div({
-                        class: '-cell',
-                        dataBind: {
-                            typedText: {
-                                value: 'count',
-                                type: '"number"',
-                                format: '"0,0a"',
-                                missing: '"-"'
-                            },
-                            style: {
-                                'font-weight': 'count() ? "bold" : "normal"',
-                                'font-style': 'count() ? "normal" : "italic"',
-                                'color': 'selected() ? "#000" : "#AAA"'
+                        }),
+                        div({
+                            class: '-cell',
+                            dataBind: {
+                                text: 'type',
+                                style: {
+                                    'font-weight': 'count() ? "bold" : "normal"',
+                                    'font-style': 'count() ? "normal" : "italic"',
+                                    'color': 'selected() ? "#000" : "#AAA"'
+                                }
                             }
-                        }
-                    })
+                        })
+                    ),
+                    gen.if('indexAvailable',
+                        div({
+                            class: '-cell',
+                            dataBind: {
+                                typedText: {
+                                    value: 'count',
+                                    type: '"number"',
+                                    format: '"0,0a"',
+                                    missing: '"-"'
+                                },
+                                style: {
+                                    'font-weight': 'count() ? "bold" : "normal"',
+                                    'font-style': 'count() ? "normal" : "italic"',
+                                    'color': 'selected() ? "#000" : "#AAA"'
+                                }
+                            }
+                        }),
+                        div({
+                            class: '-cell'
+                        })
+                    )
                 ])
             ]))
         ]);

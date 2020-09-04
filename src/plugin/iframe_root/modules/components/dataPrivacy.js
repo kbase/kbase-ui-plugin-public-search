@@ -26,7 +26,7 @@ define([
                 if (!this.authorized()) {
                     return true;
                 }
-                return this._withPublicData;
+                return this._withPublicData();
             });
         }
         togglePrivateData() {
