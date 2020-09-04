@@ -343,7 +343,7 @@ define([
 
         getGenes(query) {
             const searchAPI = this.runtime.service('rpc').makeClient({
-                module: 'KBaseSearchEngine',
+                module: 'SearchAPI2Legacy',
                 timeout: 10000,
                 authenticated: true
             });

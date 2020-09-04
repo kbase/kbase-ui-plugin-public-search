@@ -154,7 +154,7 @@ define([
         doRunTest() {
             this.samples.removeAll();
             this.searchAPI = this.runtime.service('rpc').makeClient({
-                module: 'KBaseSearchEngine',
+                module: 'SearchAPI2Legacy',
                 timeout: this.scaleMax(),
                 authenticated: false
             });

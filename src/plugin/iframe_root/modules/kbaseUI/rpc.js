@@ -71,7 +71,11 @@ define(['kb_lib/jsonRpc/dynamicServiceClient', 'kb_lib/jsonRpc/genericClient', '
     class RPCClient {
         constructor({ runtime, module, timeout, authenticated }) {
             this.runtime = runtime;
-            this.moduleName = module;
+            // This business to handle search2, which re-uses KBaseSearchEngine, so that can't
+            // be used as the module key (and it isn't a real SDK module anyway.)
+            const serviceConfig = this.runtime.config(`services.${module}`) || {};
+            this.moduleKey = module;
+            this.moduleName = serviceConfig.module || module;
             this.timeout = timeout || 60000;
             this.RPCError = RPCError;
             this.authenticated = authenticated;
@@ -80,7 +84,7 @@ define(['kb_lib/jsonRpc/dynamicServiceClient', 'kb_lib/jsonRpc/genericClient', '
         }
 
         setup() {
-            const url = this.runtime.config(['services', this.moduleName, 'url'].join('.'));
+            const url = this.runtime.config(`services.${this.moduleKey}.url`);
             let token;
             if (this.authenticated) {
                 token = this.runtime.service('session').getAuthToken();

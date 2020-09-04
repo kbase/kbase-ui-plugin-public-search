@@ -244,13 +244,13 @@ define([
 
         getAllTypes() {
             const search = this.runtime.service('rpc').makeClient({
-                module: 'KBaseSearchEngine',
+                module: 'SearchAPI2Legacy',
                 timeout: 10000,
                 authorization: true
             });
             var param = {
                 match_filter: {
-                    full_text_in_all: null,
+                    // full_text_in_all: null,
                     exclude_subobjects: 1
                 },
                 access_filter: {
