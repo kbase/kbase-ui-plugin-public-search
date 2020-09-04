@@ -8,11 +8,6 @@
         routes:
             -
                 path: public-search?query=:-query&dataPrivacy=:-dataPrivacy&workspaceTypes=:-workspaceTypes&dataTypes=:-dataTypes
-                # queryParams:
-                #     query: true
-                #     dataPrivacy: true
-                #     workspaceTypes: true
-                #     dataTypes: true
                 view: main
                 authorization: true
         menu:
