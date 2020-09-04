@@ -36,7 +36,7 @@ define([
                 padding: '4px',
                 border: '1px silver solid',
                 borderRadius: '4px',
-                boxShadow: '4px 4px 4px rgba(200,200,200,0.5)'
+                // boxShadow: '4px 4px 4px rgba(200,200,200,0.5)'
             }
         }
     });
