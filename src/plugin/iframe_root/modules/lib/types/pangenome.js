@@ -11,14 +11,14 @@ define([
         }
 
         getTitle() {
-            return this.object.data.name;
+            return this.object.data.pangenome_name;
         }
 
         getDetail() {
+            // console.log('pangenome',this.object);
             return {
-                name: this.object.data.name,
-                genomeRefCount: this.object.data.genome_refs,
-                orthologCount: this.object.data.orthologs,
+                name: this.object.data.pangenome_name,
+                genomeRefCount: this.object.data.genome_upas.length,
                 type: this.object.data.type
             };
         }

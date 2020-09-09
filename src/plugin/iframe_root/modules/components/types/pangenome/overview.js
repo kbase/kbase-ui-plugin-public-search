@@ -21,58 +21,42 @@ define([
         td = t('td');
 
     class ViewModel {
-        constructor({ref}, context) {
-            this.ref = ref;
+        constructor({object}, context) {
+            this.ref = object.objectInfo.ref;
             this.runtime = context.$root.runtime;
-            this.ready = ko.observable(true);
+            this.ready = ko.observable(false);
+            this.error = ko.observable(false);
 
-            // this.getOverviewInfo();
+            this.name = ko.observable();
+            this.genomeCount = ko.observable();
+            this.orthologCount = ko.observable();
+
+            this.getOverviewInfo();
         }
 
-    //     getOverviewInfo() {
-    //         const workspace = this.runtime.service('rpc').makeClient({
-    //             module: 'Workspace',
-    //             timeout: 10000,
-    //             authorization: false
-    //         });
-    //         // https://github.com/kbase/workspace_deluxe/blob/8a52097748ef31b94cdf1105766e2c35108f4c41/workspace.spec#L1111
-    //         // https://github.com/kbase/workspace_deluxe/blob/8a52097748ef31b94cdf1105766e2c35108f4c41/workspace.spec#L265
-    //         workspace.callFunc('get_object_subset', [[{
-    //             ref: this.ref,
-    //             included: [
-    //                 'scientific_name',
-    //                 'scientific_lineage',
-    //                 'rank',
-    //                 'domain',
-    //                 'kingdom',
-    //                 'aliases',
-    //                 'genetic_code'
-    //             ]
-    //         }]])
-    //             .spread(([objectData]) => {
-    //                 this.scientificName(objectData.data.scientific_name);
-    //                 this.rank(objectData.data.rank);
-    //                 this.domain(objectData.data.domain);
-    //                 this.kingdom(objectData.data.kingdom);
-    //                 this.geneticCode(objectData.data.genetic_code);
-    //                 this.aliases(objectData.data.aliases);
-    //                 this.loading(false);
-    //                 // this.scientificName(objectData.data.scientific_name);
-    //                 const lineage = objectData.data.scientific_lineage;
-    //                 if (lineage) {
-    //                     let lineageList;
-    //                     if (lineage.indexOf(';') !== -1) {
-    //                         lineageList = lineage.split(';');
-    //                     } else {
-    //                         lineageList = lineage.split(',');
-    //                     }
-    //                     this.lineage(lineageList);
-    //                 }
-    //             })
-    //             .catch((err) => {
-    //                 console.error('ERROR', err);
-    //             });
-    //     }
+        getOverviewInfo() {
+            const workspace = this.runtime.service('rpc').makeClient({
+                module: 'Workspace',
+                timeout: 10000,
+                authorization: false
+            });
+            return workspace.callFunc('get_objects2', [{
+                objects: [{
+                    ref: this.ref
+                }]
+            }])
+                .then(([result]) => {
+                    const object = result.data[0];
+                    this.name(object.data.name);
+                    this.genomeCount(object.data.genome_refs.length);
+                    this.orthologCount(object.data.orthologs.length);
+                    this.ready(true);
+                })
+                .catch((err) => {
+                    this.error(err.message);
+                    console.error('ERROR', err);
+                });
+        }
     }
 
     const styles = html.makeStyles({
@@ -124,70 +108,29 @@ define([
             class: styles.classes.table
         }, [
             tr([
-                th('Something'),
+                th('Name'),
                 td({
-                    // dataBind: {
-                    //     text: 'scientificName'
-                    // }
-                }, 'Here')
+                    dataBind: {
+                        text: 'name'
+                    }
+                })
             ]),
-            // tr([
-            //     th('Rank'),
-            //     td({
-            //         dataBind: {
-            //             text: 'rank'
-            //         }
-            //     })
-            // ]),
-            // tr([
-            //     th('Kingdom'),
-            //     td({
-            //         dataBind: {
-            //             text: 'kingdom'
-            //         }
-            //     })
-            // ]),
-            // tr([
-            //     th('Domain'),
-            //     td({
-            //         dataBind: {
-            //             text: 'domain'
-            //         }
-            //     })
-            // ]),
-            // tr([
-            //     th('Genetic Code'),
-            //     td({
-            //         dataBind: {
-            //             text: 'geneticCode'
-            //         }
-            //     })
-            // ]),
-            // tr([
-            //     th('Aliases'),
-            //     td({
-            //         dataBind: {
-            //             foreach: 'aliases'
-            //         }
-            //     }, div({
-            //         dataBind: {
-            //             text: '$data'
-            //         }
-            //     }))
-            // ]),
-            // tr([
-            //     th('Lineage'),
-            //     td({
-            //         dataBind: {
-            //             component: {
-            //                 name: LineageComponent.quotedName(),
-            //                 params: {
-            //                     lineage: 'lineage'
-            //                 }
-            //             }
-            //         }
-            //     })
-            // ]),
+            tr([
+                th('Genomes'),
+                td({
+                    dataBind: {
+                        text: 'genomeCount'
+                    }
+                })
+            ]),
+            tr([
+                th('Genomes'),
+                td({
+                    dataBind: {
+                        text: 'orthologCount'
+                    }
+                })
+            ])
         ]);
     }
 

@@ -44,11 +44,6 @@ define([
                 label: 'genome references',
                 property: 'genomeRefCount'
             }
-        ], [
-            {
-                label: 'orthologs',
-                property: 'orthologCount'
-            }
         ]]
     }];
 

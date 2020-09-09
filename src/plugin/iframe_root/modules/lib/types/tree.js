@@ -11,7 +11,7 @@ define([
         }
 
         getTitle() {
-            return this.object.data.default_node_labels.user1;
+            return this.object.data.tree_name || this.object.object_name;
         }
 
         getDetail() {

@@ -150,52 +150,7 @@ define([
                         text: 'count'
                     }
                 })
-            ]),
-            // tr([
-            //     th('Description'),
-            //     td({
-            //         dataBind: {
-            //             text: 'description'
-            //         }
-            //     })
-            // ]),
-            // tr([
-            //     th('Description'),
-            //     td({
-            //         dataBind: {
-            //             text: 'description'
-            //         }
-            //     })
-            // ]),
-            // tr([
-            //     th('KBase ID'),
-            //     td({
-            //         dataBind: {
-            //             text: 'kbaseID'
-            //         }
-            //     })
-            // ]),
-            // tr([
-            //     th('Reference Types'),
-            //     td({
-            //         dataBind: {
-            //             text: 'referenceTypes'
-            //         }
-            //     })
-            // ])
-            // tr([
-            //     th('Lineage'),
-            //     td({
-            //         dataBind: {
-            //             component: {
-            //                 name: LineageComponent.quotedName(),
-            //                 params: {
-            //                     lineage: 'lineage'
-            //                 }
-            //             }
-            //         }
-            //     })
-            // ]),
+            ])
         ]);
     }
 
