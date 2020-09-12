@@ -1,19 +1,14 @@
 ---
-description: Accessing public without authentication
+description: Accessing public search without authentication should be ok
 specs:
   - description: should get the signin page
     baseSelector: []
     tasks:
       - action: navigate
-        path: jgi-search
+        path: public-search
       - subtask: plugin
-      - wait: forText
+      - wait: forElement
         selector:
-          - type: plugin
-            value: auth2-client
-          - type: component
-            value: login-view
-          - type: field
-            value: requested-path
-        text: public-search
+        - type: plugin
+          value: public-search
 
