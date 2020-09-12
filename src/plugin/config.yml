@@ -9,7 +9,7 @@
             -
                 path: public-search?query=:-query&dataPrivacy=:-dataPrivacy&workspaceTypes=:-workspaceTypes&dataTypes=:-dataTypes
                 view: main
-                authorization: true
+                authorization: false
         menu:
             -
                 name: public-search

@@ -60,6 +60,7 @@ define([
             this.container.style.display = 'flex';
             this.container.style.flex = '1 1 0px';
             this.container.style['flex-direction'] = 'column';
+            this.container.setAttribute('data-k-b-testhook-plugin', 'public-search');
         }
 
         start(params) {

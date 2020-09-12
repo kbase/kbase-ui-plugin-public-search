@@ -1,5 +1,4 @@
 define([
-    'knockout',
     'kb_knockout/registry',
     'kb_knockout/lib/generators',
     'kb_knockout/lib/viewModelBase',
@@ -9,7 +8,6 @@ define([
     './linksIn',
     './linksOut'
 ], function (
-    ko,
     reg,
     gen,
     ViewModelBase,
