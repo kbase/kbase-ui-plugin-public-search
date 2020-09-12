@@ -15,7 +15,6 @@ define([
         }
 
         getDetail() {
-            // console.log('pangenome',this.object);
             return {
                 name: this.object.data.pangenome_name,
                 genomeRefCount: this.object.data.genome_upas.length,

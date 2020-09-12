@@ -498,7 +498,7 @@ define([
         }
 
         setupHistory() {
-            if (this.authorization()) {
+            if (this.authorization().token) {
                 this.history = new history.ProfileHistory({
                     maxSize: 10,
                     name: 'kbase.plugins.public-search',

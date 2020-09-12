@@ -43,6 +43,9 @@ define([
 
             this.runtime = context.$root.runtime;
 
+            const isAuthenticated = this.runtime.service('session').isAuthenticated();
+            this.enableHistory = ko.observable(isAuthenticated);
+
             this.logo = null;
 
             // SEARCH INPUTS
@@ -108,6 +111,9 @@ define([
         }
 
         doToggleHistory() {
+            if (!this.enableHistory()) {
+                return;
+            }
             this.showHistory(!this.showHistory());
         }
 
@@ -371,11 +377,14 @@ define([
             div({
                 class: ['input-group-addon', styles.classes.addonButton, commonStyle.classes.tooltipDark],
                 dataType: 'history-toggle-button',
-                title: text.getTooltip('SEARCH_HISTORY_BUTTON'),
                 dataBind: {
                     click: 'doToggleHistory',
+                    attr: {
+                        title: 'enableHistory() ? text.getTooltip("SEARCH_HISTORY_BUTTON") : "Search history disabled. Log in to enable."',
+                    },
                     style: {
-                        'background-color': 'showHistory() ? "silver" : null'
+                        'background-color': 'showHistory() ? "silver" : null',
+                        'color': 'enableHistory() ? "black" : "gray"'
                     }
                 }
             }, span({
