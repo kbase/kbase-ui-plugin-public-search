@@ -1,5 +1,5 @@
 ---
-description: Ensure main view appears
+description: Ensure public search plugin appears with auth
 specs:
   - description: should have main panel framing appear when hit the path
     baseSelector: []
