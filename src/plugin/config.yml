@@ -1,20 +1,19 @@
 ## Public Data Search Plugin
 ---
-    package:
-        name: public-search
-        description: Search for the public
-        type: legacy
-    install:
-        routes:
-            -
-                path: public-search?query=:-query&dataPrivacy=:-dataPrivacy&workspaceTypes=:-workspaceTypes&dataTypes=:-dataTypes
-                view: main
-                authorization: false
-        menu:
-            -
-                name: public-search
-                path: [public-search]
-                label: '"Public" Search'
-                icon: search 
-                beta: true
-                
+package:
+  name: public-search
+  description: Search for the public
+  type: legacy
+services:
+  route:
+    routes:
+      - path: public-search?query=:-query&dataPrivacy=:-dataPrivacy&workspaceTypes=:-workspaceTypes&dataTypes=:-dataTypes
+        view: main
+        authorization: false
+  menu:
+    items:
+      - name: public-search
+        path: public-search
+        label: Public Search
+        icon: search
+        beta: true
