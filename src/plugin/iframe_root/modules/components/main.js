@@ -215,7 +215,7 @@ define([
                 });
 
                 // massage the search input (query)
-                const {terms, diagnosis, theStopWords} = this.cleanSearchInput(this.searchInput());
+                const {terms} = this.cleanSearchInput(this.searchInput());
 
                 return {
                     searchInput: this.searchInput(),
@@ -796,13 +796,13 @@ define([
                             for (const [id, info] of Object.entries(result.access_groups_info)) {
                                 workspacesMap[id] = serviceUtils.workspaceInfoToObject(info);
                             }
-                            this.workspacesMap = workspacesMap;
-
-                            const objectsMap = {};
-                            for (const [ref, info] of Object.entries(result.objects_info)) {
-                                objectsMap[ref] = serviceUtils.objectInfoToObject(info);
-                            }
-                            this.objectsMap = objectsMap;
+                            // this.workspacesMap = workspacesMap;
+                            //
+                            // const objectsMap = {};
+                            // for (const [ref, info] of Object.entries(result.objects_info)) {
+                            //     objectsMap[ref] = serviceUtils.objectInfoToObject(info);
+                            // }
+                            // this.objectsMap = objectsMap;
 
                             const workspaces = {};
                             for (const [id, info] of Object.entries((workspacesMap))) {
@@ -893,7 +893,7 @@ define([
                                     name = '** err';
                                 }
 
-                                const row = {
+                                return {
                                     mode: mode,
                                     id: object.guid,
                                     // should be added in the table component; we shouldn't necessarily
@@ -939,7 +939,6 @@ define([
                                         }
                                     }
                                 };
-                                return row;
                             });
                             this.searchResults(searchResults);
                             this.searchState('success');

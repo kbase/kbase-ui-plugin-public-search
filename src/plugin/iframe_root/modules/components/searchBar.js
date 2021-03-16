@@ -8,8 +8,7 @@ define([
     'kb_lib/httpUtils',
     './copy/copyObjectsControl',
     '../lib/text',
-    '../lib/style',
-    './searchWarnings'
+    '../lib/style'
 ], function (
     Uuid,
     ko,
@@ -20,8 +19,7 @@ define([
     httpUtils,
     CopyObjectsControlComponent,
     text,
-    commonStyle,
-    SearchWarningsComponent
+    commonStyle
 ) {
     'use strict';
 
@@ -108,6 +106,10 @@ define([
             this.showHistory(false);
             this.searchControlValue(data);
             this.doSearch();
+        }
+
+        getTooltip(tip) {
+            return text.getTooltip(tip);
         }
 
         doToggleHistory() {
@@ -380,7 +382,7 @@ define([
                 dataBind: {
                     click: 'doToggleHistory',
                     attr: {
-                        title: 'enableHistory() ? text.getTooltip("SEARCH_HISTORY_BUTTON") : "Search history disabled. Log in to enable."',
+                        title: 'enableHistory() ? getTooltip("SEARCH_HISTORY_BUTTON") : "Search history disabled. Log in to enable."',
                     },
                     style: {
                         'background-color': 'showHistory() ? "silver" : null',
