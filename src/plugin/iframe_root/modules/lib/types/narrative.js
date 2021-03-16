@@ -11,12 +11,12 @@ define([
         }
 
         getTitle() {
-            return this.object.key_props['title'];
+            return this.object.data['narrative_title'];
         }
 
         getDetail() {
             return {
-                title: this.object.key_props.title
+                title: this.object.data['narrative_title']
             };
         }
     }

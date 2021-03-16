@@ -24,8 +24,8 @@ define([
                 source: this.object.data.source,
                 type: this.object.data.type,
 
-                scientificName: this.object.key_props.scientific_name,
-                lineage: this.object.key_props.taxonomy,
+                scientificName: this.object.data.scientific_name,
+                lineage: this.object.data.taxonomy
             };
         }
     }
