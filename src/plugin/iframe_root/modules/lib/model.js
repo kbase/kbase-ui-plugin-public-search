@@ -64,7 +64,7 @@ define([
 
             const searchAPI = this.runtime.service('rpc').makeClient({
                 module: 'SearchAPI2Legacy',
-                timeout: 10000,
+                timeout: 60000,
                 authenticated: true
             });
 
@@ -87,7 +87,7 @@ define([
                 query = null;
             }
 
-            var param = {
+            const param = {
                 match_filter: {
                     full_text_in_all: query,
                     exclude_subobjects: 1
@@ -143,12 +143,12 @@ define([
 
             const searchAPI = this.runtime.service('rpc').makeClient({
                 module: 'SearchAPI2Legacy',
-                timeout: 10000,
+                timeout: 60000,
                 authenticated: true
             });
             return searchAPI.callFunc('search_objects', [param])
-                .spread((result) => {
-                    return result;
+                .then((result) => {
+                    return result[0];
                 });
         }
 

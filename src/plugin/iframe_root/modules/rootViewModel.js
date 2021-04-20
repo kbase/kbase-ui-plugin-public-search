@@ -124,7 +124,7 @@ define([
                 },
                 {
                     name: 'date',
-                    label: 'Date',
+                    label: 'Last changed',
                     type: 'date',
                     format: 'MM/DD/YYYY',
                     sort: {
@@ -245,12 +245,11 @@ define([
         getAllTypes() {
             const search = this.runtime.service('rpc').makeClient({
                 module: 'SearchAPI2Legacy',
-                timeout: 10000,
+                timeout: 60000,
                 authorization: true
             });
-            var param = {
+            const param = {
                 match_filter: {
-                    // full_text_in_all: null,
                     exclude_subobjects: 1
                 },
                 access_filter: {
