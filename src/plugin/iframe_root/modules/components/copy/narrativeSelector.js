@@ -39,7 +39,7 @@ define([
                     selected: ko.observable(false)
                 },
                 {
-                    label: 'Date',
+                    label: 'Last modified',
                     value: 'date',
                     selected: ko.observable(false)
                 },

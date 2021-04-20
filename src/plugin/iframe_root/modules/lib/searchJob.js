@@ -40,7 +40,7 @@ define([
             this.state = CANCELED;
         }
 
-        error(errorObject) {
+        setError(errorObject) {
             this.error = errorObject;
             this.state = ERROR;
         }

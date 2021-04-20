@@ -341,7 +341,6 @@ define([
                         }
                     }
                 }
-
                 this.lastSearch.query = newValue;
                 this.doSearch(newValue);
             });
@@ -849,8 +848,6 @@ define([
                             // Populate results
                             const searchResults = result.objects.map((object) => {
                                 const searchObject = TypeController.makeSearchObject(object);
-                                // just testing...
-                                // const [, workspaceId, objectId, version] = object.guid.match(/^WS:(\d+)\/(\d+)\/(\d+)$/);
                                 const workspace = workspaces[searchObject.workspaceId];
                                 let owner;
                                 let name;
@@ -895,20 +892,20 @@ define([
 
                                 return {
                                     mode: mode,
-                                    id: object.guid,
+                                    id: object.id,
                                     // should be added in the table component; we shouldn't necessarily
                                     // know about this here. or perhaps in an class provided by the table
                                     // module.
                                     over: ko.observable(false),
                                     data: {
                                         selected: {
-                                            value: ko.observable(this.selectedRows().includes(object.guid))
+                                            value: ko.observable(this.selectedRows().includes(object.id))
                                         },
                                         type: {
-                                            value: object.type
+                                            value: object.workspace_type_name
                                         },
                                         date: {
-                                            value: new Date(object.timestamp)
+                                            value: new Date(object.modified_at)
                                         },
                                         owner: {
                                             value: owner
@@ -951,7 +948,7 @@ define([
                             this.page(1);
                             this.searchState('error');
                             this.error(error);
-                            newSearchJob.error(error);
+                            newSearchJob.setError(error);
                             // this.showError();
                         })
                         .finally(() => {

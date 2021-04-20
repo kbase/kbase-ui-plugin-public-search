@@ -8,6 +8,7 @@ const Terser = require('terser');
 const path = require('path');
 const tar = require('tar');
 
+
 async function copyFiles(rootDir) {
     const root = rootDir.split('/');
     const source = root.concat(['src', 'plugin']).join('/');

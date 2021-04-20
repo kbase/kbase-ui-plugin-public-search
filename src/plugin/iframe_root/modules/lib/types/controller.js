@@ -63,7 +63,7 @@ define([
     };
 
     function makeSearchObject(object) {
-        const searchObjectClass = searchObjectMap[object.type.toLowerCase()] || DefaultObject;
+        const searchObjectClass = searchObjectMap[object.workspace_type_name.toLowerCase()] || DefaultObject;
         return new searchObjectClass({object});
     }
 

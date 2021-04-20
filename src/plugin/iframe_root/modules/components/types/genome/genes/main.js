@@ -344,7 +344,7 @@ define([
         getGenes(query) {
             const searchAPI = this.runtime.service('rpc').makeClient({
                 module: 'SearchAPI2Legacy',
-                timeout: 10000,
+                timeout: 60000,
                 authenticated: true
             });
 
