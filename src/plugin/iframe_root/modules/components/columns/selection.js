@@ -23,16 +23,17 @@ define([
             this.selected = params.row.data.selected.value;
             this.selectedRows = params.env.selectedRows;
             this.rowId = params.row.id;
+            this.objectRef = params.row.data.metadata.ref;
         }
 
         toggleSelected(data,e) {
             this.selected(!this.selected());
 
             if (this.selected()) {
-                this.selectedRows.remove(this.rowId);
-                this.selectedRows.push(this.rowId);
+                this.selectedRows.remove(this.objectRef);
+                this.selectedRows.push(this.objectRef);
             } else {
-                this.selectedRows.remove(this.rowId);
+                this.selectedRows.remove(this.objectRef);
             }
             // Since we also listen on the row for a click to bring up the inspector,
             // we need to block that from propagating.

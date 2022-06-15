@@ -279,8 +279,10 @@ define([
             this.selectedRows = ko.observableArray();
 
             this.selectedObjects = ko.pureComputed(() => {
-                return this.selectedRows().map((rowId) => {
-                    const [,workspaceId, objectId, version] = /WS:(\d+)\/(\d+)\/(\d+)/.exec(rowId);
+                return this.selectedRows().map((ref) => {
+                    // const [,workspaceId, objectId] = /^WS::(\d+):(\d+)$/.exec(rowId);
+                    // return [workspaceId, objectId].join('/');
+                    const [workspaceId, objectId, version] = /^(\d+)\/(\d+)\/(\d+)$/.exec(ref);
                     return [workspaceId, objectId, version].join('/');
                 });
             });
@@ -890,6 +892,7 @@ define([
                                     name = '** err';
                                 }
 
+                                const objectRef = `${object.workspace_id}/${object.object_id}/${object.object_version}`;
                                 return {
                                     mode: mode,
                                     id: object.id,
@@ -899,7 +902,7 @@ define([
                                     over: ko.observable(false),
                                     data: {
                                         selected: {
-                                            value: ko.observable(this.selectedRows().includes(object.id))
+                                            value: ko.observable(this.selectedRows().includes(objectRef))
                                         },
                                         type: {
                                             value: object.workspace_type_name
