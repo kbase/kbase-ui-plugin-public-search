@@ -204,8 +204,7 @@ define([
             return workspace.callFunc('get_object_info3', [{
                 objects: [{
                     wsid: ref.workspaceId,
-                    objid: ref.objectId,
-                    ver: ref.version
+                    objid: ref.objectId
                 }],
                 ignoreErrors: 1
             }])
@@ -233,13 +232,12 @@ define([
         getObjectsInfo(refs) {
             var normalizedRefs = refs.map((ref) => {
                 if (typeof ref === 'string') {
-                    const [workspaceId, objectId, version] = ref.split('/').map((x) => {
+                    const [workspaceId, objectId] = ref.split('/').map((x) => {
                         return parseInt(x, 10);
                     });
                     return {
                         workspaceId: workspaceId,
-                        objectId: objectId,
-                        version: version
+                        objectId: objectId
                     };
                 }
             });
