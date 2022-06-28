@@ -151,6 +151,12 @@ define([
                     width: 1
                 },
                 {
+                    name: 'typeVersion',
+                    label: 'Type Version',
+                    type: 'string',
+                    width: 1
+                },
+                {
                     name: 'name',
                     label: 'Workspace',
                     type: 'string',
