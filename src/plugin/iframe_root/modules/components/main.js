@@ -907,6 +907,9 @@ define([
                                         type: {
                                             value: object.workspace_type_name
                                         },
+                                        typeVersion: {
+                                            value: object.workspace_type_version
+                                        },
                                         date: {
                                             value: new Date(object.modified_at)
                                         },
